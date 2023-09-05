@@ -5,14 +5,14 @@ import numpy as np
 import zipfile
 import re
 import os
+from fastapi import UploadFile
 
 
 
 class APDataConverter:
 
-    def __init__(self, files, is_qme: bool = True):
+    def __init__(self, files: list[UploadFile] = None, file_name: str = '', is_qme: bool = True):
 
-        # Input vars
         self.lstDrop = [
             'Approve',
             'Reject',
@@ -113,45 +113,24 @@ class APDataConverter:
             'Interviewer_Name',
             'Address',
         ]
-        self.upload_files = files
+
+        # Input vars
         self.is_qme = is_qme
+
+        if file_name:
+            # with open(file_name, 'rb') as data_file:
+            data_file = open(file_name, 'rb')
+            file = UploadFile(file=data_file, filename=file_name, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            self.upload_files = [file]
+        else:
+            self.upload_files = files
+
 
         # Output vars
         self.str_file_name = str()
         self.zip_name = str()
         self.df_data_input, self.df_qres_info_input = pd.DataFrame(), pd.DataFrame()
 
-        # if len(files) == 1:
-        #     file = files[0]
-        #     self.str_file_name = file.filename
-        #
-        #     if '.sav' in file.filename:
-        #         # this function is pending
-        #         self.df_data_input, self.df_qres_info_input = self.read_file_sav(file)
-        #         self.zip_name = file.filename.replace('.sav', '.zip')
-        #     else:
-        #         self.df_data_input, self.df_qres_info_input = self.read_file_xlsx(file, is_qme)
-        #         self.zip_name = file.filename.replace('.xlsx', '.zip')
-        #
-        # else:
-        #     self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
-        #     self.zip_name = self.str_file_name.replace('.xlsx', '.zip')
-        #
-        #     df_data_input_merge = pd.DataFrame()
-        #     df_qres_info_input_merge = pd.DataFrame()
-        #
-        #     for i, file in enumerate(files):
-        #         df_data_input, df_qres_info_input = self.read_file_xlsx(file, is_qme)
-        #
-        #         if not df_data_input.empty:
-        #             df_data_input_merge = pd.concat([df_data_input_merge, df_data_input], axis=0)
-        #
-        #         if df_qres_info_input_merge.empty:
-        #             df_qres_info_input_merge = df_qres_info_input
-        #
-        #     df_data_input_merge.reset_index(drop=True, inplace=True)
-        #
-        #     self.df_data_input, self.df_qres_info_input = df_data_input_merge, df_qres_info_input_merge
 
 
     def convert_upload_files_to_df_input(self):
@@ -190,6 +169,8 @@ class APDataConverter:
             df_data_input_merge.reset_index(drop=True, inplace=True)
 
             self.df_data_input, self.df_qres_info_input = df_data_input_merge, df_qres_info_input_merge
+
+        self.check_duplicate_variables()
 
 
     def read_file_xlsx(self, file, is_qme: bool) -> (pd.DataFrame, pd.DataFrame):
@@ -257,13 +238,14 @@ class APDataConverter:
         return df_data_output, df_qres_info_output
 
 
-    def check_duplicate_variables(self):
+    def check_duplicate_variables(self) -> list:
 
         dup_vars = self.df_qres_info_input.duplicated(subset=['Name of items'])
 
         lst_dup_vars = list()
         if dup_vars.any():
             lst_dup_vars = self.df_qres_info_input.loc[dup_vars, 'Name of items'].values.tolist()
+            print('Duplicate variables:', '|'.join(lst_dup_vars))
 
         return lst_dup_vars
 
