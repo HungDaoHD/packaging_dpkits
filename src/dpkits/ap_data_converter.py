@@ -6,6 +6,7 @@ import zipfile
 import re
 import os
 from fastapi import UploadFile
+from colorama import Fore, Back, Style
 
 
 
@@ -138,14 +139,14 @@ class APDataConverter:
         lst_dup_vars = list()
         if dup_vars.any():
             lst_dup_vars = self.df_info_converted.loc[dup_vars, 'Name of items'].values.tolist()
-            print('Duplicate variables:', '|'.join(lst_dup_vars))
+            print(Fore.RED, 'Please check duplicated variables:', ', '.join(lst_dup_vars))
 
         return lst_dup_vars
 
 
     def read_file_xlsx(self, file, is_qme: bool) -> (pd.DataFrame, pd.DataFrame):
 
-        print('Read file xlsx')
+        print(f'Read file "{file.filename}"')
 
         xlsx = io.BytesIO(file.file.read())
 
@@ -215,8 +216,6 @@ class APDataConverter:
 
     def convert_upload_files_to_df_converted(self):
 
-        print('Convert uploaded xlsx to dataframe')
-
         files = self.upload_files
         is_qme = self.is_qme
 
@@ -252,7 +251,15 @@ class APDataConverter:
 
             self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
 
-        self.check_duplicate_variables()
+        print(f'Convert uploaded files "{self.str_file_name}" to dataframe')
+
+        if self.check_duplicate_variables():
+            exit()
+
+
+
+
+
 
 
     @staticmethod
@@ -268,9 +275,9 @@ class APDataConverter:
 
     def convert_df_md(self) -> (pd.DataFrame, pd.DataFrame):
 
-        print('Convert to MD dataframe')
-
         self.convert_upload_files_to_df_converted()
+
+        print('Convert to MD dataframe')
 
         df_data, df_info = self.df_data_converted, self.df_info_converted
 
@@ -326,11 +333,14 @@ class APDataConverter:
         return df_data_output, df_info_output
 
 
-    def convert_df_mc(self, lst_new_row: list = None) -> (pd.DataFrame, pd.DataFrame):  # convert data with MA questions format by columns instead of code
-
-        print('Convert to MC dataframe')
+    def convert_df_mc(self, lst_new_row: list = None) -> (pd.DataFrame, pd.DataFrame):
+        """
+        Convert data with MA questions format by columns instead of code
+        """
 
         self.convert_upload_files_to_df_converted()
+
+        print('Convert to MC dataframe')
 
         df_data, df_info = self.df_data_converted, self.df_info_converted
 
@@ -457,6 +467,7 @@ class APDataConverter:
 
         return df_data_output, df_info_output
 
+
     @staticmethod
     def generate_sps(df_info: pd.DataFrame, is_md: bool, sps_name: str):
 
@@ -535,7 +546,7 @@ class APDataConverter:
         return dict_unnetted
 
 
-    def remove_net_code(self, df_info: pd.DataFrame) -> pd.DataFrame:
+    def remove_net_code(self, df_info: pd.DataFrame) -> pd.DataFrame():
         df_info_without_net = df_info.copy()
 
         for idx in df_info_without_net.index:
@@ -617,7 +628,7 @@ class APDataConverter:
             print(f'Add zip {topline_name}')
             lst_zip_file_name.extend([topline_name])
         else:
-            print(f'Not found {topline_name}')
+            print(Fore.YELLOW, f'Not found {topline_name}', Fore.RESET)
 
         if is_zip:
             print(f'Create {self.zip_name} with files: {", ".join(lst_zip_file_name)}')

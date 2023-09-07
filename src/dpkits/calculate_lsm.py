@@ -11,8 +11,6 @@ class LSMCalculation:
 
         df_data_output.loc[:, lst_addin] = [[np.nan] * len(lst_addin)] * df_data_output.shape[0]
 
-
-
         df_data_output['CC1_Score'] = df_data_output['CC1']
         df_data_output['CC1_Score'].replace({1: 1, 2: 1, 3: 1, 4: 1, 5: 3, 6: 3, 7: 4, 8: 4, 9: 5, 10: 5, 11: 5, 12: 5}, inplace=True)
 
