@@ -31,7 +31,7 @@ class DataTranspose:
         }
         :return: df_data_stack, df_info_stack both as dataframe type
         """
-
+        
         id_col = dict_data_structure['id_col']
         sp_col = dict_data_structure['sp_col']
         lst_scr = dict_data_structure['lst_scr']

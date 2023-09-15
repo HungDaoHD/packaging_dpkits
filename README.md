@@ -1,5 +1,13 @@
 # Data processing Package
 
+- Requirements
+    - pandas
+    - pyreadstat
+    - numpy
+    - zipfile
+    - fastapi[UploadFile]
+
+
 - __init__(files, file_name, is_qme):
 ```
 files: list[UploadFile] default = None
