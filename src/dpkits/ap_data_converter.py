@@ -566,25 +566,20 @@ class APDataConverter:
                 os.remove(f_name)
 
 
-    def generate_multiple_sav_sps(self, dict_dfs: dict, is_md: bool, is_export_xlsx: bool = False, is_zip: bool = True):
+    def generate_multiple_data_files(self, dict_dfs: dict, is_md: bool, is_export_sav: bool = True, is_export_xlsx: bool = True, is_zip: bool = True):
 
         lst_zip_file_name = list()
 
         str_name = self.str_file_name.replace('.xlsx', '')
 
         xlsx_name = f"{str_name}_Rawdata.xlsx"
-        topline_name = f"{str_name}_Topline.xlsx"
-
-        if is_export_xlsx:
-            lst_zip_file_name.extend([xlsx_name])
+        # topline_name = f"{str_name}_Topline.xlsx"
 
         for key, val in dict_dfs.items():
 
             str_full_file_name = f"{str_name}_{val['tail_name']}" if val['tail_name'] else str_name
             str_sav_name = f"{str_full_file_name}.sav"
-            str_sps_name = f"{str_full_file_name}.sps"
-
-            print(f'Create {str_sav_name}')
+            # str_sps_name = f"{str_full_file_name}.sps"
 
             df_data = val['data']
             df_info = val['info']
@@ -594,14 +589,17 @@ class APDataConverter:
 
             is_recode_to_lbl = val['is_recode_to_lbl']
 
-            dict_val_lbl = {a: {int(k): str(v) for k, v in b.items()} for a, b in zip(df_info['var_name'], df_info['val_lbl'])}
-            dict_measure = {a: 'nominal' for a in df_info['var_name']}
+            if is_export_sav:
+                print(f'Create {str_sav_name}')
+                dict_val_lbl = {a: {int(k): str(v) for k, v in b.items()} for a, b in zip(df_info['var_name'], df_info['val_lbl'])}
+                dict_measure = {a: 'nominal' for a in df_info['var_name']}
+                pyreadstat.write_sav(df_data, str_sav_name, column_labels=df_info['var_lbl'].values.tolist(), variable_value_labels=dict_val_lbl, variable_measure=dict_measure)
 
-            pyreadstat.write_sav(df_data, str_sav_name, column_labels=df_info['var_lbl'].values.tolist(),
-                                 variable_value_labels=dict_val_lbl, variable_measure=dict_measure)
+                # print(f'Create {str_sps_name}')
+                # self.generate_sps(df_info, is_md, str_sps_name)
+                # lst_zip_file_name.extend([str_sav_name, str_sps_name])
 
-            print(f'Create {str_sps_name}')
-            self.generate_sps(df_info, is_md, str_sps_name)
+                lst_zip_file_name.extend([str_sav_name])
 
             if is_export_xlsx:
 
@@ -621,14 +619,14 @@ class APDataConverter:
                     df_data_xlsx.to_excel(writer, sheet_name=f"{val['sheet_name']}_Rawdata" if val['sheet_name'] else "Rawdata", index=False)
                     df_info.to_excel(writer, sheet_name=f"{val['sheet_name']}_Datamap" if val['sheet_name'] else "Datamap", index=False)
 
-            lst_zip_file_name.extend([str_sav_name, str_sps_name])
+                if xlsx_name not in lst_zip_file_name:
+                    lst_zip_file_name.extend([xlsx_name])
 
-
-        if os.path.isfile(topline_name):
-            print(f'Add zip {topline_name}')
-            lst_zip_file_name.extend([topline_name])
-        else:
-            print(Fore.YELLOW, f'Not found {topline_name}', Fore.RESET)
+        # if os.path.isfile(topline_name):
+        #     print(f'Add zip {topline_name}')
+        #     lst_zip_file_name.extend([topline_name])
+        # else:
+        #     print(Fore.YELLOW, f'Not found {topline_name}', Fore.RESET)
 
         if is_zip:
             print(f'Create {self.zip_name} with files: {", ".join(lst_zip_file_name)}')

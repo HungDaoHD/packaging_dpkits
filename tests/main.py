@@ -1,20 +1,22 @@
 import pandas as pd
 
 
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-# from fastapi import UploadFile
-# import sys
-# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-#
-# from ap_data_converter import APDataConverter
-# from calculate_lsm import LSMCalculation
-# from data_transpose import DataTranspose
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+from fastapi import UploadFile
+import sys
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+
+from ap_data_converter import APDataConverter
+from calculate_lsm import LSMCalculation
+from data_transpose import DataTranspose
+from table_generator import DataTableGenerator
+from table_formater import TableFormatter
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
-from dpkits.ap_data_converter import APDataConverter
-from dpkits.calculate_lsm import LSMCalculation
-from dpkits.data_transpose import DataTranspose
+# from dpkits.ap_data_converter import APDataConverter
+# from dpkits.calculate_lsm import LSMCalculation
+# from dpkits.data_transpose import DataTranspose
 
 
 # Call Class APDataConverter with file_name
@@ -124,12 +126,180 @@ dict_dfs = {
     },
 }
 
-converter.generate_multiple_sav_sps(dict_dfs=dict_dfs, is_md=False, is_export_xlsx=True, is_zip=True)
+converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
 # ----------------------------------------------------------------------------------------------------------------------
 
 
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
+dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name='table_test.xlsx', lst_qre_group=[], lst_qre_mean=[], is_md=False)
 
+lst_side_qres = [
+    {"qre_name": "CC1"},
+    {"qre_name": "$CC3"},
+    {"qre_name": "$CC4"},
+    {"qre_name": "$CC6"},
+    {"qre_name": "$CC10"},
+    {"qre_name": "LSM"},
+    {"qre_name": "Gender"},
+    {"qre_name": "Age"},
+    {"qre_name": "City"},
+    {"qre_name": "HHI"},
+    {"qre_name": "MaritalStatus"},
+    {"qre_name": "$KidAge"},
+    {"qre_name": "BannedIndustry"},
+    {"qre_name": "Prohibited"},
+    {"qre_name": "$Type"},
+    {"qre_name": "Q9_1"},
+    {"qre_name": "$Q10"},
+    {"qre_name": "Q11_01"},
+    {"qre_name": "Q11_02"},
+    {"qre_name": "Q11_03"},
+    {"qre_name": "Q11_04"},
+    {"qre_name": "Q11_05"},
+    {"qre_name": "Q11_06"},
+    {"qre_name": "Q11_07"},
+    {"qre_name": "Q11_08"},
+    {"qre_name": "Q11_09"},
+    {"qre_name": "Q11_10"},
+    {"qre_name": "Q11_11"},
+    {"qre_name": "Q11_12"},
+    {"qre_name": "Q11_13"},
+    {"qre_name": "Q11_14"},
+    {"qre_name": "$Q12"},
+    {"qre_name": "$Q13"},
+    {"qre_name": "$Q14"},
+    {"qre_name": "$Q15"},
+    {"qre_name": "Awareness1"},
+    {"qre_name": "Frequency"},
+    {"qre_name": "Awareness2"},
+    {"qre_name": "Perception"},
+    # {"qre_name": "Perception_Group"},
+    # {"qre_name": "Perception_Mean"},
+
+]
+
+lst_header_qres = [
+    [
+        {
+            "qre_name": "Age",
+            "qre_lbl": "Age",
+            "cats": {
+                'TOTAL': 'TOTAL',
+                '1': 'Dưới 18', '2': '18 - 24', '3': '25 - 30', '4': '31 - 39', '5': '40 - 50', '6': 'Trên 50'
+            }
+        },
+        {
+            "qre_name": "City",
+            "qre_lbl": "Location",
+            "cats": {
+                '1': 'TP. Hồ Chí Minh',
+                '2': 'Hà Nội',
+                '3': 'Đà Nẵng',
+                '4': 'Hải Phòng',
+                '5': 'Cần Thơ',
+            }
+        },
+        {
+            "qre_name": "@City2",
+            "qre_lbl": "Location",
+            "cats": {
+                'City.isin([1, 5, 10, 11, 12])': 'All South',
+                'City.isin([2, 4, 16, 17, 18])': 'All North',
+                'City.isin([13, 14, 15])': 'Other Cities and Mid',
+            }
+        },
+        {
+            "qre_name": "HHI",
+            "qre_lbl": "HHI",
+            "cats": {
+                '1': 'Dưới 4,000,000 VND',
+                '2': '4,000,000 - 9,000,000 VND',
+                '3': '9,000,001 - 14,000,000 VND',
+                '4': '14,000,001 - 20,000,000 VND',
+                '5': 'Trên 20,000,000 VND'
+            }
+        },
+        {
+            "qre_name": "$KidAge",
+            "qre_lbl": "Kid age",
+            "cats": {
+                '1': 'Dưới 5 tuổi',
+                '2': '5 - 7 tuổi',
+                '3': '8 - 10 tuổi',
+                '4': '11 - 13 tuổi',
+                '5': '14 - 16 tuổi',
+                '6': 'Trên 16 tuổi'
+            }
+        },
+        {
+            "qre_name": "Awareness1",
+            "qre_lbl": "Bạn đã bao giờ đi gặp các chuyên gia chăm sóc răng miệng (nha sĩ, bác sĩ) chưa?",
+            "cats": {'1': 'Rồi', '2': 'Chưa bao giờ'}
+        },
+        {
+            "qre_name": "Awareness2",
+            "qre_lbl": "P/S có tổng đài chăm sóc răng miệng miễn phí, nhằm giúp bạn có thể được tư vấn về sức khỏe răng miệng miễn phí ngay tại nhà. Bạn có thể trò chuyện trực tiếp với Chuyên Gia chăm sóc răng miệng là các nha sĩ, bác sĩ Răng Hàm Mặt khi liên hệ hai tổng đài trên. Bạn có biết đến thông tin này hay không?",
+            "cats": {'1': 'Có', '2': 'Không'}
+        },
+        {
+            "qre_name": "Perception",
+            "qre_lbl": "Vui lòng cho biết mức độ đồng ý của bạn với nhận định P/S đang nỗ lực để người dân dễ dàng tiếp cận hơn với chuyên gia, nha sỹ, nhằm mục đích cải thiện sức khỏe răng miệng của người Việt Nam?",
+            "cats": {'1': 'Hoàn toàn không đồng ý', '2': 'Không đồng ý', '3': 'Trung lập', '4': 'Đồng ý',
+                     '5': 'Hoàn toàn đồng ý'}
+        },
+
+    ],
+]
+
+
+lst_func_to_run = [
+    {
+        'func_name': 'run_standard_table_sig',
+        'tables_to_run': [
+            'Tbl_1_Pct',
+            # 'Tbl_1_Count',
+        ],
+        'tables_format': {
+
+            "Tbl_1_Pct": {
+                "tbl_name": "Table 1 - Pct",
+                "tbl_filter": "City > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
+                "is_hide_oe_zero_cats": 1,
+                "sig_test_info": {
+                    "sig_type": "ind",
+                    "sig_cols": [],
+                    "lst_sig_lvl": [90, 95]
+                },
+                "lst_side_qres": lst_side_qres,
+                "lst_header_qres": lst_header_qres
+            },
+
+            "Tbl_1_Count": {
+                "tbl_name": "Table 1 - Count",
+                "tbl_filter": "City > 0",
+                "is_count": 1,
+                "is_pct_sign": 0,
+                "is_hide_oe_zero_cats": 1,
+                "sig_test_info": {
+                    "sig_type": "",
+                    "sig_cols": [],
+                    "lst_sig_lvl": []
+                },
+                "lst_side_qres": lst_side_qres,
+                "lst_header_qres": lst_header_qres
+            },
+
+        },
+
+    },
+]
+
+dtg.run_tables_by_js_files(lst_func_to_run)
+
+dtf = TableFormatter(xlsx_name='table_test.xlsx')
+dtf.format_sig_table()
 # ----------------------------------------------------------------------------------------------------------------------
 
 print('\n==>TESTING PROCESS DONE')
