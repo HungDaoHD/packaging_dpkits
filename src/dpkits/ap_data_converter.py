@@ -156,7 +156,9 @@ class APDataConverter:
 
             df_data_header = df_data.iloc[[3, 4, 5], :].copy().T
             df_data_header.loc[((pd.isnull(df_data_header[3])) & (df_data_header[5] == 'Images')), 3] = ['Images']
-            df_data_header[3].fillna(method='ffill', inplace=True)
+            # df_data_header[3].fillna(method='ffill', inplace=True)
+
+            df_data_header[3].ffill(inplace=True)
 
             df_temp = df_data_header.loc[
                       (df_data_header[3].duplicated(keep=False)) & ~(pd.isnull(df_data_header[3])) & ~(

@@ -17,6 +17,8 @@ from table_formater import TableFormatter
 # from dpkits.ap_data_converter import APDataConverter
 # from dpkits.calculate_lsm import LSMCalculation
 # from dpkits.data_transpose import DataTranspose
+# from dpkits.table_generator import DataTableGenerator
+# from dpkits.table_formater import TableFormatter
 
 
 # Call Class APDataConverter with file_name
@@ -94,40 +96,40 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 
-# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
-dict_dfs = {
-    1: {
-        'data': df_data,
-        'info': df_info,
-        'tail_name': 'byCode',
-        'sheet_name': 'byCode',
-        'is_recode_to_lbl': False,
-    },
-    2: {
-        'data': df_data,
-        'info': df_info,
-        'tail_name': 'byLabel',
-        'sheet_name': 'byLabel',
-        'is_recode_to_lbl': True,
-    },
-    3: {
-        'data': df_data_stack,
-        'info': df_info_stack,
-        'tail_name': 'stack',
-        'sheet_name': 'stack',
-        'is_recode_to_lbl': False,
-    },
-    4: {
-        'data': df_data_unstack,
-        'info': df_info_unstack,
-        'tail_name': 'unstack',
-        'sheet_name': 'unstack',
-        'is_recode_to_lbl': False,
-    },
-}
-
-converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
-# ----------------------------------------------------------------------------------------------------------------------
+# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# dict_dfs = {
+#     1: {
+#         'data': df_data,
+#         'info': df_info,
+#         'tail_name': 'byCode',
+#         'sheet_name': 'byCode',
+#         'is_recode_to_lbl': False,
+#     },
+#     2: {
+#         'data': df_data,
+#         'info': df_info,
+#         'tail_name': 'byLabel',
+#         'sheet_name': 'byLabel',
+#         'is_recode_to_lbl': True,
+#     },
+#     3: {
+#         'data': df_data_stack,
+#         'info': df_info_stack,
+#         'tail_name': 'stack',
+#         'sheet_name': 'stack',
+#         'is_recode_to_lbl': False,
+#     },
+#     4: {
+#         'data': df_data_unstack,
+#         'info': df_info_unstack,
+#         'tail_name': 'unstack',
+#         'sheet_name': 'unstack',
+#         'is_recode_to_lbl': False,
+#     },
+# }
+#
+# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
+# # ----------------------------------------------------------------------------------------------------------------------
 
 
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
@@ -185,68 +187,69 @@ lst_header_qres = [
             "qre_lbl": "Age",
             "cats": {
                 'TOTAL': 'TOTAL',
-                '1': 'Dưới 18', '2': '18 - 24', '3': '25 - 30', '4': '31 - 39', '5': '40 - 50', '6': 'Trên 50'
+                # '1': 'Dưới 18',
+                '2': '18 - 24', '3': '25 - 30', '4': '31 - 39', '5': '40 - 50', '6': 'Trên 50'
             }
         },
-        {
-            "qre_name": "City",
-            "qre_lbl": "Location",
-            "cats": {
-                '1': 'TP. Hồ Chí Minh',
-                '2': 'Hà Nội',
-                '3': 'Đà Nẵng',
-                '4': 'Hải Phòng',
-                '5': 'Cần Thơ',
-            }
-        },
-        {
-            "qre_name": "@City2",
-            "qre_lbl": "Location",
-            "cats": {
-                'City.isin([1, 5, 10, 11, 12])': 'All South',
-                'City.isin([2, 4, 16, 17, 18])': 'All North',
-                'City.isin([13, 14, 15])': 'Other Cities and Mid',
-            }
-        },
-        {
-            "qre_name": "HHI",
-            "qre_lbl": "HHI",
-            "cats": {
-                '1': 'Dưới 4,000,000 VND',
-                '2': '4,000,000 - 9,000,000 VND',
-                '3': '9,000,001 - 14,000,000 VND',
-                '4': '14,000,001 - 20,000,000 VND',
-                '5': 'Trên 20,000,000 VND'
-            }
-        },
-        {
-            "qre_name": "$KidAge",
-            "qre_lbl": "Kid age",
-            "cats": {
-                '1': 'Dưới 5 tuổi',
-                '2': '5 - 7 tuổi',
-                '3': '8 - 10 tuổi',
-                '4': '11 - 13 tuổi',
-                '5': '14 - 16 tuổi',
-                '6': 'Trên 16 tuổi'
-            }
-        },
-        {
-            "qre_name": "Awareness1",
-            "qre_lbl": "Bạn đã bao giờ đi gặp các chuyên gia chăm sóc răng miệng (nha sĩ, bác sĩ) chưa?",
-            "cats": {'1': 'Rồi', '2': 'Chưa bao giờ'}
-        },
-        {
-            "qre_name": "Awareness2",
-            "qre_lbl": "P/S có tổng đài chăm sóc răng miệng miễn phí, nhằm giúp bạn có thể được tư vấn về sức khỏe răng miệng miễn phí ngay tại nhà. Bạn có thể trò chuyện trực tiếp với Chuyên Gia chăm sóc răng miệng là các nha sĩ, bác sĩ Răng Hàm Mặt khi liên hệ hai tổng đài trên. Bạn có biết đến thông tin này hay không?",
-            "cats": {'1': 'Có', '2': 'Không'}
-        },
-        {
-            "qre_name": "Perception",
-            "qre_lbl": "Vui lòng cho biết mức độ đồng ý của bạn với nhận định P/S đang nỗ lực để người dân dễ dàng tiếp cận hơn với chuyên gia, nha sỹ, nhằm mục đích cải thiện sức khỏe răng miệng của người Việt Nam?",
-            "cats": {'1': 'Hoàn toàn không đồng ý', '2': 'Không đồng ý', '3': 'Trung lập', '4': 'Đồng ý',
-                     '5': 'Hoàn toàn đồng ý'}
-        },
+        # {
+        #     "qre_name": "City",
+        #     "qre_lbl": "Location",
+        #     "cats": {
+        #         'TOTAL': 'TOTAL',
+        #         '1': 'TP. Hồ Chí Minh',
+        #         '2': 'Hà Nội',
+        #         '3': 'Đà Nẵng',
+        #         '4': 'Hải Phòng',
+        #         '5': 'Cần Thơ',
+        #     }
+        # },
+        # {
+        #     "qre_name": "@City2",
+        #     "qre_lbl": "Location",
+        #     "cats": {
+        #         'City.isin([1, 5, 10, 11, 12])': 'All South',
+        #         'City.isin([2, 4, 16, 17, 18])': 'All North',
+        #     }
+        # },
+        # {
+        #     "qre_name": "HHI",
+        #     "qre_lbl": "HHI",
+        #     "cats": {
+        #         # '1': 'Dưới 4,000,000 VND',
+        #         '2': '4,000,000 - 9,000,000 VND',
+        #         '3': '9,000,001 - 14,000,000 VND',
+        #         '4': '14,000,001 - 20,000,000 VND',
+        #         '5': 'Trên 20,000,000 VND'
+        #     }
+        # },
+        # {
+        #     "qre_name": "$KidAge",
+        #     "qre_lbl": "Kid age",
+        #     "cats": {
+        #         '1': 'Dưới 5 tuổi',
+        #         '2': '5 - 7 tuổi',
+        #         '3': '8 - 10 tuổi',
+        #         '4': '11 - 13 tuổi',
+        #         '5': '14 - 16 tuổi',
+        #         '6': 'Trên 16 tuổi'
+        #     }
+        # },
+        # {
+        #     "qre_name": "Awareness1",
+        #     "qre_lbl": "Bạn đã bao giờ đi gặp các chuyên gia chăm sóc răng miệng (nha sĩ, bác sĩ) chưa?",
+        #     "cats": {'1': 'Rồi', '2': 'Chưa bao giờ'}
+        # },
+        # {
+        #     "qre_name": "Awareness2",
+        #     "qre_lbl": "P/S có tổng đài chăm sóc răng miệng miễn phí, nhằm giúp bạn có thể được tư vấn về sức khỏe răng miệng miễn phí ngay tại nhà. Bạn có thể trò chuyện trực tiếp với Chuyên Gia chăm sóc răng miệng là các nha sĩ, bác sĩ Răng Hàm Mặt khi liên hệ hai tổng đài trên. Bạn có biết đến thông tin này hay không?",
+        #     "cats": {'1': 'Có', '2': 'Không'}
+        # },
+        # {
+        #     "qre_name": "Perception",
+        #     "qre_lbl": "Vui lòng cho biết mức độ đồng ý của bạn với nhận định P/S đang nỗ lực để người dân dễ dàng tiếp cận hơn với chuyên gia, nha sỹ, nhằm mục đích cải thiện sức khỏe răng miệng của người Việt Nam?",
+        #     "cats": {'1': 'Hoàn toàn không đồng ý', '2': 'Không đồng ý', '3': 'Trung lập', '4': 'Đồng ý',
+        #              '5': 'Hoàn toàn đồng ý'}
+        # },
 
     ],
 ]

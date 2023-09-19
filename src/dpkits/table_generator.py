@@ -773,8 +773,7 @@ class DataTableGenerator:
 
 
     @staticmethod
-    def mark_sig_to_df_qre(df_qre: pd.DataFrame, dict_pair_to_sig: dict, sig_pair: list, dict_header_col_name: dict,
-                           sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
+    def mark_sig_to_df_qre(df_qre: pd.DataFrame, dict_pair_to_sig: dict, sig_pair: list, dict_header_col_name: dict, sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
 
         if not lst_sig_lvl or not sig_type or not dict_pair_to_sig:
             return df_qre
@@ -784,7 +783,7 @@ class DataTableGenerator:
 
         df_left, df_right = dict_pair_to_sig[sig_pair[0]], dict_pair_to_sig[sig_pair[1]]
 
-        if df_left.shape[0] < 30 > df_right.shape[0]:
+        if df_left.shape[0] < 30 or df_right.shape[0] < 30:
             return df_qre
 
         is_df_left_null = df_left.isnull().values.all()
@@ -794,10 +793,17 @@ class DataTableGenerator:
             return df_qre
 
         try:
-            if df_left.mean()[0] == 0 or df_right.mean()[0] == 0:
+            if df_left.mean().iloc[0] == 0 or df_right.mean().iloc[0] == 0:
                 return df_qre
+
+            if df_left.mean().iloc[0] == 1 and df_right.mean().iloc[0] == 1:
+                return df_qre
+
         except Exception:
             if df_left.mean() == 0 or df_right.mean() == 0:
+                return df_qre
+
+            if df_left.mean() == 1 and df_right.mean() == 1:
                 return df_qre
 
         if sig_type == 'rel':
@@ -806,7 +812,10 @@ class DataTableGenerator:
 
             sigResult = stats.ttest_rel(df_left, df_right)
         else:
-            sigResult = stats.ttest_ind(df_left, df_right)
+            sigResult = stats.ttest_ind_from_stats(
+                mean1=df_left.mean(), std1=df_left.std(), nobs1=df_left.shape[0],
+                mean2=df_right.mean(), std2=df_right.std(), nobs2=df_right.shape[0]
+            )
 
         if sigResult.pvalue:
             if sigResult.statistic > 0:
@@ -927,6 +936,8 @@ class DataTableGenerator:
 
 
         df_tbl = pd.DataFrame.from_dict(dict_tbl_data)
+
+        df_tbl['qre_lbl'] = df_tbl['qre_lbl'].astype('object')
 
         df_tbl.loc[1:4, ['qre_lbl']] = [
             f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}",
