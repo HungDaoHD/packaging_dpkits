@@ -336,9 +336,10 @@ class DataTableGenerator:
                 'var_name': var_name,
                 'var_lbl': qre['qre_lbl'].replace('{lbl}', df_qre_info.at[0, 'var_lbl']) if 'qre_lbl' in qre.keys() else df_qre_info.at[0, 'var_lbl'],
                 'var_type': 'MA_comb' if '#combine' in qre['qre_name'] else df_qre_info.at[0, 'var_type'],
-                'val_lbl': df_qre_info.at[0, 'val_lbl'],
+                'val_lbl': qre['cats'] if 'cats' in qre.keys() else df_qre_info.at[0, 'val_lbl'],
                 'qre_fil': qre['qre_filter'] if 'qre_filter' in qre.keys() else "",
                 'lst_qre_col': lst_qre_col,
+                'mean': qre['mean'] if 'mean' in qre.keys() else {},
             }
 
             df_info = pd.concat([df_info, pd.DataFrame(columns=list(dict_row.keys()), data=[list(dict_row.values())])], axis=0, ignore_index=True)
@@ -521,7 +522,7 @@ class DataTableGenerator:
 
     def add_sa_qre_mean_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
                                    qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                                   sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
+                                   sig_type: str, lst_sig_lvl: list, mean_factor: dict) -> pd.DataFrame:
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -540,6 +541,9 @@ class DataTableGenerator:
         })
 
         org_qre_name = qre_name.replace('_Mean', '')
+
+        if mean_factor:
+            df_data.replace(mean_factor, inplace=True)
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
@@ -957,6 +961,7 @@ class DataTableGenerator:
             qre_fil = df_info.at[idx, 'qre_fil']
             lst_qre_col = df_info.at[idx, 'lst_qre_col']
 
+
             print(qre_name)
 
             # if qre_name == 'Q2_OL_Com':
@@ -1000,7 +1005,11 @@ class DataTableGenerator:
                 if qre_name in self.dict_unnetted_qres.keys():
                     qre_val_unnetted = self.dict_unnetted_qres[qre_name]
                 else:
-                    qre_val_unnetted = qre_val
+                    if 'net_code' in qre_val.keys():
+                        self.dict_unnetted_qres.update({qre_name: self.unnetted_qre_val(qre_val)})
+                        qre_val_unnetted = self.dict_unnetted_qres[qre_name]
+                    else:
+                        qre_val_unnetted = qre_val
 
                 qre_info['qre_val'] = qre_val_unnetted
 
@@ -1015,18 +1024,24 @@ class DataTableGenerator:
 
                                 lst_sub_cat = list(net_val.keys())
 
-                                net_cat_val = net_cat.split('|')[0]
-                                net_cat_lbl = net_cat.split('|')[-1]
+                                net_cat_val, net_cat_type, net_cat_lbl = net_cat.split('|')
 
                                 df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
 
-                                for cat2, lbl2 in net_val.items():
-                                    df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, lbl2)
+                                if 'NET' in net_cat_type.upper():
+                                    for cat2, lbl2 in net_val.items():
+                                        df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
                             else:
                                 df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
 
                     else:
                         df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
+
+
+                mean_factor = df_info.at[idx, 'mean']
+                if mean_factor.keys():
+                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor)
+
 
             elif qre_type in ['MEAN']:
 
@@ -1049,7 +1064,14 @@ class DataTableGenerator:
                 if f'{qre_name}_1' in self.dict_unnetted_qres.keys() and f'{qre_name}_2' in self.dict_unnetted_qres.keys():
                     qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
                 else:
-                    qre_val_unnetted = qre_val
+                    if f'{qre_name}_1' in self.dict_unnetted_qres.keys():
+                        qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
+                    else:
+                        if 'net_code' in qre_val.keys():
+                            self.dict_unnetted_qres.update({f'{qre_name}_1': self.unnetted_qre_val(qre_val)})
+                            qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
+                        else:
+                            qre_val_unnetted = qre_val
 
                 qre_info['qre_val'] = qre_val_unnetted
 
@@ -1065,13 +1087,14 @@ class DataTableGenerator:
                                 lst_sub_cat = list(net_val.keys())
 
                                 # "900001|combine|POSITIVE (NET)"
-                                list_net_cat = net_cat.split('|')
+                                # list_net_cat = net_cat.split('|')
+                                net_cat_val, net_cat_type, net_cat_lbl = net_cat.split('|')
 
-                                df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, list_net_cat[0], list_net_cat[2], lst_sub_cat)
+                                df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
 
-                                if 'NET' in list_net_cat[1].upper():
+                                if 'NET' in net_cat_type.upper():
                                     for cat2, lbl2 in net_val.items():
-                                        df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, lbl2)
+                                        df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
 
                             else:
                                 df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)

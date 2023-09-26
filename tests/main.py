@@ -170,13 +170,55 @@ lst_side_qres = [
     {"qre_name": "$Q12"},
     {"qre_name": "$Q13"},
     {"qre_name": "$Q14"},
-    {"qre_name": "$Q15"},
+    # {"qre_name": "$Q15"},
     {"qre_name": "Awareness1"},
     {"qre_name": "Frequency"},
     {"qre_name": "Awareness2"},
-    {"qre_name": "Perception"},
-    # {"qre_name": "Perception_Group"},
-    # {"qre_name": "Perception_Mean"},
+    # {"qre_name": "Perception"},
+
+
+    # MA Question with net/combine (can apply to SA questions)
+    {"qre_name": "$Q15", "cats": {
+        'net_code': {
+            '900001|combine|Group 1 + 2':{
+                '1': 'Yellow/dull teeth',
+                '3': 'Dental plaque',
+                '5': 'Bad breath',
+                '7': 'Aphthousulcer',
+                '2': 'Sensitive teeth',
+                '4': 'Caries',
+                '6': 'Gingivitis (bleeding, swollen gums)',
+            },
+            '900002|net|Group 1': {
+                '1': 'Yellow/dull teeth',
+                '3': 'Dental plaque',
+                '5': 'Bad breath',
+                '7': 'Aphthousulcer',
+            },
+            '900003|net|Group 2': {
+                '2': 'Sensitive teeth',
+                '4': 'Caries',
+                '6': 'Gingivitis (bleeding, swollen gums)',
+            },
+        },
+        '8': 'Other (specify)',
+        '9': 'No problem',
+    }},
+
+    # Scale question with full properties
+    {
+        "qre_name": "Perception",
+        "cats": {
+            '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
+            'net_code': {
+                '900001|combine|B2B': {'1': 'Totally disagree', '2': 'Disagree'},
+                '900002|combine|Medium': {'3': 'Neutral'},
+                '900003|combine|T2B': {'4': 'Agree', '5': 'Totally agree'},
+            }
+        },
+        "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    },
+
 
 ]
 
@@ -187,7 +229,6 @@ lst_header_qres = [
             "qre_lbl": "Age",
             "cats": {
                 'TOTAL': 'TOTAL',
-                # '1': 'Dưới 18',
                 '2': '18 - 24', '3': '25 - 30', '4': '31 - 39', '5': '40 - 50', '6': 'Trên 50'
             }
         },
@@ -260,7 +301,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Tbl_1_Pct',
-            # 'Tbl_1_Count',
+            'Tbl_1_Count',
         ],
         'tables_format': {
 
