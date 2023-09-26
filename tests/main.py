@@ -1,24 +1,24 @@
 import pandas as pd
 
 
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
-from fastapi import UploadFile
-import sys
-sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# from fastapi import UploadFile
+# import sys
+# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+#
+# from ap_data_converter import APDataConverter
+# from calculate_lsm import LSMCalculation
+# from data_transpose import DataTranspose
+# from table_generator import DataTableGenerator
+# from table_formater import TableFormatter
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
-from ap_data_converter import APDataConverter
-from calculate_lsm import LSMCalculation
-from data_transpose import DataTranspose
-from table_generator import DataTableGenerator
-from table_formater import TableFormatter
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
-
-# from dpkits.ap_data_converter import APDataConverter
-# from dpkits.calculate_lsm import LSMCalculation
-# from dpkits.data_transpose import DataTranspose
-# from dpkits.table_generator import DataTableGenerator
-# from dpkits.table_formater import TableFormatter
+from dpkits.ap_data_converter import APDataConverter
+from dpkits.calculate_lsm import LSMCalculation
+from dpkits.data_transpose import DataTranspose
+from dpkits.table_generator import DataTableGenerator
+from dpkits.table_formater import TableFormatter
 
 
 # Call Class APDataConverter with file_name
@@ -34,14 +34,11 @@ converter = APDataConverter(file_name='APDataTest.xlsx')
 
 df_data, df_info = converter.convert_df_mc()  # Use 'converter.convert_df_md()' if you need md data
 
-# LSM 6 CALCULATION - Only use for Unilever project which has LSM questions
+# LSM 6 CALCULATION - Only use for Unilever projects which has LSM questions
 df_data, df_info = LSMCalculation.cal_lsm_6(df_data, df_info)
 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
-
-
-
 
 
 # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
@@ -95,7 +92,6 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 
-
 # # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
 # dict_dfs = {
 #     1: {
@@ -133,7 +129,7 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
-dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name='table_test.xlsx', lst_qre_group=[], lst_qre_mean=[], is_md=False)
+dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name='table_test.xlsx', lst_qre_group=[], lst_qre_mean=[], is_md=False)
 
 lst_side_qres = [
     {"qre_name": "CC1"},
@@ -295,13 +291,61 @@ lst_header_qres = [
     ],
 ]
 
+lst_side_qres_sig = [
+    {
+        "qre_name": "Q1",
+        "cats": {
+            '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
+            'net_code': {
+                '900001|combine|B2B': {'1': 'Totally disagree', '2': 'Disagree'},
+                '900002|combine|Medium': {'3': 'Neutral'},
+                '900003|combine|T2B': {'4': 'Agree', '5': 'Totally agree'},
+            }
+        },
+        "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    },
+    {
+        "qre_name": "Q3",
+        "cats": {
+            '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
+            'net_code': {
+                '900001|combine|B2B': {'1': '', '2': ''},
+                '900002|combine|Medium': {'3': ''},
+                '900003|combine|T2B': {'4': '', '5': ''},
+            }
+        },
+        "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    },
+
+]
+
+lst_header_qres_sig = [
+    [
+        {
+            "qre_name": "Age",
+            "qre_lbl": "Age",
+            "cats": {
+                'TOTAL': 'TOTAL',
+                '2': '18 - 24', '3': '25 - 30', '4': '31 - 39', '5': '40 - 50', '6': 'Trên 50'
+            }
+        },
+    ],
+    [
+        {
+            "qre_name": "Ma_SP",
+            "qre_lbl": "Ma_SP",
+            "cats": {'1': 'AAA', '2': 'BBB'}
+        },
+    ],
+]
 
 lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Tbl_1_Pct',
-            'Tbl_1_Count',
+            # 'Tbl_1_Pct',
+            # 'Tbl_1_Count',
+            'Tbl_sig',
         ],
         'tables_format': {
 
@@ -335,6 +379,20 @@ lst_func_to_run = [
                 "lst_header_qres": lst_header_qres
             },
 
+            "Tbl_sig": {
+                "tbl_name": "Table Sig - Pct",
+                "tbl_filter": "City > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
+                "is_hide_oe_zero_cats": 1,
+                "sig_test_info": {
+                    "sig_type": "ind",
+                    "sig_cols": [],
+                    "lst_sig_lvl": [90, 95]
+                },
+                "lst_side_qres": lst_side_qres_sig,
+                "lst_header_qres": lst_header_qres_sig
+            },
         },
 
     },
