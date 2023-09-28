@@ -332,6 +332,8 @@ class APDataConverter:
         df_data_output.replace({None: np.nan}, inplace=True)
         df_info_output.reset_index(drop=True, inplace=True)
 
+        df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
+
         return df_data_output, df_info_output
 
 
@@ -466,6 +468,8 @@ class APDataConverter:
 
         # dfQreInfo.set_index('var_name', inplace=True)
         df_info_output.reset_index(drop=True, inplace=True)
+
+        df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
 
         return df_data_output, df_info_output
 
@@ -636,7 +640,20 @@ class APDataConverter:
 
 
 
+    @staticmethod
+    def auto_convert_ft_to_float(df_data: pd.DataFrame, df_info: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
+        df_info_fil = df_info.query("var_type == 'FT' & var_name != 'ID' & not var_name.str.contains('_o')")
+
+        for col_name in df_info_fil['var_name'].values.tolist():
+            try:
+                df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='float')
+                print(f'Convert {col_name} from FT to NUM type')
+            except Exception:
+                print(f'Cannot convert {col_name} from FT to NUM type')
+                continue
+
+        return df_data, df_info
 
 
 

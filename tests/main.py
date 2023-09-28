@@ -1,24 +1,26 @@
 import pandas as pd
 
 
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-# from fastapi import UploadFile
-# import sys
-# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-#
-# from ap_data_converter import APDataConverter
-# from calculate_lsm import LSMCalculation
-# from data_transpose import DataTranspose
-# from table_generator import DataTableGenerator
-# from table_formater import TableFormatter
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+from fastapi import UploadFile
+import sys
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+
+from ap_data_converter import APDataConverter
+from calculate_lsm import LSMCalculation
+from data_transpose import DataTranspose
+from table_generator import DataTableGenerator
+from table_formater import TableFormatter
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
-from dpkits.ap_data_converter import APDataConverter
-from dpkits.calculate_lsm import LSMCalculation
-from dpkits.data_transpose import DataTranspose
-from dpkits.table_generator import DataTableGenerator
-from dpkits.table_formater import TableFormatter
+# from dpkits.ap_data_converter import APDataConverter
+# from dpkits.calculate_lsm import LSMCalculation
+# from dpkits.data_transpose import DataTranspose
+# from dpkits.table_generator import DataTableGenerator
+# from dpkits.table_formater import TableFormatter
+
+
 
 
 # Call Class APDataConverter with file_name
@@ -34,12 +36,18 @@ converter = APDataConverter(file_name='APDataTest.xlsx')
 
 df_data, df_info = converter.convert_df_mc()  # Use 'converter.convert_df_md()' if you need md data
 
-# LSM 6 CALCULATION - Only use for Unilever projects which has LSM questions
+# LSM 6 CALCULATION - Only use for Unilever projects which have LSM questions
 df_data, df_info = LSMCalculation.cal_lsm_6(df_data, df_info)
 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
 
+
+# df_data['City_o6'] = pd.to_numeric(df_data['City_o6'], downcast="float")
+#
+# df_data['CC8'] = pd.to_numeric(df_data['CC8'], downcast="float")
+#
+# here = 1
 
 # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
 
@@ -129,7 +137,14 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
-dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name='table_test.xlsx', lst_qre_group=[], lst_qre_mean=[], is_md=False)
+df_data_tbl = pd.concat([df_data, df_data_stack], axis=0)
+df_info_tbl = pd.concat([df_info, df_info_stack], axis=0)
+
+
+df_data_tbl.reset_index(drop=True, inplace=True)
+df_info_tbl.reset_index(drop=True, inplace=True)
+
+dtg = DataTableGenerator(df_data=df_data_tbl, df_info=df_info_tbl, xlsx_name='table_test.xlsx', lst_qre_group=[], lst_qre_mean=[], is_md=False)
 
 lst_side_qres = [
     {"qre_name": "CC1"},
@@ -343,15 +358,15 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            # 'Tbl_1_Pct',
-            # 'Tbl_1_Count',
-            'Tbl_sig',
+            'Tbl_1_Pct',  # this table use df_data & df_info to run
+            'Tbl_1_Count',  # this table use df_data & df_info to run
+            'Tbl_sig',  # this table use df_data_stack & df_info_stack to run
         ],
         'tables_format': {
 
             "Tbl_1_Pct": {
                 "tbl_name": "Table 1 - Pct",
-                "tbl_filter": "City > 0",
+                "tbl_filter": "City > 0 & Ma_SP.isnull()",
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
@@ -366,7 +381,7 @@ lst_func_to_run = [
 
             "Tbl_1_Count": {
                 "tbl_name": "Table 1 - Count",
-                "tbl_filter": "City > 0",
+                "tbl_filter": "City > 0 & Ma_SP.isnull()",
                 "is_count": 1,
                 "is_pct_sign": 0,
                 "is_hide_oe_zero_cats": 1,
@@ -381,12 +396,12 @@ lst_func_to_run = [
 
             "Tbl_sig": {
                 "tbl_name": "Table Sig - Pct",
-                "tbl_filter": "City > 0",
+                "tbl_filter": "City > 0 & Ma_SP > 0",
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "sig_test_info": {
-                    "sig_type": "ind",
+                    "sig_type": "rel",
                     "sig_cols": [],
                     "lst_sig_lvl": [90, 95]
                 },
@@ -404,4 +419,6 @@ dtf = TableFormatter(xlsx_name='table_test.xlsx')
 dtf.format_sig_table()
 # ----------------------------------------------------------------------------------------------------------------------
 
+
 print('\n==>TESTING PROCESS DONE')
+
