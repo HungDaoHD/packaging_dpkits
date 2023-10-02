@@ -228,14 +228,14 @@ class APDataConverter:
             if '.sav' in file.filename:
                 # this function is pending
                 self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
-                self.zip_name = file.filename.replace('.sav', '.zip')
+                self.zip_name = file.filename.replace('.sav', '_Data.zip')
             else:
                 self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
-                self.zip_name = file.filename.replace('.xlsx', '.zip')
+                self.zip_name = file.filename.replace('.xlsx', '_Data.zip')
 
         else:
             self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
-            self.zip_name = self.str_file_name.replace('.xlsx', '.zip')
+            self.zip_name = self.str_file_name.replace('.xlsx', '_Data.zip')
 
             df_data_converted_merge = pd.DataFrame()
             df_info_converted_merge = pd.DataFrame()

@@ -86,8 +86,9 @@ class DataTableGenerator:
 
     def run_tables_by_js_files(self, lst_func_to_run: list):
 
-        self.add_group()
-        self.add_mean()
+        # TODO: Update new way to run group and mean so these functions need to remove
+        # self.add_group()
+        # self.add_mean()
 
         if os.path.exists(self.file_name):
             os.remove(self.file_name)
@@ -340,24 +341,11 @@ class DataTableGenerator:
                 'qre_fil': qre['qre_filter'] if 'qre_filter' in qre.keys() else "",
                 'lst_qre_col': lst_qre_col,
                 'mean': qre['mean'] if 'mean' in qre.keys() else {},
+                'sort': qre['sort'] if 'sort' in qre.keys() else ''
             }
 
             df_info = pd.concat([df_info, pd.DataFrame(columns=list(dict_row.keys()), data=[list(dict_row.values())])], axis=0, ignore_index=True)
             # ----------------------------------------------------------------------------------------------------------
-
-            # # OLD
-            # dict_row = {
-            #     'var_name': "",
-            #     'var_lbl': qre['qre_lbl'].replace('{lbl}', df_qre_info.at[0, 'var_lbl']) if 'qre_lbl' in qre.keys() else df_qre_info.at[0, 'var_lbl'],
-            #     'var_type': 'MA_comb' if '#combine' in qre['qre_name'] else df_qre_info.at[0, 'var_type'],
-            #     'val_lbl': {},
-            #     'qre_fil': qre['qre_filter'] if 'qre_filter' in qre.keys() else "",
-            #     'lst_col': lst_qre_col,
-            # }
-            # for idx, col in enumerate(lst_qre_col):
-            #     dict_row['var_name'] = col
-            #     dict_row['val_lbl'] = df_qre_info.at[idx, 'val_lbl']
-            #     df_info = pd.concat([df_info, pd.DataFrame(columns=list(dict_row.keys()), data=[list(dict_row.values())])], axis=0, ignore_index=True)
 
 
         # Maximum 5 levels of header
@@ -1042,15 +1030,14 @@ class DataTableGenerator:
                 if mean_factor.keys():
                     df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor)
 
-
-            elif qre_type in ['MEAN']:
-
-                df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl)
-
-            elif qre_type in ['GROUP']:
-
-                for cat, lbl in qre_val['cats'].items():
-                    df_qre = self.add_sa_qre_group_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
+            # elif qre_type in ['MEAN']:
+            #
+            #     df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl)
+            #
+            # elif qre_type in ['GROUP']:
+            #
+            #     for cat, lbl in qre_val['cats'].items():
+            #         df_qre = self.add_sa_qre_group_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
 
             elif qre_type in ['NUM']:
 
@@ -1102,6 +1089,23 @@ class DataTableGenerator:
                     else:
                         df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
 
+
+            # SORTING---------------------------------------------------------------------------------------------------
+            sort_opt = df_info.at[idx, 'sort']
+
+            if sort_opt:
+                is_asc = True if sort_opt == 'asc' else False
+                base_val = -999_999_999 if sort_opt == 'asc' else 999_999_999
+
+                df_qre['sort_col'] = df_qre[df_qre.columns.tolist()[5]]
+                df_qre.loc[df_qre['cat_val'] == 'base', 'sort_col'] = base_val
+
+                df_qre.sort_values(by=['sort_col'], ascending=is_asc, inplace=True, ignore_index=True)
+                df_qre.drop(columns=['sort_col'], inplace=True)
+
+            # END SORTING-----------------------------------------------------------------------------------------------
+            
+            
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
 
         return df_tbl
