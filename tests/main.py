@@ -1,23 +1,27 @@
 import pandas as pd
 
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
-from fastapi import UploadFile
-import sys
-sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
 
-from ap_data_converter import APDataConverter
-from calculate_lsm import LSMCalculation
-from data_transpose import DataTranspose
-from table_generator import DataTableGenerator
-from table_formater import TableFormatter
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+from dpkits.ap_data_converter import APDataConverter
+from dpkits.calculate_lsm import LSMCalculation
+from dpkits.data_transpose import DataTranspose
+from dpkits.table_generator import DataTableGenerator
+from dpkits.table_formater import TableFormatter
 
 
-# from dpkits.ap_data_converter import APDataConverter
-# from dpkits.calculate_lsm import LSMCalculation
-# from dpkits.data_transpose import DataTranspose
-# from dpkits.table_generator import DataTableGenerator
-# from dpkits.table_formater import TableFormatter
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# from fastapi import UploadFile
+# import sys
+# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+#
+# from ap_data_converter import APDataConverter
+# from calculate_lsm import LSMCalculation
+# from data_transpose import DataTranspose
+# from table_generator import DataTableGenerator
+# from table_formater import TableFormatter
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+
+
 
 
 
@@ -45,6 +49,9 @@ df_data, df_info = LSMCalculation.cal_lsm_6(df_data, df_info)
 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
+
+df_data.to_excel('df_data.xlsx')
+df_info.to_excel('df_info.xlsx')
 
 
 # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
