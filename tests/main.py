@@ -21,11 +21,14 @@ from table_formater import TableFormatter
 
 
 
-
+# Define input/output files name
 str_file_name = 'APDataTest'
+str_tbl_file_name = f'{str_file_name}_Topline.xlsx'
+
 
 # Call Class APDataConverter with file_name
 converter = APDataConverter(file_name=f'{str_file_name}.xlsx')
+
 
 # convert input file to dataframe
 # df_data: contains data as pandas dataframe
@@ -55,7 +58,7 @@ df_info = pd.DataFrame(df_info)
 # df_data.loc[df_data['Q0a_RespondentID'] == 1001, ['Q0b_Name']] = ['new']
 
 
-# TRANSPOSE TO STACK
+# TRANSPOSE TO STACK----------------------------------------------------------------------------------------------------
 dict_stack_structure = {
     'id_col': 'ResID',
     'sp_col': 'Ma_SP',
@@ -80,7 +83,7 @@ dict_stack_structure = {
 df_data_stack, df_info_stack = DataTranspose.to_stack(df_data, df_info, dict_stack_structure)
 
 
-# TRANSPOSE TO UNSTACK
+# TRANSPOSE TO UNSTACK--------------------------------------------------------------------------------------------------
 dict_unstack_structure = {
     'id_col': 'ResID',
     'sp_col': 'Ma_SP',
@@ -91,140 +94,136 @@ dict_unstack_structure = {
 
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
-# ----------------------------------------------------------------------------------------------------------------------
 
 
+# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+dict_dfs = {
+    1: {
+        'data': df_data,
+        'info': df_info,
+        'tail_name': 'ByCode',
+        'sheet_name': 'ByCode',
+        'is_recode_to_lbl': False,
+    },
+    2: {
+        'data': df_data,
+        'info': df_info,
+        'tail_name': 'ByLabel',
+        'sheet_name': 'ByLabel',
+        'is_recode_to_lbl': True,
+    },
+    3: {
+        'data': df_data_stack,
+        'info': df_info_stack,
+        'tail_name': 'Stack',
+        'sheet_name': 'Stack',
+        'is_recode_to_lbl': False,
+    },
+    4: {
+        'data': df_data_unstack,
+        'info': df_info_unstack,
+        'tail_name': 'Unstack',
+        'sheet_name': 'Unstack',
+        'is_recode_to_lbl': False,
+    },
+}
 
-# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
-# dict_dfs = {
-#     1: {
-#         'data': df_data,
-#         'info': df_info,
-#         'tail_name': 'ByCode',
-#         'sheet_name': 'ByCode',
-#         'is_recode_to_lbl': False,
-#     },
-#     2: {
-#         'data': df_data,
-#         'info': df_info,
-#         'tail_name': 'ByLabel',
-#         'sheet_name': 'ByLabel',
-#         'is_recode_to_lbl': True,
-#     },
-#     3: {
-#         'data': df_data_stack,
-#         'info': df_info_stack,
-#         'tail_name': 'Stack',
-#         'sheet_name': 'Stack',
-#         'is_recode_to_lbl': False,
-#     },
-#     4: {
-#         'data': df_data_unstack,
-#         'info': df_info_unstack,
-#         'tail_name': 'Unstack',
-#         'sheet_name': 'Unstack',
-#         'is_recode_to_lbl': False,
-#     },
-# }
-#
-#
-# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
-# # ----------------------------------------------------------------------------------------------------------------------
+
+converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
 
 
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
 df_data_tbl = pd.concat([df_data, df_data_stack], axis=0)
 df_info_tbl = pd.concat([df_info, df_info_stack], axis=0)
 
-
 df_data_tbl.reset_index(drop=True, inplace=True)
 df_info_tbl.reset_index(drop=True, inplace=True)
 
-dtg = DataTableGenerator(df_data=df_data_tbl, df_info=df_info_tbl, xlsx_name=f'{str_file_name}_Topline.xlsx', lst_qre_group=[], lst_qre_mean=[], is_md=False)
+dtg = DataTableGenerator(df_data=df_data_tbl, df_info=df_info_tbl, xlsx_name=str_tbl_file_name, is_md=False)
 
 lst_side_qres = [
-    {"qre_name": "CC1", "sort": "asc"},
-    {"qre_name": "$CC3", "sort": "des"},
-    {"qre_name": "$CC4"},
-    # {"qre_name": "$CC6"},
-    # {"qre_name": "$CC10"},
-    # {"qre_name": "LSM"},
-    # {"qre_name": "Gender"},
-    # {"qre_name": "Age"},
-    # {"qre_name": "City"},
-    # {"qre_name": "HHI"},
-    # {"qre_name": "MaritalStatus"},
-    # {"qre_name": "$KidAge"},
-    # {"qre_name": "BannedIndustry"},
-    # {"qre_name": "Prohibited"},
-    # {"qre_name": "$Type"},
-    # {"qre_name": "Q9_1"},
-    # {"qre_name": "$Q10"},
-    # {"qre_name": "Q11_01"},
-    # {"qre_name": "Q11_02"},
-    # {"qre_name": "Q11_03"},
-    # {"qre_name": "Q11_04"},
-    # {"qre_name": "Q11_05"},
-    # {"qre_name": "Q11_06"},
-    # {"qre_name": "Q11_07"},
-    # {"qre_name": "Q11_08"},
-    # {"qre_name": "Q11_09"},
-    # {"qre_name": "Q11_10"},
-    # {"qre_name": "Q11_11"},
-    # {"qre_name": "Q11_12"},
-    # {"qre_name": "Q11_13"},
-    # {"qre_name": "Q11_14"},
-    # {"qre_name": "$Q12"},
-    # {"qre_name": "$Q13"},
-    # {"qre_name": "$Q14"},
-    # # {"qre_name": "$Q15"},
-    # {"qre_name": "Awareness1"},
-    # {"qre_name": "Frequency"},
-    # {"qre_name": "Awareness2"},
-    # # {"qre_name": "Perception"},
-    #
-    #
-    # # MA Question with net/combine (can apply to SA questions)
-    # {"qre_name": "$Q15", "cats": {
-    #     'net_code': {
-    #         '900001|combine|Group 1 + 2': {
-    #             '1': 'Yellow/dull teeth',
-    #             '3': 'Dental plaque',
-    #             '5': 'Bad breath',
-    #             '7': 'Aphthousulcer',
-    #             '2': 'Sensitive teeth',
-    #             '4': 'Caries',
-    #             '6': 'Gingivitis (bleeding, swollen gums)',
-    #         },
-    #         '900002|net|Group 1': {
-    #             '1': 'Yellow/dull teeth',
-    #             '3': 'Dental plaque',
-    #             '5': 'Bad breath',
-    #             '7': 'Aphthousulcer',
-    #         },
-    #         '900003|net|Group 2': {
-    #             '2': 'Sensitive teeth',
-    #             '4': 'Caries',
-    #             '6': 'Gingivitis (bleeding, swollen gums)',
-    #         },
-    #     },
-    #     '8': 'Other (specify)',
-    #     '9': 'No problem',
-    # }},
-    #
-    # # Scale question with full properties
-    # {
-    #     "qre_name": "Perception",
-    #     "cats": {
-    #         '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
-    #         'net_code': {
-    #             '900001|combine|B2B': {'1': 'Totally disagree', '2': 'Disagree'},
-    #             '900002|combine|Medium': {'3': 'Neutral'},
-    #             '900003|combine|T2B': {'4': 'Agree', '5': 'Totally agree'},
-    #         }
-    #     },
-    #     "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
-    # },
+    {"qre_name": "CC1", "sort": "des"},
+    {"qre_name": "$CC3", "sort": "asc"},
+    {"qre_name": "$CC4", "sort": "des"},
+    {"qre_name": "$CC6"},
+    {"qre_name": "$CC10"},
+    {"qre_name": "LSM"},
+    {"qre_name": "Gender"},
+    {"qre_name": "Age"},
+    {"qre_name": "City"},
+    {"qre_name": "HHI"},
+    {"qre_name": "MaritalStatus"},
+    {"qre_name": "$KidAge"},
+    {"qre_name": "BannedIndustry"},
+    {"qre_name": "Prohibited"},
+    {"qre_name": "$Type"},
+    {"qre_name": "Q9_1"},
+    {"qre_name": "$Q10"},
+    {"qre_name": "Q11_01"},
+    {"qre_name": "Q11_02"},
+    {"qre_name": "Q11_03"},
+    {"qre_name": "Q11_04"},
+    {"qre_name": "Q11_05"},
+    {"qre_name": "Q11_06"},
+    {"qre_name": "Q11_07"},
+    {"qre_name": "Q11_08"},
+    {"qre_name": "Q11_09"},
+    {"qre_name": "Q11_10"},
+    {"qre_name": "Q11_11"},
+    {"qre_name": "Q11_12"},
+    {"qre_name": "Q11_13"},
+    {"qre_name": "Q11_14"},
+    {"qre_name": "$Q12"},
+    {"qre_name": "$Q13"},
+    {"qre_name": "$Q14"},
+    # {"qre_name": "$Q15"},
+    {"qre_name": "Awareness1"},
+    {"qre_name": "Frequency"},
+    {"qre_name": "Awareness2"},
+    # {"qre_name": "Perception"},
+
+
+    # MA Question with net/combine (can apply to SA questions)
+    {"qre_name": "$Q15", "cats": {
+        'net_code': {
+            '900001|combine|Group 1 + 2': {
+                '1': 'Yellow/dull teeth',
+                '3': 'Dental plaque',
+                '5': 'Bad breath',
+                '7': 'Aphthousulcer',
+                '2': 'Sensitive teeth',
+                '4': 'Caries',
+                '6': 'Gingivitis (bleeding, swollen gums)',
+            },
+            '900002|net|Group 1': {
+                '1': 'Yellow/dull teeth',
+                '3': 'Dental plaque',
+                '5': 'Bad breath',
+                '7': 'Aphthousulcer',
+            },
+            '900003|net|Group 2': {
+                '2': 'Sensitive teeth',
+                '4': 'Caries',
+                '6': 'Gingivitis (bleeding, swollen gums)',
+            },
+        },
+        '8': 'Other (specify)',
+        '9': 'No problem',
+    }},
+
+    # Scale question with full properties
+    {
+        "qre_name": "Perception",
+        "cats": {
+            '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
+            'net_code': {
+                '900001|combine|B2B': {'1': 'Totally disagree', '2': 'Disagree'},
+                '900002|combine|Medium': {'3': 'Neutral'},
+                '900003|combine|T2B': {'4': 'Agree', '5': 'Totally agree'},
+            }
+        },
+        "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    },
 
 
 ]
@@ -411,9 +410,9 @@ lst_func_to_run = [
 
 dtg.run_tables_by_js_files(lst_func_to_run)
 
-dtf = TableFormatter(xlsx_name=f'{str_file_name}_Topline.xlsx')
+dtf = TableFormatter(xlsx_name=str_tbl_file_name)
 dtf.format_sig_table()
-# ----------------------------------------------------------------------------------------------------------------------
+
 
 
 

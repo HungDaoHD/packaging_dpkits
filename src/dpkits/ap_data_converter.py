@@ -260,10 +260,6 @@ class APDataConverter:
 
 
 
-
-
-
-
     @staticmethod
     def cleanhtml(raw_html) -> str:
 
@@ -572,7 +568,7 @@ class APDataConverter:
                 os.remove(f_name)
 
 
-    def generate_multiple_data_files(self, dict_dfs: dict, is_md: bool, is_export_sav: bool = True, is_export_xlsx: bool = True, is_zip: bool = True):
+    def generate_multiple_data_files(self, dict_dfs: dict, is_md: bool = False, is_export_sav: bool = True, is_export_xlsx: bool = True, is_zip: bool = True):
 
         lst_zip_file_name = list()
 
@@ -627,12 +623,6 @@ class APDataConverter:
 
                 if xlsx_name not in lst_zip_file_name:
                     lst_zip_file_name.extend([xlsx_name])
-
-        # if os.path.isfile(topline_name):
-        #     print(f'Add zip {topline_name}')
-        #     lst_zip_file_name.extend([topline_name])
-        # else:
-        #     print(Fore.YELLOW, f'Not found {topline_name}', Fore.RESET)
 
         if is_zip:
             print(f'Create {self.zip_name} with files: {", ".join(lst_zip_file_name)}')

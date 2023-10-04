@@ -9,7 +9,7 @@ from scipy import stats
 
 class DataTableGenerator:
 
-    def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, lst_qre_group: list, lst_qre_mean: list, is_md: bool = False):
+    def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, lst_qre_group: list = [], lst_qre_mean: list = [], is_md: bool = False):
 
         self.df_data = df_data.copy()
         self.df_info = df_info.copy()
