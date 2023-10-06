@@ -1,24 +1,24 @@
 import pandas as pd
 import numpy as np
 
-# from dpkits.ap_data_converter import APDataConverter
-# from dpkits.calculate_lsm import LSMCalculation
-# from dpkits.data_transpose import DataTranspose
-# from dpkits.table_generator import DataTableGenerator
-# from dpkits.table_formater import TableFormatter
+from dpkits.ap_data_converter import APDataConverter
+from dpkits.calculate_lsm import LSMCalculation
+from dpkits.data_transpose import DataTranspose
+from dpkits.table_generator import DataTableGenerator
+from dpkits.table_formater import TableFormatter
 
 
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
-from fastapi import UploadFile
-import sys
-sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-
-from ap_data_converter import APDataConverter
-from calculate_lsm import LSMCalculation
-from data_transpose import DataTranspose
-from table_generator import DataTableGenerator
-from table_formater import TableFormatter
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# from fastapi import UploadFile
+# import sys
+# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+#
+# from ap_data_converter import APDataConverter
+# from calculate_lsm import LSMCalculation
+# from data_transpose import DataTranspose
+# from table_generator import DataTableGenerator
+# from table_formater import TableFormatter
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
 
@@ -70,8 +70,6 @@ df_data.replace({
 
 
 df_data.loc[(df_data['Gender_new'] == 2) & (df_data['Age'] == 5),  ['Gender_new']] = [np.nan]
-
-
 df_info.loc[df_info['var_name'] == 'Q1_SP1', ['val_lbl']] = [{'1': 'a', '2': 'b', '3': 'c', '4': 'd', '5': 'e'}]
 
 
@@ -127,6 +125,30 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+# OE RUNNING------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+# NOT YET START
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -138,13 +160,13 @@ dict_dfs = {
         'sheet_name': 'ByCode',
         'is_recode_to_lbl': False,
     },
-    # 2: {
-    #     'data': df_data,
-    #     'info': df_info,
-    #     'tail_name': 'ByLabel',
-    #     'sheet_name': 'ByLabel',
-    #     'is_recode_to_lbl': True,
-    # },
+    2: {
+        'data': df_data,
+        'info': df_info,
+        'tail_name': 'ByLabel',
+        'sheet_name': 'ByLabel',
+        'is_recode_to_lbl': True,
+    },
     3: {
         'data': df_data_stack,
         'info': df_info_stack,
@@ -152,16 +174,17 @@ dict_dfs = {
         'sheet_name': 'Stack',
         'is_recode_to_lbl': False,
     },
-    # 4: {
-    #     'data': df_data_unstack,
-    #     'info': df_info_unstack,
-    #     'tail_name': 'Unstack',
-    #     'sheet_name': 'Unstack',
-    #     'is_recode_to_lbl': False,
-    # },
+    4: {
+        'data': df_data_unstack,
+        'info': df_info_unstack,
+        'tail_name': 'Unstack',
+        'sheet_name': 'Unstack',
+        'is_recode_to_lbl': False,
+    },
 }
 
-converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=False, is_export_xlsx=True, is_zip=False)
+# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
+converter.generate_multiple_data_files(dict_dfs=dict_dfs)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
