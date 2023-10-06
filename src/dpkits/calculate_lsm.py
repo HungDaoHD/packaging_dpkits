@@ -155,4 +155,7 @@ class LSMCalculation:
                                              ])],
                                         axis=0)
 
+        df_data_output.reset_index(drop=True, inplace=True)
+        df_qres_info_output.reset_index(drop=True, inplace=True)
+
         return df_data_output, df_qres_info_output
