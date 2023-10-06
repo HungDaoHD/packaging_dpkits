@@ -1,24 +1,24 @@
 import pandas as pd
 import numpy as np
 
-from dpkits.ap_data_converter import APDataConverter
-from dpkits.calculate_lsm import LSMCalculation
-from dpkits.data_transpose import DataTranspose
-from dpkits.table_generator import DataTableGenerator
-from dpkits.table_formater import TableFormatter
+# from dpkits.ap_data_converter import APDataConverter
+# from dpkits.calculate_lsm import LSMCalculation
+# from dpkits.data_transpose import DataTranspose
+# from dpkits.table_generator import DataTableGenerator
+# from dpkits.table_formater import TableFormatter
 
 
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-# from fastapi import UploadFile
-# import sys
-# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-#
-# from ap_data_converter import APDataConverter
-# from calculate_lsm import LSMCalculation
-# from data_transpose import DataTranspose
-# from table_generator import DataTableGenerator
-# from table_formater import TableFormatter
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+from fastapi import UploadFile
+import sys
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+
+from ap_data_converter import APDataConverter
+from calculate_lsm import LSMCalculation
+from data_transpose import DataTranspose
+from table_generator import DataTableGenerator
+from table_formater import TableFormatter
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
 
@@ -126,60 +126,63 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
-# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
-# dict_dfs = {
-#     1: {
-#         'data': df_data,
-#         'info': df_info,
-#         'tail_name': 'ByCode',
-#         'sheet_name': 'ByCode',
-#         'is_recode_to_lbl': False,
-#     },
-#     2: {
-#         'data': df_data,
-#         'info': df_info,
-#         'tail_name': 'ByLabel',
-#         'sheet_name': 'ByLabel',
-#         'is_recode_to_lbl': True,
-#     },
-#     3: {
-#         'data': df_data_stack,
-#         'info': df_info_stack,
-#         'tail_name': 'Stack',
-#         'sheet_name': 'Stack',
-#         'is_recode_to_lbl': False,
-#     },
-#     4: {
-#         'data': df_data_unstack,
-#         'info': df_info_unstack,
-#         'tail_name': 'Unstack',
-#         'sheet_name': 'Unstack',
-#         'is_recode_to_lbl': False,
-#     },
-# }
-#
-#
-# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=True, is_export_xlsx=True, is_zip=True)
+dict_dfs = {
+    1: {
+        'data': df_data,
+        'info': df_info,
+        'tail_name': 'ByCode',
+        'sheet_name': 'ByCode',
+        'is_recode_to_lbl': False,
+    },
+    # 2: {
+    #     'data': df_data,
+    #     'info': df_info,
+    #     'tail_name': 'ByLabel',
+    #     'sheet_name': 'ByLabel',
+    #     'is_recode_to_lbl': True,
+    # },
+    3: {
+        'data': df_data_stack,
+        'info': df_info_stack,
+        'tail_name': 'Stack',
+        'sheet_name': 'Stack',
+        'is_recode_to_lbl': False,
+    },
+    # 4: {
+    #     'data': df_data_unstack,
+    #     'info': df_info_unstack,
+    #     'tail_name': 'Unstack',
+    #     'sheet_name': 'Unstack',
+    #     'is_recode_to_lbl': False,
+    # },
+}
+
+converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_md=False, is_export_sav=False, is_export_xlsx=True, is_zip=False)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 # # USE df_data & df_info to run table----------------------------------------------------------------------------------
 lst_side_qres = [
     # {"qre_name": "$Q15", "qre_lbl": "{lbl}: new label", "qre_filter": "Age.isin([2, 3])"},
 
-    # {"qre_name": "CC1", "sort": "des"},
-    # {"qre_name": "$CC3", "sort": "asc"},
-    # {"qre_name": "$CC4", "sort": "des"},
-    # {"qre_name": "$CC6"},
-    # {"qre_name": "$CC10"},
-    # {"qre_name": "LSM"},
-    # {"qre_name": "Gender"},
-    # {"qre_name": "Age"},
-    # {"qre_name": "City"},
-    # {"qre_name": "HHI"},
+    {"qre_name": "CC1", "sort": "des"},
+    {"qre_name": "$CC3", "sort": "asc"},
+    {"qre_name": "$CC4", "sort": "des"},
+    {"qre_name": "$CC6"},
+    {"qre_name": "$CC10"},
+    {"qre_name": "LSM"},
+    {"qre_name": "Gender"},
+    {"qre_name": "Age"},
+    {"qre_name": "City"},
+    {"qre_name": "HHI"},
     # {"qre_name": "MaritalStatus"},
     # {"qre_name": "$KidAge"},
     # {"qre_name": "BannedIndustry"},
@@ -209,8 +212,7 @@ lst_side_qres = [
     # {"qre_name": "Frequency"},
     # {"qre_name": "Awareness2"},
     # # {"qre_name": "Perception"},
-    #
-    #
+
     # MA Question with net/combine (can apply to SA questions)
     {"qre_name": "$Q15", "cats": {
         'net_code': {
@@ -408,7 +410,6 @@ dtg.run_tables_by_js_files(lst_func_to_run_2, is_append=True)
 # FORMAT TABLES---------------------------------------------------------------------------------------------------------
 dtf = TableFormatter(xlsx_name=str_tbl_file_name)
 dtf.format_sig_table()
-
 
 
 

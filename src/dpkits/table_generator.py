@@ -512,23 +512,31 @@ class DataTableGenerator:
 
     def add_sa_qre_mean_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
                                    qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                                   sig_type: str, lst_sig_lvl: list, mean_factor: dict) -> pd.DataFrame:
+                                   sig_type: str, lst_sig_lvl: list, mean_factor: dict, is_mean: bool = True) -> pd.DataFrame:
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
         qre_type = qre_info['qre_type']
         qre_val = qre_info['qre_val']
-        # is_count = qre_info['is_count']
-        # val_pct = qre_info['val_pct']
 
-        dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
-        dict_new_row.update({
-            'qre_name': qre_name,
-            'qre_lbl': qre_lbl,
-            'qre_type': qre_type,
-            'cat_val': 'mean',
-            'cat_lbl': 'Mean',
-        })
+        if is_mean:
+            dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
+            dict_new_row.update({
+                'qre_name': qre_name,
+                'qre_lbl': qre_lbl,
+                'qre_type': qre_type,
+                'cat_val': 'mean',
+                'cat_lbl': 'Mean',
+            })
+        else:
+            dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
+            dict_new_row.update({
+                'qre_name': qre_name.replace('_Mean', '_Std'),
+                'qre_lbl': qre_lbl,
+                'qre_type': qre_type,
+                'cat_val': 'std',
+                'cat_lbl': 'Std',
+            })
 
         org_qre_name = qre_name.replace('_Mean', '')
 
@@ -554,21 +562,30 @@ class DataTableGenerator:
 
                 dict_pair_to_sig.update({item: df_filter})
 
-                num_val = df_filter[org_qre_name].mean()
+                if is_mean:
 
-                val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
+                    num_val = df_filter[org_qre_name].mean()
+                    val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
 
-                if sig_type and lst_sig_lvl:
+                    if sig_type and lst_sig_lvl:
 
-                    num_val_old = df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name]].values[0, 0]
+                        num_val_old = df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name]].values[0, 0]
 
-                    if pd.isnull(num_val_old):
+                        if pd.isnull(num_val_old):
+                            df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
+
+                    else:
                         df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
 
                 else:
-                    df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
 
-            if sig_type and lst_sig_lvl:
+                    num_val_std = df_filter[org_qre_name].std()
+                    val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
+
+                    df_qre.loc[df_qre['cat_val'] == 'std', [val_col_name, sig_col_name]] = [num_val_std, np.nan]
+
+
+            if sig_type and lst_sig_lvl and is_mean:
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre
@@ -1027,10 +1044,13 @@ class DataTableGenerator:
                     else:
                         df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
 
-
                 mean_factor = df_info.at[idx, 'mean']
                 if mean_factor.keys():
+                    # Run Mean
                     df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor)
+
+                    # Run Std
+                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor, is_mean=False)
 
             # elif qre_type in ['MEAN']:
             #

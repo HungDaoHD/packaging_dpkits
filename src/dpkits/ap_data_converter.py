@@ -618,8 +618,23 @@ class APDataConverter:
                 print(f"Create {xlsx_name} - sheet {val['sheet_name']}")
 
                 with pd.ExcelWriter(xlsx_name, engine="openpyxl", mode="a" if os.path.isfile(xlsx_name) else "w") as writer:
-                    df_data_xlsx.to_excel(writer, sheet_name=f"{val['sheet_name']}_Rawdata" if val['sheet_name'] else "Rawdata", index=False)
-                    df_info.to_excel(writer, sheet_name=f"{val['sheet_name']}_Datamap" if val['sheet_name'] else "Datamap", index=False)
+
+                    wb = writer.book
+                    ws_data_name = f"{val['sheet_name']}_Rawdata" if val['sheet_name'] else "Rawdata"
+                    ws_info_name = f"{val['sheet_name']}_Datamap" if val['sheet_name'] else "Datamap"
+
+                    try:
+                        print(f'Check sheets existing and remove - {ws_data_name} & {ws_info_name}')
+                        wb.remove(wb[ws_data_name])
+                        wb.remove(wb[ws_info_name])
+
+                    except Exception:
+                        print('There is no sheet existing')
+
+                    finally:
+                        print(f'Create sheets - {ws_data_name} & {ws_info_name}')
+                        df_data_xlsx.to_excel(writer, sheet_name=ws_data_name, index=False)
+                        df_info.to_excel(writer, sheet_name=ws_info_name, index=False)
 
                 if xlsx_name not in lst_zip_file_name:
                     lst_zip_file_name.extend([xlsx_name])
