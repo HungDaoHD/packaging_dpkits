@@ -75,8 +75,6 @@ df_data.loc[(df_data['Gender_new'] == 2) & (df_data['Age'] == 5),  ['Gender_new'
 df_info.loc[df_info['var_name'] == 'Q1_SP1', ['val_lbl']] = [{'1': 'a', '2': 'b', '3': 'c', '4': 'd', '5': 'e'}]
 
 
-
-
 df_info = pd.concat([df_info, pd.DataFrame(
     columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'],
     data=[
@@ -166,16 +164,9 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
-df_data_tbl = pd.concat([df_data, df_data_stack], axis=0)
-df_info_tbl = pd.concat([df_info, df_info_stack], axis=0)
 
-# df_data_tbl.to_excel('df_data_tbl.xlsx')
 
-df_data_tbl.reset_index(drop=True, inplace=True)
-df_info_tbl.reset_index(drop=True, inplace=True)
-
-dtg = DataTableGenerator(df_data=df_data_tbl, df_info=df_info_tbl, xlsx_name=str_tbl_file_name)
-
+# # USE df_data & df_info to run table----------------------------------------------------------------------------------
 lst_side_qres = [
     # {"qre_name": "$Q15", "qre_lbl": "{lbl}: new label", "qre_filter": "Age.isin([2, 3])"},
 
@@ -247,20 +238,20 @@ lst_side_qres = [
         '8': 'Other (specify)',
         '9': 'No problem',
     }},
-    #
-    # # Scale question with full properties
-    # {
-    #     "qre_name": "Perception",
-    #     "cats": {
-    #         '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
-    #         'net_code': {
-    #             '900001|combine|B2B': {'1': 'Totally disagree', '2': 'Disagree'},
-    #             '900002|combine|Medium': {'3': 'Neutral'},
-    #             '900003|combine|T2B': {'4': 'Agree', '5': 'Totally agree'},
-    #         }
-    #     },
-    #     "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
-    # },
+
+    # Scale question with full properties
+    {
+        "qre_name": "Perception",
+        "cats": {
+            '1': 'Totally disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Totally agree',
+            'net_code': {
+                '900001|combine|B2B': {'1': 'Totally disagree', '2': 'Disagree'},
+                '900002|combine|Medium': {'3': 'Neutral'},
+                '900003|combine|T2B': {'4': 'Agree', '5': 'Totally agree'},
+            }
+        },
+        "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    },
 
 
 ]
@@ -275,7 +266,6 @@ lst_header_qres = [
                 '2': '18 - 24', '3': '25 - 30', '4': '31 - 39', '5': '40 - 50', '6': 'Trên 50'
             }
         },
-
         {
             "qre_name": "@City2",
             "qre_lbl": "Location",
@@ -284,52 +274,57 @@ lst_header_qres = [
                 'City.isin([2, 4, 16, 17, 18])': 'All North',
             }
         },
-
-
-
-        # {
-        #     "qre_name": "HHI",
-        #     "qre_lbl": "HHI",
-        #     "cats": {
-        #         # '1': 'Dưới 4,000,000 VND',
-        #         '2': '4,000,000 - 9,000,000 VND',
-        #         '3': '9,000,001 - 14,000,000 VND',
-        #         '4': '14,000,001 - 20,000,000 VND',
-        #         '5': 'Trên 20,000,000 VND'
-        #     }
-        # },
-        # {
-        #     "qre_name": "$KidAge",
-        #     "qre_lbl": "Kid age",
-        #     "cats": {
-        #         '1': 'Dưới 5 tuổi',
-        #         '2': '5 - 7 tuổi',
-        #         '3': '8 - 10 tuổi',
-        #         '4': '11 - 13 tuổi',
-        #         '5': '14 - 16 tuổi',
-        #         '6': 'Trên 16 tuổi'
-        #     }
-        # },
-        # {
-        #     "qre_name": "Awareness1",
-        #     "qre_lbl": "Bạn đã bao giờ đi gặp các chuyên gia chăm sóc răng miệng (nha sĩ, bác sĩ) chưa?",
-        #     "cats": {'1': 'Rồi', '2': 'Chưa bao giờ'}
-        # },
-        # {
-        #     "qre_name": "Awareness2",
-        #     "qre_lbl": "P/S có tổng đài chăm sóc răng miệng miễn phí, nhằm giúp bạn có thể được tư vấn về sức khỏe răng miệng miễn phí ngay tại nhà. Bạn có thể trò chuyện trực tiếp với Chuyên Gia chăm sóc răng miệng là các nha sĩ, bác sĩ Răng Hàm Mặt khi liên hệ hai tổng đài trên. Bạn có biết đến thông tin này hay không?",
-        #     "cats": {'1': 'Có', '2': 'Không'}
-        # },
-        # {
-        #     "qre_name": "Perception",
-        #     "qre_lbl": "Vui lòng cho biết mức độ đồng ý của bạn với nhận định P/S đang nỗ lực để người dân dễ dàng tiếp cận hơn với chuyên gia, nha sỹ, nhằm mục đích cải thiện sức khỏe răng miệng của người Việt Nam?",
-        #     "cats": {'1': 'Hoàn toàn không đồng ý', '2': 'Không đồng ý', '3': 'Trung lập', '4': 'Đồng ý',
-        #              '5': 'Hoàn toàn đồng ý'}
-        # },
-
     ],
 ]
 
+lst_func_to_run = [
+    {
+        'func_name': 'run_standard_table_sig',
+        'tables_to_run': [
+            'Tbl_1_Pct',  # this table use df_data & df_info to run
+            'Tbl_1_Count',  # this table use df_data & df_info to run
+        ],
+        'tables_format': {
+
+            "Tbl_1_Pct": {
+                "tbl_name": "Table 1 - Pct",
+                "tbl_filter": "City > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
+                "is_hide_oe_zero_cats": 1,
+                "sig_test_info": {
+                    "sig_type": "",  # ind / rel
+                    "sig_cols": [],
+                    "lst_sig_lvl": []
+                },
+                "lst_side_qres": lst_side_qres,
+                "lst_header_qres": lst_header_qres
+            },
+
+            "Tbl_1_Count": {
+                "tbl_name": "Table 1 - Count",
+                "tbl_filter": "City > 0",
+                "is_count": 1,
+                "is_pct_sign": 0,
+                "is_hide_oe_zero_cats": 1,
+                "sig_test_info": {
+                    "sig_type": "",
+                    "sig_cols": [],
+                    "lst_sig_lvl": []
+                },
+                "lst_side_qres": lst_side_qres,
+                "lst_header_qres": lst_header_qres
+            },
+        },
+
+    },
+]
+
+dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+dtg.run_tables_by_js_files(lst_func_to_run)
+
+
+# # USE df_data_stack & df_info_stack to run table----------------------------------------------------------------------
 lst_side_qres_sig = [
     {
         "qre_name": "Q1",
@@ -379,46 +374,13 @@ lst_header_qres_sig = [
     ],
 ]
 
-lst_func_to_run = [
+lst_func_to_run_2 = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Tbl_1_Pct',  # this table use df_data & df_info to run
-            # 'Tbl_1_Count',  # this table use df_data & df_info to run
             'Tbl_sig',  # this table use df_data_stack & df_info_stack to run
         ],
         'tables_format': {
-
-            "Tbl_1_Pct": {
-                "tbl_name": "Table 1 - Pct",
-                "tbl_filter": "City > 0 & Ma_SP.isnull()",
-                "is_count": 0,
-                "is_pct_sign": 1,
-                "is_hide_oe_zero_cats": 1,
-                "sig_test_info": {
-                    "sig_type": "ind",  # ind / rel
-                    "sig_cols": [],
-                    "lst_sig_lvl": [90, 95]
-                },
-                "lst_side_qres": lst_side_qres,
-                "lst_header_qres": lst_header_qres
-            },
-
-            "Tbl_1_Count": {
-                "tbl_name": "Table 1 - Count",
-                "tbl_filter": "City > 0 & Ma_SP.isnull()",
-                "is_count": 1,
-                "is_pct_sign": 0,
-                "is_hide_oe_zero_cats": 1,
-                "sig_test_info": {
-                    "sig_type": "",
-                    "sig_cols": [],
-                    "lst_sig_lvl": []
-                },
-                "lst_side_qres": lst_side_qres,
-                "lst_header_qres": lst_header_qres
-            },
-
             "Tbl_sig": {
                 "tbl_name": "Table Sig - Pct",
                 "tbl_filter": "City > 0 & Ma_SP > 0",
@@ -438,8 +400,12 @@ lst_func_to_run = [
     },
 ]
 
-dtg.run_tables_by_js_files(lst_func_to_run)
+dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+dtg.run_tables_by_js_files(lst_func_to_run_2, is_append=True)
 
+
+
+# FORMAT TABLES---------------------------------------------------------------------------------------------------------
 dtf = TableFormatter(xlsx_name=str_tbl_file_name)
 dtf.format_sig_table()
 

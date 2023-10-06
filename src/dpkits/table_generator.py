@@ -9,7 +9,7 @@ from scipy import stats
 
 class DataTableGenerator:
 
-    def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, lst_qre_group: list = [], lst_qre_mean: list = [], is_md: bool = False):
+    def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, is_md: bool = False):
 
         self.df_data = df_data.copy()
         self.df_info = df_info.copy()
@@ -20,8 +20,9 @@ class DataTableGenerator:
 
         self.file_name = xlsx_name
 
-        self.lst_qre_group = lst_qre_group
-        self.lst_qre_mean = lst_qre_mean
+        # lst_qre_group: list = [], lst_qre_mean: list = []
+        # self.lst_qre_group = lst_qre_group
+        # self.lst_qre_mean = lst_qre_mean
 
         self.dict_unnetted_qres = dict()
         for idx in self.df_info.index:
@@ -61,42 +62,43 @@ class DataTableGenerator:
         self.df_info = df_info
 
 
-    def add_group(self):
-        print('add_group')
-        df_info = self.df_info.copy()
+    # def add_group(self):
+    #     print('add_group')
+    #     df_info = self.df_info.copy()
+    #
+    #     for qre_mean in self.lst_qre_group:
+    #         idx = df_info.loc[df_info['var_name'] == qre_mean[0], :].index[0]
+    #
+    #         df_info = self.insert_row(idx + 1, df_info, [f'{qre_mean[0]}_Group', f"{df_info.at[idx, 'var_lbl']}_Group", 'GROUP', qre_mean[1]])
+    #
+    #     self.df_info = df_info
+    #
+    #
+    # def add_mean(self):
+    #     print('add_mean')
+    #     df_info = self.df_info.copy()
+    #
+    #     for qre_mean in self.lst_qre_mean:
+    #         idx = df_info.loc[df_info['var_name'] == qre_mean[0], :].index[0]
+    #         df_info = self.insert_row(idx + 1, df_info, [f'{qre_mean[0]}_Mean',	f"{df_info.at[idx, 'var_lbl']}_Mean", 'MEAN', qre_mean[1]])
+    #
+    #     self.df_info = df_info
 
-        for qre_mean in self.lst_qre_group:
-            idx = df_info.loc[df_info['var_name'] == qre_mean[0], :].index[0]
 
-            df_info = self.insert_row(idx + 1, df_info, [f'{qre_mean[0]}_Group', f"{df_info.at[idx, 'var_lbl']}_Group", 'GROUP', qre_mean[1]])
-
-        self.df_info = df_info
-
-
-    def add_mean(self):
-        print('add_mean')
-        df_info = self.df_info.copy()
-
-        for qre_mean in self.lst_qre_mean:
-            idx = df_info.loc[df_info['var_name'] == qre_mean[0], :].index[0]
-            df_info = self.insert_row(idx + 1, df_info, [f'{qre_mean[0]}_Mean',	f"{df_info.at[idx, 'var_lbl']}_Mean", 'MEAN', qre_mean[1]])
-
-        self.df_info = df_info
-
-
-    def run_tables_by_js_files(self, lst_func_to_run: list):
+    def run_tables_by_js_files(self, lst_func_to_run: list, is_append: bool = False):
 
         # TODO: Update new way to run group and mean so these functions need to remove
         # self.add_group()
         # self.add_mean()
 
-        if os.path.exists(self.file_name):
-            os.remove(self.file_name)
+        if not is_append:
+            if os.path.exists(self.file_name):
+                os.remove(self.file_name)
 
-        df_content_null = pd.DataFrame(data=[], columns=['#', 'Content'])
+            df_content_null = pd.DataFrame(columns=['#', 'Content'], data=[])
 
-        with pd.ExcelWriter(self.file_name) as writer:
-            df_content_null.to_excel(writer, sheet_name='Content', index=False)  # encoding='utf-8-sig'
+            with pd.ExcelWriter(self.file_name) as writer:
+                df_content_null.to_excel(writer, sheet_name='Content', index=False)
 
         for item in lst_func_to_run:
             self.run_tables_by_item(item)
