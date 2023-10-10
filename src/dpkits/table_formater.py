@@ -269,6 +269,7 @@ class TableFormatter:
         for irow in range(start_row, ws.max_row + 1):
 
             cur1_cell = ws.cell(irow, 1)
+
             cur1_cell.border = self.thin_border
             cur1_cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             cur1_cell.font = Font(bold=True, color='FFFFFF')
@@ -415,11 +416,16 @@ class TableFormatter:
 
             lst_sub_header_col = list()
 
-            last_header_row = 0
-            for i in range(1, 11):
-                if ws.cell(i + 1, 5).value == 'Base':
-                    last_header_row = i
+            last_header_row = 2
+
+            while ws.cell(last_header_row, 5).value != 'Base':
+                last_header_row += 1
+
+                if last_header_row >= 30:
+                    last_header_row = -999
                     break
+
+            last_header_row -= 1
 
             is_sig_tbl = True if ws.cell(4, 2).value else False
 
@@ -482,6 +488,8 @@ class TableFormatter:
                 8: {'fontColor': '000000', 'fgColor': 'F4B084'},
                 9: {'fontColor': '000000', 'fgColor': 'F8CBAD'},
                 10: {'fontColor': '000000', 'fgColor': 'FCE4D6'},
+                11: {'fontColor': '000000', 'fgColor': 'FCD5B4'},
+                12: {'fontColor': '000000', 'fgColor': 'FDE9D9'},
             }
 
             for irow in range(3, last_header_row + 1):
@@ -496,17 +504,34 @@ class TableFormatter:
                     cur_cell.font = Font(bold=True, size=12, color=dict_header_color[irow - 3]['fontColor'])
                     cur_cell.fill = PatternFill(patternType='solid', fgColor=dict_header_color[irow - 3]['fgColor'])
 
-                    if cur_cell.value != ws.cell(irow, icol + 1).value:
-                        end_column = icol
+                    if irow <= 4:
 
-                        if start_column != end_column and cur_cell.value is not None:
+                        if cur_cell.value != ws.cell(irow, icol + 1).value:
+                            end_column = icol
 
-                            ws.merge_cells(start_row=irow, start_column=start_column, end_row=irow, end_column=end_column)
-                            lst_sub_header_col.append(icol)
+                            if start_column != end_column and cur_cell.value is not None:
 
-                        start_column = icol + 1
+                                ws.merge_cells(start_row=irow, start_column=start_column, end_row=irow, end_column=end_column)
+                                lst_sub_header_col.append(icol)
+
+                            start_column = icol + 1
+
+                    else:
+
+                        if cur_cell.value != ws.cell(irow, icol + 1).value or ws.cell(irow - 1, icol + 1).value is not None:
+                            end_column = icol
+
+                            if start_column != end_column and cur_cell.value is not None:
+
+                                ws.merge_cells(start_row=irow, start_column=start_column, end_row=irow, end_column=end_column)
+                                lst_sub_header_col.append(icol)
+
+                            start_column = icol + 1
+
 
             print(f"Formatting {ws.title} - Side axis")
+
+
 
             start_side_row = last_header_row + 1
             self.format_side_axis(ws=ws, is_matrix_table=False, start_side_row=start_side_row, num_format=num_format,
