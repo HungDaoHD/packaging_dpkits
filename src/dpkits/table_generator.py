@@ -380,7 +380,7 @@ class DataTableGenerator:
         # drop row which have all value is nan
         df_tbl.dropna(how='all', inplace=True)
 
-        # drop row in qre oe have all columns are 0
+        # Drop rows in qre oe that have all columns are 0
         if tbl['is_hide_oe_zero_cats']:
 
             df_sum_oe_val = df_tbl.query("qre_name.str.contains('_OE') & qre_type == 'MA'").copy()
@@ -394,6 +394,28 @@ class DataTableGenerator:
                 df_sum_oe_val = df_sum_oe_val.query('sum_val == 0')
 
                 df_tbl.drop(df_sum_oe_val.index, inplace=True)
+
+
+        # Drop columns which all value equal 0
+        if tbl['is_hide_zero_cols']:
+
+            start_idx = df_tbl.query(f"cat_val == 'base'").index.tolist()[0]
+            lst_val_col = [v for i, v in enumerate(df_tbl.columns.tolist()[5:]) if i % 2 == 0]
+
+            df_fil = df_tbl.query("index >= @start_idx")[lst_val_col].copy()
+            df_fil.replace({0: np.nan}, inplace=True)
+            df_fil.dropna(axis='columns', how='all', inplace=True)
+
+            lst_keep_col = list()
+            for i in df_fil.columns.tolist():
+                lst_keep_col.extend([i, i.replace('@val@', '@sig@')])
+
+            df_tbl = df_tbl[df_tbl.columns.tolist()[:5] + lst_keep_col]
+
+            # df_tbl.to_excel('df_tbl_review.xlsx')
+            a = 1
+
+
 
         # Reset df table index
         df_tbl.reset_index(drop=True, inplace=True)
@@ -1126,8 +1148,7 @@ class DataTableGenerator:
                 df_qre.drop(columns=['sort_col'], inplace=True)
 
             # END SORTING-----------------------------------------------------------------------------------------------
-            
-            
+
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
 
         return df_tbl

@@ -488,7 +488,7 @@ class TableFormatter:
                 7: {'fontColor': '000000', 'fgColor': '27CF6B'},
                 8: {'fontColor': 'FFFFFF', 'fgColor': '1E9E52'},
                 9: {'fontColor': 'FFFFFF', 'fgColor': '156e3a'},
-                
+
                 # 5: {'fontColor': '000000', 'fgColor': 'A9D08E'},
                 # 6: {'fontColor': '000000', 'fgColor': 'C6E0B4'},
                 # 7: {'fontColor': '000000', 'fgColor': 'E2EFDA'},

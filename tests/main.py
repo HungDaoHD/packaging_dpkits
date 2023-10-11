@@ -349,26 +349,6 @@ lst_header = [
                 "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
             }
         },
-        # {
-        #     "qre_name": "@S4_Class",
-        #     "qre_lbl": "Class",
-        #     "cats": {
-        #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-        #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-        #     }
-        # },
-        # {
-        #     "qre_name": "@S8_BUMO",
-        #     "qre_lbl": "BUMO",
-        #     "cats": {
-        #         "S8.isin([2])": "Tiger nâu",
-        #         "S8.isin([6, 7, 8])": "Sài Gòn",
-        #         "S8.isin([12, 13, 14])": "Larue",
-        #     }
-        # },
-    ],
-
-    [
         {
             "qre_name": "@S4_Class",
             "qre_lbl": "Class",
@@ -377,8 +357,6 @@ lst_header = [
                 "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
             }
         },
-    ],
-    [
         {
             "qre_name": "@S8_BUMO",
             "qre_lbl": "BUMO",
@@ -389,8 +367,6 @@ lst_header = [
             }
         },
     ],
-
-
 
     # header lvl 3
     [
@@ -498,6 +474,7 @@ lst_func_to_run = [
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
                 "sig_test_info": {
                     "sig_type": "",
                     "sig_cols": [],
@@ -524,6 +501,7 @@ lst_func_to_run = [
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
                 "sig_test_info": {
                     "sig_type": "rel",
                     "sig_cols": [],
@@ -539,6 +517,7 @@ lst_func_to_run = [
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
                 "sig_test_info": {
                     "sig_type": "",
                     "sig_cols": [],
@@ -559,6 +538,8 @@ dtg.run_tables_by_js_files(lst_func_to_run[:1])
 # RUN TABLE FOR MAIN
 dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
 dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+
+
 
 
 # FORMAT TABLES---------------------------------------------------------------------------------------------------------
