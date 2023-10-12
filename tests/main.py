@@ -2,25 +2,24 @@ import pandas as pd
 import numpy as np
 
 # from dpkits.ap_data_converter import APDataConverter
-# from dpkits.calculate_lsm import LSMCalculation
 # from dpkits.data_processing import DataProcessing
 # from dpkits.data_transpose import DataTranspose
 # from dpkits.table_generator import DataTableGenerator
 # from dpkits.table_formater import TableFormatter
-
+# from dpkits.calculate_lsm import LSMCalculation
 
 
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-from fastapi import UploadFile
 import sys
 sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
 
 from ap_data_converter import APDataConverter
-from calculate_lsm import LSMCalculation
 from data_processing import DataProcessing
 from data_transpose import DataTranspose
 from table_generator import DataTableGenerator
 from table_formater import TableFormatter
+from codeframe_reader import CodeframeReader
+from calculate_lsm import LSMCalculation
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
@@ -55,7 +54,6 @@ df_data, df_info = converter.convert_df_mc()  # Use 'converter.convert_df_md()' 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
 
-
 # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
 # df_info columns must be ['var_name', 'var_lbl', 'var_type', 'val_lbl']
 
@@ -70,10 +68,8 @@ dict_add_new_qres = {
 }
 
 df_data, df_info = DataProcessing.add_qres(df_data, df_info, dict_add_new_qres)
-
-
-
-
+df_data = pd.DataFrame(df_data)
+df_info = pd.DataFrame(df_info)
 
 
 
@@ -198,22 +194,31 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 # ----------------------------------------------------------------------------------------------------------------------
 # NOT YET START
 
+cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
 
+cfr.to_dataframe_file()
 
+df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
 
+df_coding = pd.DataFrame(cfr.df_full_oe_coding)
 
+df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+df_coding.drop(columns=['RESPONDENTID'], inplace=True)
 
+df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
 
+lst_drop = df_coding.columns.tolist()
+lst_drop.remove('ID')
+lst_drop.remove('Ma_SP')
 
+df_data_stack.drop(columns=lst_drop, inplace=True)
 
+df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
 
-
-
-
-
-
-
-
+for i in lst_drop:
+    df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -310,6 +315,7 @@ README:
             "is_count": 0,  # 1 for count, 0 for percentage
             "is_pct_sign": 1,  # 1 for display '%' else 0
             "is_hide_oe_zero_cats": 1,  # 1 for hide answers which percentage = 0% at all header columns
+            "is_hide_zero_cols": 1,  # 1 for hide header columns which percentage = 0% at all row
             "sig_test_info":  # define significant test
             {
                 "sig_type": "rel",  # 'rel' for dependent sig test, 'ind' for independent sig test
@@ -491,7 +497,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main',
-            # 'Main_oe',
+            'Main_oe',
         ],
         'tables_format': {
 

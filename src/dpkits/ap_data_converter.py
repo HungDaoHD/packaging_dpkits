@@ -539,7 +539,6 @@ class APDataConverter:
                     if isinstance(net_val, str):
                         dict_unnetted.update({str(net_key): net_val})
                     else:
-                        self.logger.info('Unnetted %s' % net_key)
                         dict_unnetted.update(net_val)
 
             else:
