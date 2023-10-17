@@ -189,36 +189,36 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# OE RUNNING------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-# NOT YET START
-
-cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-
-cfr.to_dataframe_file()
-
-df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-
-df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-
-df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-
-df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-
-lst_drop = df_coding.columns.tolist()
-lst_drop.remove('ID')
-lst_drop.remove('Ma_SP')
-
-df_data_stack.drop(columns=lst_drop, inplace=True)
-
-df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-
-for i in lst_drop:
-    df_data_stack[i].replace({99999: np.nan}, inplace=True)
+# # ----------------------------------------------------------------------------------------------------------------------
+# # OE RUNNING------------------------------------------------------------------------------------------------------------
+# # ----------------------------------------------------------------------------------------------------------------------
+# # NOT YET START
+#
+# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+#
+# cfr.to_dataframe_file()
+#
+# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+#
+# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+#
+# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+#
+# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+#
+# lst_drop = df_coding.columns.tolist()
+# lst_drop.remove('ID')
+# lst_drop.remove('Ma_SP')
+#
+# df_data_stack.drop(columns=lst_drop, inplace=True)
+#
+# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+#
+# for i in lst_drop:
+#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -394,6 +394,11 @@ lst_side_scr_tagon = [
     {"qre_name": "S7"},
     {"qre_name": "S8"},
     {"qre_name": "S10"},
+
+    {"qre_name": "Dealer_HCM_01_Rank1"},
+    {"qre_name": "$Dealer_HCM_02_Rank"},
+
+
 ]
 
 
@@ -477,8 +482,8 @@ lst_func_to_run = [
             "Scr_Tagon": {
                 "tbl_name": "Screener",
                 "tbl_filter": "S1 > 0",
-                "is_count": 0,
-                "is_pct_sign": 1,
+                "is_count": 1,
+                "is_pct_sign": 0,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {
@@ -541,9 +546,9 @@ lst_func_to_run = [
 dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
 dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
-# RUN TABLE FOR MAIN
-dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+# # RUN TABLE FOR MAIN
+# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 

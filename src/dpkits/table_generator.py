@@ -268,12 +268,18 @@ class DataTableGenerator:
 
         if '$' in dict_qre['qre_name']:
 
-            lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}_[0-9]+')")['var_name'].values.tolist()
+            if 'RANK' in str(dict_qre['qre_name']).upper():
+                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}[0-9]+')")['var_name'].values.tolist()
+            else:
+                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}_[0-9]+')")['var_name'].values.tolist()
 
             if str(str_cat_or_query).upper() == 'TOTAL':
                 return f"({' | '.join([f'{i} > 0' for i in lst_qre_ma_name])})"
 
             return f"({' | '.join([f'{i} == {str_cat_or_query}' for i in lst_qre_ma_name])})"
+
+
+
 
         if str(str_cat_or_query).upper() == 'TOTAL':
             return f"{dict_qre['qre_name']} > 0"
@@ -322,8 +328,14 @@ class DataTableGenerator:
         for qre in tbl['lst_side_qres']:
 
             if '$' in qre['qre_name']:
-                lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}_[0-9]+"), 'var_name'].values.tolist()
+
+                if '_RANK' in str(qre['qre_name']).upper():
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}[0-9]+"), 'var_name'].values.tolist()
+                else:
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}_[0-9]+"), 'var_name'].values.tolist()
+
                 var_name = qre['qre_name'].replace('$', '')
+
             elif '#combine' in qre['qre_name']:
                 var_name, str_comb = qre['qre_name'].split('#combine')
                 lst_qre_col = str_comb.replace('(', '').replace(')', '').split(',')
@@ -338,7 +350,7 @@ class DataTableGenerator:
             dict_row = {
                 'var_name': var_name,
                 'var_lbl': qre['qre_lbl'].replace('{lbl}', df_qre_info.at[0, 'var_lbl']) if 'qre_lbl' in qre.keys() else df_qre_info.at[0, 'var_lbl'],
-                'var_type': 'MA_comb' if '#combine' in qre['qre_name'] else df_qre_info.at[0, 'var_type'],
+                'var_type': 'MA_comb' if '#combine' in qre['qre_name'] else ('MA_Rank' if '$' in qre['qre_name'] and '_RANK' in str(qre['qre_name']).upper() else df_qre_info.at[0, 'var_type']),
                 'val_lbl': qre['cats'] if 'cats' in qre.keys() else df_qre_info.at[0, 'val_lbl'],
                 'qre_fil': qre['qre_filter'] if 'qre_filter' in qre.keys() else "",
                 'lst_qre_col': lst_qre_col,
@@ -1087,7 +1099,7 @@ class DataTableGenerator:
 
                 df_qre = self.add_num_qre_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl)
 
-            elif qre_type in ['MA', 'MA_mtr', 'MA_comb']:
+            elif qre_type in ['MA', 'MA_mtr', 'MA_comb', 'MA_Rank']:
 
                 # if 'Q1a' in qre_name:
                 #     a = 1
