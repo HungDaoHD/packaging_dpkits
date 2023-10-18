@@ -16,14 +16,20 @@ class DataProcessing:
 
                 for i in range(1, int(max_col) + 1):
                     df_info = pd.concat([df_info, pd.DataFrame(columns=info_col_name, data=[[f'{qre_ma_name}_{i}', val[0], val[1], val[2]]])], axis=0, ignore_index=True)
-                    df_data = pd.concat([df_data, pd.DataFrame(columns=[f'{qre_ma_name}_{i}'], data=[val[-1]] * df_data.shape[0])], axis=1)
+
+                    if '_OE_' not in key:
+                        df_data = pd.concat([df_data, pd.DataFrame(columns=[f'{qre_ma_name}_{i}'], data=[val[-1]] * df_data.shape[0])], axis=1)
 
             else:
                 df_info = pd.concat([df_info, pd.DataFrame(columns=info_col_name, data=[[key, val[0], val[1], val[2]]])], axis=0, ignore_index=True)
-                df_data = pd.concat([df_data, pd.DataFrame(columns=[key], data=[val[-1]] * df_data.shape[0])], axis=1)
 
+                if '_OE_' not in key:
+                    df_data = pd.concat([df_data, pd.DataFrame(columns=[key], data=[val[-1]] * df_data.shape[0])], axis=1)
+
+        
         df_data.reset_index(drop=True, inplace=True)
         df_info.reset_index(drop=True, inplace=True)
+
 
         return df_data, df_info
 
