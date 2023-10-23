@@ -575,7 +575,7 @@ class DataTableGenerator:
         org_qre_name = qre_name.replace('_Mean', '')
 
         if mean_factor:
-            df_data.replace(mean_factor, inplace=True)
+            df_data.replace({org_qre_name: mean_factor}, inplace=True)
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 

@@ -344,36 +344,36 @@ lst_header = [
         },
     ],
 
-    # header lvl 2
-    [
-        {
-            "qre_name": "@S3_b_Group",
-            "qre_lbl": "Age",
-            "cats": {
-                "S3_b > 0": "TOTAL",
-                "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-                "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-            }
-        },
-        {
-            "qre_name": "@S4_Class",
-            "qre_lbl": "Class",
-            "cats": {
-                "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-                "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-            }
-        },
-        {
-            "qre_name": "@S8_BUMO",
-            "qre_lbl": "BUMO",
-            "cats": {
-                "S8.isin([2])": "Tiger nâu",
-                "S8.isin([6, 7, 8])": "Sài Gòn",
-                "S8.isin([12, 13, 14])": "Larue",
-            }
-        },
-    ],
-
+    # # header lvl 2
+    # [
+    #     {
+    #         "qre_name": "@S3_b_Group",
+    #         "qre_lbl": "Age",
+    #         "cats": {
+    #             "S3_b > 0": "TOTAL",
+    #             "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+    #             "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+    #         }
+    #     },
+    #     {
+    #         "qre_name": "@S4_Class",
+    #         "qre_lbl": "Class",
+    #         "cats": {
+    #             "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+    #             "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+    #         }
+    #     },
+    #     {
+    #         "qre_name": "@S8_BUMO",
+    #         "qre_lbl": "BUMO",
+    #         "cats": {
+    #             "S8.isin([2])": "Tiger nâu",
+    #             "S8.isin([6, 7, 8])": "Sài Gòn",
+    #             "S8.isin([12, 13, 14])": "Larue",
+    #         }
+    #     },
+    # ],
+    #
     # header lvl 3
     [
         {
@@ -411,7 +411,7 @@ lst_side_main = [
             '900002|combine|Medium': {'3': '3'},
             '900003|combine|B2B': {'1': '1', '2': '2'},
         }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
 
     {"qre_name": "Q4", 'cats': {
         '1': 'Hoàn toàn không phù hợp', '2': 'Không phù hợp', '3': 'Hơi không phù hợp', '4': 'Phù hợp', '5': 'Rất Phù hợp',
@@ -502,7 +502,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main',
-            'Main_oe',
+            # 'Main_oe',
         ],
         'tables_format': {
 
@@ -542,13 +542,13 @@ lst_func_to_run = [
     },
 ]
 
-# RUN TABLE FOR SCREENER
-dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[:1])
+# # RUN TABLE FOR SCREENER
+# dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
-# # RUN TABLE FOR MAIN
-# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+# RUN TABLE FOR MAIN
+dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=False)
 
 
 
