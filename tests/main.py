@@ -222,34 +222,34 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-dict_dfs = {
-    1: {
-        'data': df_data,
-        'info': df_info,
-        'tail_name': 'ByCode',
-        'sheet_name': 'ByCode',
-        'is_recode_to_lbl': False,
-    },
-    2: {
-        'data': df_data_stack,
-        'info': df_info_stack,
-        'tail_name': 'Stack',
-        'sheet_name': 'Stack',
-        'is_recode_to_lbl': False,
-    },
-    3: {
-        'data': df_data_unstack,
-        'info': df_info_unstack,
-        'tail_name': 'Unstack',
-        'sheet_name': 'Unstack',
-        'is_recode_to_lbl': False,
-    },
-}
-
-converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=False)
+# # ----------------------------------------------------------------------------------------------------------------------
+# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# # ----------------------------------------------------------------------------------------------------------------------
+# dict_dfs = {
+#     1: {
+#         'data': df_data,
+#         'info': df_info,
+#         'tail_name': 'ByCode',
+#         'sheet_name': 'ByCode',
+#         'is_recode_to_lbl': False,
+#     },
+#     2: {
+#         'data': df_data_stack,
+#         'info': df_info_stack,
+#         'tail_name': 'Stack',
+#         'sheet_name': 'Stack',
+#         'is_recode_to_lbl': False,
+#     },
+#     3: {
+#         'data': df_data_unstack,
+#         'info': df_info_unstack,
+#         'tail_name': 'Unstack',
+#         'sheet_name': 'Unstack',
+#         'is_recode_to_lbl': False,
+#     },
+# }
+#
+# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=False)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -259,7 +259,11 @@ converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_expor
 README:
     - Side question properties:
     {
-        "qre_name": "$Q15",  # column name, must set '$' if it is MA question
+        
+        "qre_name": 
+            - "$Q15",  # column name, must set '$' if it is MA question
+            - "Q16_Merge#combine(Q16a_1, Q16a_2, Q16a_3, Q16a_4, Q16b_1, Q16b_2, Q16b_3)"  # Combine multiple MA questions with same 'cats' define
+        
         "qre_lbl": "{lbl}: new label",  # default df_info label, input {lbl} top keep original label and addin new label
         "qre_filter": "Age.isin([2, 3])",  # use for filter question
         "sort": "des", # sort options: acs / des
@@ -283,7 +287,8 @@ README:
             },
             '8': 'Other (specify)',
             '9': 'No problem',
-        }
+        },
+        "calculate": {"lbl": "Sum(T2B, B2B)", "syntax": "[T2B] + [B2B]"},
     },
 
     - Header question properties:
@@ -339,7 +344,6 @@ lst_header = [
                 "TOTAL": "TOTAL",
                 '3': 'Hồ Chí Minh',
                 '4': 'Cần Thơ'
-
             }
         },
     ],
@@ -420,7 +424,7 @@ lst_side_main = [
             '900002|combine|Medium': {'3': '3'},
             '900003|combine|B2B': {'1': '1', '2': '2'},
         }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, "calculate": {"lbl": "NPS", "syntax": "[T2B] - [B2B]"}},
 
     {"qre_name": "Q5", 'cats': {
         '1': 'Hoàn toàn không mới lạ và khác biệt', '2': 'Không mới lạ và khác biệt', '3': 'Hơi không mới lạ và khác biệt', '4': 'Mới lạ và khác biệt', '5': 'Rất mới lạ và khác biệt',
@@ -548,7 +552,7 @@ lst_func_to_run = [
 
 # RUN TABLE FOR MAIN
 dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=False)
+dtg.run_tables_by_js_files(lst_func_to_run[1:])  # , is_append=True
 
 
 
