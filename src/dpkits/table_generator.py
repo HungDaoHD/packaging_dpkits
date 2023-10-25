@@ -689,81 +689,45 @@ class DataTableGenerator:
         return df_qre
 
 
-    def add_sa_qre_cal_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
-                                  qre_info: dict, dict_header_col_name: dict, dict_cal: dict) -> pd.DataFrame:
-
-        qre_name = qre_info['qre_name']
-        qre_lbl = qre_info['qre_lbl']
-        qre_type = qre_info['qre_type']
-        qre_val = qre_info['qre_val']
-
-        dict_new_row = {col: '' if '@sig@' in col else dict_cal.get('syntax') for col in df_qre.columns}
-        dict_new_row.update({
-            'qre_name': qre_name,
-            'qre_lbl': qre_lbl,
-            'qre_type': qre_type,
-            'cat_val': 'calculate',
-            'cat_lbl': dict_cal.get('lbl'),
-        })
-
-        df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
+    @staticmethod
+    def add_sa_qre_cal_to_tbl_sig(df_qre: pd.DataFrame, qre_info: dict, dict_cal: dict) -> pd.DataFrame:
 
         df_qre['idx_by_cat_lbl'] = df_qre['cat_lbl']
         df_qre.set_index('idx_by_cat_lbl', inplace=True)
 
-        idx_cal = dict_cal.get('lbl')
+        for key, val in dict_cal.items():
 
-        for col in df_qre.columns:
-            if '@val@' not in col:
-                continue
+            dict_new_row = {col: '' if '@sig@' in col else dict_cal.get('syntax') for col in df_qre.columns}
+            dict_new_row.update({
+                'qre_name': qre_info['qre_name'],
+                'qre_lbl': qre_info['qre_lbl'],
+                'qre_type': qre_info['qre_type'],
+                'cat_val': f'calculate|{key}',
+                'cat_lbl': key,
+            })
 
-            str_syntax = dict_cal.get('syntax').replace('[', f"df_qre.loc['").replace(']', f"', '{col}']")
+            df_temp = pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])
 
-            df_qre.loc[idx_cal, col] = eval(str_syntax)
+            # df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
+
+            df_temp['idx_by_cat_lbl'] = df_temp['cat_lbl']
+            df_temp.set_index('idx_by_cat_lbl', inplace=True)
+
+            for col in df_temp.columns:
+                if '@val@' not in col:
+                    continue
+
+                str_syntax = val.replace('[', f"df_qre.loc['").replace(']', f"', '{col}']")
+
+                df_temp.loc[key, col] = eval(str_syntax)
+
+            df_qre = pd.concat([df_qre, df_temp], axis=0)
 
 
         df_qre.reset_index(drop=True, inplace=True)
-        here = 1
 
 
-        # for idx_pair, sig_pair in enumerate(lst_sig_pair):
-        #
-        #     dict_pair_to_sig = dict()
-        #
-        #     for idx_item, item in enumerate(sig_pair):
-        #         str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
-        #
-        #         df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
-        #
-        #         if df_filter.empty:
-        #             continue
-        #
-        #         if -999 not in qre_val.keys():
-        #             df_filter.replace(qre_val, inplace=True)
-        #
-        #         dict_pair_to_sig.update({item: df_filter})
-        #
-        #         if is_mean:
-        #
-        #             num_val = df_filter[org_qre_name].mean()
-        #             val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
-        #
-        #             if sig_type and lst_sig_lvl:
-        #
-        #                 num_val_old = df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name]].values[0, 0]
-        #
-        #                 if pd.isnull(num_val_old):
-        #                     df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
-        #
-        #             else:
-        #                 df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
-        #
-        #         else:
-        #
-        #             num_val_std = df_filter[org_qre_name].std()
-        #             val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
-        #
-        #             df_qre.loc[df_qre['cat_val'] == 'std', [val_col_name, sig_col_name]] = [num_val_std, np.nan]
+
 
 
         return df_qre
@@ -1173,10 +1137,7 @@ class DataTableGenerator:
 
                 dict_cal = df_info.at[idx, 'calculate']
                 if dict_cal:
-                    df_qre = self.add_sa_qre_cal_to_tbl_sig(df_data, df_tbl, df_qre, qre_info, dict_header_col_name, dict_cal)
-
-                    here = 1
-
+                    df_qre = self.add_sa_qre_cal_to_tbl_sig(df_qre, qre_info, dict_cal)
 
             # elif qre_type in ['MEAN']:
             #

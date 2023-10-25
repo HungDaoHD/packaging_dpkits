@@ -359,8 +359,14 @@ class TableFormatter:
                             ws.merge_cells(start_row=irow, start_column=icol, end_row=irow, end_column=icol + step - 1)
 
                     else:
-                        if ws.cell(irow, 4).value in ['mean', 'std', 'calculate']:
+                        if ws.cell(irow, 4).value in ['mean', 'std']:
                             ws.cell(irow, 5).font = Font(bold=True, color='0070C0')
+                            cur_cell.font = Font(bold=True)
+                            cur_cell.number_format = '0.00'
+
+                        elif 'calculate' in ws.cell(irow, 4).value:
+
+                            ws.cell(irow, 5).font = Font(bold=True, color='E26B0A')
                             cur_cell.font = Font(bold=True)
                             cur_cell.number_format = '0.00'
 

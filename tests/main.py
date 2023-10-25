@@ -415,7 +415,11 @@ lst_side_main = [
             '900002|combine|Medium': {'3': '3'},
             '900003|combine|B2B': {'1': '1', '2': '2'},
         }
-    }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, "calculate": {
+        "NPS": "abs([T2B] - [B2B])",
+        "4 - Thích weight 0.2": "[4 - Thích]*0.2",
+        "5 - Rất thích weight 0.8": "[5 - Rất thích]*0.8",
+    }},
 
     {"qre_name": "Q4", 'cats': {
         '1': 'Hoàn toàn không phù hợp', '2': 'Không phù hợp', '3': 'Hơi không phù hợp', '4': 'Phù hợp', '5': 'Rất Phù hợp',
@@ -424,7 +428,7 @@ lst_side_main = [
             '900002|combine|Medium': {'3': '3'},
             '900003|combine|B2B': {'1': '1', '2': '2'},
         }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, "calculate": {"lbl": "NPS", "syntax": "[T2B] - [B2B]"}},
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
 
     {"qre_name": "Q5", 'cats': {
         '1': 'Hoàn toàn không mới lạ và khác biệt', '2': 'Không mới lạ và khác biệt', '3': 'Hơi không mới lạ và khác biệt', '4': 'Mới lạ và khác biệt', '5': 'Rất mới lạ và khác biệt',
@@ -462,7 +466,10 @@ lst_side_main = [
         },
     }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
 
-    {"qre_name": "F1_YN_New"},
+    {"qre_name": "F1_YN_New", "calculate": {
+        "Yes*0.2": "[Yes]*0.2",
+        "Yes*0.8": "[Yes]*0.8",
+    }},
 
 ]
 
