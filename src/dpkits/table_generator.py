@@ -502,11 +502,20 @@ class DataTableGenerator:
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
+        lst_ran_col = list()
+
         for idx_pair, sig_pair in enumerate(lst_sig_pair):
 
             dict_pair_to_sig = dict()
 
             for idx_item, item in enumerate(sig_pair):
+
+                if not sig_type and item in lst_ran_col:
+                    continue
+
+                if item not in lst_ran_col:
+                    lst_ran_col.append(item)
+
                 str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
 
                 df_filter = df_data.query(str_query).loc[:, [qre_name]].copy()
@@ -579,11 +588,20 @@ class DataTableGenerator:
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
+        lst_ran_col = list()
+
         for idx_pair, sig_pair in enumerate(lst_sig_pair):
 
             dict_pair_to_sig = dict()
 
             for idx_item, item in enumerate(sig_pair):
+
+                if not sig_type and item in lst_ran_col:
+                    continue
+
+                if item not in lst_ran_col:
+                    lst_ran_col.append(item)
+
                 str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
 
                 df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
@@ -649,11 +667,20 @@ class DataTableGenerator:
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
+        lst_ran_col = list()
+
         for idx_pair, sig_pair in enumerate(lst_sig_pair):
 
             dict_pair_to_sig = dict()
 
             for idx_item, item in enumerate(sig_pair):
+
+                if not sig_type and item in lst_ran_col:
+                    continue
+
+                if item not in lst_ran_col:
+                    lst_ran_col.append(item)
+
                 str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
 
                 df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
@@ -726,15 +753,7 @@ class DataTableGenerator:
 
         df_qre.reset_index(drop=True, inplace=True)
 
-
-
-
-
         return df_qre
-
-
-
-
 
 
 
@@ -757,11 +776,20 @@ class DataTableGenerator:
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
+        lst_ran_col = list()
+
         for idx_pair, sig_pair in enumerate(lst_sig_pair):
 
             dict_pair_to_sig = dict()
 
             for idx_item, item in enumerate(sig_pair):
+
+                if not sig_type and item in lst_ran_col:
+                    continue
+
+                if item not in lst_ran_col:
+                    lst_ran_col.append(item)
+
                 str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
                 df_filter = df_data.query(str_query).loc[:, [qre_name]].copy()
 
@@ -817,11 +845,20 @@ class DataTableGenerator:
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
+        lst_ran_col = list()
+
         for idx_pair, sig_pair in enumerate(lst_sig_pair):
 
             dict_pair_to_sig = dict()
 
             for idx_item, item in enumerate(sig_pair):
+
+                if not sig_type and item in lst_ran_col:
+                    continue
+
+                if item not in lst_ran_col:
+                    lst_ran_col.append(item)
+
                 str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
                 # df_filter = df_data.query(str_query).loc[:, df_ma_info['var_name'].values.tolist()].copy()
                 df_filter = df_data.query(str_query).loc[:, lst_qre_col].copy()
