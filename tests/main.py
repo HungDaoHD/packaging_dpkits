@@ -350,40 +350,41 @@ lst_header = [
             "qre_name": "S1",
             "qre_lbl": "City",
             "cats": {
-                "TOTAL": "TOTAL",
+                # "TOTAL": "TOTAL",
                 '3': 'Hồ Chí Minh',
-                '4': 'Cần Thơ'
+                # '4': 'Cần Thơ'
             }
         },
     ],
     # header lvl 2
     [
-        {
-            "qre_name": "@S3_b_Group",
-            "qre_lbl": "Age",
-            "cats": {
-                "S3_b > 0": "TOTAL",
-                "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-                "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-            }
-        },
-        {
-            "qre_name": "@S4_Class",
-            "qre_lbl": "Class",
-            "cats": {
-                "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-                "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-            }
-        },
+        # {
+        #     "qre_name": "@S3_b_Group",
+        #     "qre_lbl": "Age",
+        #     "cats": {
+        #         "S3_b > 0": "TOTAL",
+        #         "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+        #         "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+        #     }
+        # },
+        # {
+        #     "qre_name": "@S4_Class",
+        #     "qre_lbl": "Class",
+        #     "cats": {
+        #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+        #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+        #     }
+        # },
         {
             "qre_name": "@S8_BUMO",
             "qre_lbl": "BUMO",
             "cats": {
-                "S8.isin([2])": "Tiger nâu",
-                "S8.isin([6, 7, 8])": "Sài Gòn",
+                # "S8.isin([2])": "Tiger nâu",
+                # "S8.isin([6, 7, 8])": "Sài Gòn",
                 "S8.isin([12, 13, 14])": "Larue",
             }
         },
+
     ],
     # header lvl 3
     [
@@ -397,7 +398,7 @@ lst_header = [
 
 lst_side_scr_tagon = [
     {"qre_name": "S1"},
-    {"qre_name": "S2"},
+    {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
     {"qre_name": "S3_b"},
     {"qre_name": "S4"},
     {"qre_name": "S5"},
@@ -427,55 +428,55 @@ lst_side_main = [
         "4 - Thích weight 0.2": "[4 - Thích]*0.2",
         "5 - Rất thích weight 0.8": "[5 - Rất thích]*0.8",
     }},
-    {"qre_name": "Q4", 'cats': {
-        '1': 'Hoàn toàn không phù hợp', '2': 'Không phù hợp', '3': 'Hơi không phù hợp', '4': 'Phù hợp', '5': 'Rất Phù hợp',
-        'net_code': {
-            '900001|combine|T2B': {'4': '4', '5': '5'},
-            '900002|combine|Medium': {'3': '3'},
-            '900003|combine|B2B': {'1': '1', '2': '2'},
-        }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-
-    {"qre_name": "Q5", 'cats': {
-        '1': 'Hoàn toàn không mới lạ và khác biệt', '2': 'Không mới lạ và khác biệt', '3': 'Hơi không mới lạ và khác biệt', '4': 'Mới lạ và khác biệt', '5': 'Rất mới lạ và khác biệt',
-        'net_code': {
-            '900001|combine|T2B': {'4': '4', '5': '5'},
-            '900002|combine|Medium': {'3': '3'},
-            '900003|combine|B2B': {'1': '1', '2': '2'},
-        }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-
-    {"qre_name": "Q9", 'cats': {
-        '1': 'Hoàn toàn không cao cấp', '2': 'Không cao cấp', '3': 'Hơi không cao cấp', '4': 'Cao cấp', '5': 'Rất cao cấp',
-        'net_code': {
-            '900001|combine|T2B': {'4': '4', '5': '5'},
-            '900002|combine|Medium': {'3': '3'},
-            '900003|combine|B2B': {'1': '1', '2': '2'},
-        }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-
-    {"qre_name": "Q6", 'cats': {
-        '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
-        'net_code': {
-            '900001|combine|T2B': {'4': '4', '5': '5'},
-            '900002|combine|Medium': {'3': '3'},
-            '900003|combine|B2B': {'1': '1', '2': '2'},
-        }
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-
-    {"qre_name": "Q10", 'cats': {
-        '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
-        'net_code': {
-            '900001|combine|T2B': {'4': '4', '5': '5'},
-            '900002|combine|Medium': {'3': '3'},
-            '900003|combine|B2B': {'1': '1', '2': '2'},
-        },
-    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-
-    {"qre_name": "F1_YN_New", "calculate": {
-        "Yes*0.2": "[Yes]*0.2",
-        "Yes*0.8": "[Yes]*0.8",
-    }},
+    # {"qre_name": "Q4", 'cats': {
+    #     '1': 'Hoàn toàn không phù hợp', '2': 'Không phù hợp', '3': 'Hơi không phù hợp', '4': 'Phù hợp', '5': 'Rất Phù hợp',
+    #     'net_code': {
+    #         '900001|combine|T2B': {'4': '4', '5': '5'},
+    #         '900002|combine|Medium': {'3': '3'},
+    #         '900003|combine|B2B': {'1': '1', '2': '2'},
+    #     }
+    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    #
+    # {"qre_name": "Q5", 'cats': {
+    #     '1': 'Hoàn toàn không mới lạ và khác biệt', '2': 'Không mới lạ và khác biệt', '3': 'Hơi không mới lạ và khác biệt', '4': 'Mới lạ và khác biệt', '5': 'Rất mới lạ và khác biệt',
+    #     'net_code': {
+    #         '900001|combine|T2B': {'4': '4', '5': '5'},
+    #         '900002|combine|Medium': {'3': '3'},
+    #         '900003|combine|B2B': {'1': '1', '2': '2'},
+    #     }
+    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    #
+    # {"qre_name": "Q9", 'cats': {
+    #     '1': 'Hoàn toàn không cao cấp', '2': 'Không cao cấp', '3': 'Hơi không cao cấp', '4': 'Cao cấp', '5': 'Rất cao cấp',
+    #     'net_code': {
+    #         '900001|combine|T2B': {'4': '4', '5': '5'},
+    #         '900002|combine|Medium': {'3': '3'},
+    #         '900003|combine|B2B': {'1': '1', '2': '2'},
+    #     }
+    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    #
+    # {"qre_name": "Q6", 'cats': {
+    #     '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
+    #     'net_code': {
+    #         '900001|combine|T2B': {'4': '4', '5': '5'},
+    #         '900002|combine|Medium': {'3': '3'},
+    #         '900003|combine|B2B': {'1': '1', '2': '2'},
+    #     }
+    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    #
+    # {"qre_name": "Q10", 'cats': {
+    #     '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
+    #     'net_code': {
+    #         '900001|combine|T2B': {'4': '4', '5': '5'},
+    #         '900002|combine|Medium': {'3': '3'},
+    #         '900003|combine|B2B': {'1': '1', '2': '2'},
+    #     },
+    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+    #
+    # {"qre_name": "F1_YN_New", "calculate": {
+    #     "Yes*0.2": "[Yes]*0.2",
+    #     "Yes*0.8": "[Yes]*0.8",
+    # }},
 
 ]
 
@@ -531,9 +532,9 @@ lst_func_to_run = [
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {
-                    "sig_type": "",  # rel
+                    "sig_type": "rel",
                     "sig_cols": [],
-                    "lst_sig_lvl": []  # 90, 95
+                    "lst_sig_lvl": [90, 95]
                 },
                 "lst_side_qres": lst_side_main,
                 "lst_header_qres": lst_header
