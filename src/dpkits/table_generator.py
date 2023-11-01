@@ -269,9 +269,9 @@ class DataTableGenerator:
         if '$' in dict_qre['qre_name']:
 
             if 'RANK' in str(dict_qre['qre_name']).upper():
-                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}[0-9]+')")['var_name'].values.tolist()
+                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}[0-9]+$')")['var_name'].values.tolist()
             else:
-                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}_[0-9]+')")['var_name'].values.tolist()
+                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}_[0-9]+$')")['var_name'].values.tolist()
 
             if str(str_cat_or_query).upper() == 'TOTAL':
                 return f"({' | '.join([f'{i} > 0' for i in lst_qre_ma_name])})"
@@ -328,9 +328,9 @@ class DataTableGenerator:
             if '$' in qre['qre_name']:
 
                 if '_RANK' in str(qre['qre_name']).upper():
-                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}[0-9]+"), 'var_name'].values.tolist()
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
                 else:
-                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}_[0-9]+"), 'var_name'].values.tolist()
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
 
                 var_name = qre['qre_name'].replace('$', '')
 
@@ -425,8 +425,6 @@ class DataTableGenerator:
             df_tbl = df_tbl[df_tbl.columns.tolist()[:5] + lst_keep_col]
 
             # df_tbl.to_excel('df_tbl_review.xlsx')
-            a = 1
-
 
 
         # Reset df table index
@@ -438,7 +436,8 @@ class DataTableGenerator:
 
 
     @staticmethod
-    def add_base_to_tbl_sig(df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list) -> pd.DataFrame:
+    # def add_base_to_tbl_sig(df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list) -> pd.DataFrame:
+    def add_base_to_tbl_sig(df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list) -> pd.DataFrame:
 
         lst_tbl_row_data = list()
         lst_ignore_col = list()
@@ -450,19 +449,30 @@ class DataTableGenerator:
                 if item in lst_ignore_col:
                     continue
 
-                str_hd_query = df_tbl.at[0, dict_header_col_name[item]['val_col']]
+                # str_hd_query = df_tbl.at[0, dict_header_col_name[item]['val_col']]
+                # if len(qre_info['lst_qre_col']) > 1:
+                #     lst_qre_col = qre_info['lst_qre_col']
+                #     # df_filter = df_data.query(str_hd_query).copy()
+                #     df_filter = dict_header_col_name[item]['df_data'].copy()
+                #     df_fil_base = df_filter[lst_qre_col].dropna(how='all')
+                #     df_filter = df_filter.loc[df_fil_base.index, :]
+                # else:
+                #     # str_query = f"{str_hd_query} & {qre_info['qre_name'].replace('_Mean', '').replace('_Group', '')} > 0"
+                #     # df_filter = df_data.query(str_query).copy()
+                #
+                #     lst_qre_col = qre_info['lst_qre_col']
+                #     df_filter = dict_header_col_name[item]['df_data'].copy()
+                #     df_fil_base = df_filter[lst_qre_col].dropna(how='all')
+                #     df_filter = df_filter.loc[df_fil_base.index, :]
 
-                if len(qre_info['lst_qre_col']) > 1:
-                    lst_qre_col = qre_info['lst_qre_col']
-                    df_filter = df_data.query(str_hd_query).copy()
-                    df_fil_base = df_filter[lst_qre_col].dropna(how='all')
-                    df_filter = df_filter.loc[df_fil_base.index, :]
+                lst_qre_col = qre_info['lst_qre_col']
+                df_filter = dict_header_col_name[item]['df_data'].copy()
+                df_fil_base = df_filter[lst_qre_col].dropna(how='all')
+                df_filter = df_filter.loc[df_fil_base.index, :]
 
-                else:
-                    str_query = f"{str_hd_query} & {qre_info['qre_name'].replace('_Mean', '').replace('_Group', '')} > 0"
-                    df_filter = df_data.query(str_query).copy()
 
-                if df_data.empty:
+                # if df_data.empty:
+                if df_filter.empty:
                     num_base = 0
                 else:
                     num_base = df_filter.shape[0]
@@ -480,9 +490,16 @@ class DataTableGenerator:
         return df_qre
 
 
-    def add_sa_qre_val_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
-                                  qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                                  sig_type: str, lst_sig_lvl: list, cat: str, lbl: str, lst_sub_cat: list = None) -> pd.DataFrame:
+
+    # def add_sa_qre_val_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
+    #                               qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
+    #                               sig_type: str, lst_sig_lvl: list, cat: str, lbl: str, lst_sub_cat: list = None) -> pd.DataFrame:
+
+
+
+    def add_sa_qre_val_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
+                                  lst_sig_pair: list, sig_type: str, lst_sig_lvl: list,
+                                  cat: str, lbl: str, lst_sub_cat: list = None) -> pd.DataFrame:
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -516,9 +533,10 @@ class DataTableGenerator:
                 if item not in lst_ran_col:
                     lst_ran_col.append(item)
 
-                str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # df_filter = df_data.query(str_query).loc[:, [qre_name]].copy()
 
-                df_filter = df_data.query(str_query).loc[:, [qre_name]].copy()
+                df_filter = dict_header_col_name[item]['df_data'].loc[:, [qre_name]].copy()
 
                 if df_filter.empty:
                     continue
@@ -553,9 +571,14 @@ class DataTableGenerator:
         return df_qre
 
 
-    def add_sa_qre_mean_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
-                                   qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                                   sig_type: str, lst_sig_lvl: list, mean_factor: dict, is_mean: bool = True) -> pd.DataFrame:
+    # def add_sa_qre_mean_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
+    #                                qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
+    #                                sig_type: str, lst_sig_lvl: list, mean_factor: dict, is_mean: bool = True) -> pd.DataFrame:
+
+
+
+    def add_sa_qre_mean_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
+                                   lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, mean_factor: dict, is_mean: bool = True) -> pd.DataFrame:
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -583,8 +606,8 @@ class DataTableGenerator:
 
         org_qre_name = qre_name.replace('_Mean', '')
 
-        if mean_factor:
-            df_data.replace({org_qre_name: mean_factor}, inplace=True)
+        # if mean_factor:
+        #     df_data.replace({org_qre_name: mean_factor}, inplace=True)
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
@@ -602,12 +625,16 @@ class DataTableGenerator:
                 if item not in lst_ran_col:
                     lst_ran_col.append(item)
 
-                str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
 
-                df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
+                df_filter = dict_header_col_name[item]['df_data'].loc[:, [org_qre_name]].copy()
 
                 if df_filter.empty:
                     continue
+
+                if mean_factor:
+                    df_filter.replace({org_qre_name: mean_factor}, inplace=True)
 
                 if -999 not in qre_val.keys():
                     df_filter.replace(qre_val, inplace=True)
@@ -643,9 +670,16 @@ class DataTableGenerator:
         return df_qre
 
 
-    def add_sa_qre_group_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
-                                    qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                                    sig_type: str, lst_sig_lvl: list, cat: str, lbl: str) -> pd.DataFrame:  # lst_sub_cat: list = None
+
+    # def add_sa_qre_group_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
+    #                                 qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
+    #                                 sig_type: str, lst_sig_lvl: list, cat: str, lbl: str) -> pd.DataFrame:  # lst_sub_cat: list = None
+
+
+
+    def add_sa_qre_group_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
+                                    lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, cat: str, lbl: str) -> pd.DataFrame:
+
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -681,9 +715,10 @@ class DataTableGenerator:
                 if item not in lst_ran_col:
                     lst_ran_col.append(item)
 
-                str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
 
-                df_filter = df_data.query(str_query).loc[:, [org_qre_name]].copy()
+                df_filter = dict_header_col_name[item]['df_data'].loc[:, [org_qre_name]].copy()
 
                 if df_filter.empty:
                     continue
@@ -748,7 +783,11 @@ class DataTableGenerator:
 
                 df_temp.loc[key, col] = eval(str_syntax)
 
+            a = 0
+
             df_qre = pd.concat([df_qre, df_temp], axis=0)
+
+            a = 1
 
 
         df_qre.reset_index(drop=True, inplace=True)
@@ -757,9 +796,14 @@ class DataTableGenerator:
 
 
 
-    def add_num_qre_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
-                               qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                               sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
+    # def add_num_qre_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
+    #                            qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
+    #                            sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
+
+
+
+    def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
+                               lst_sig_pair: list, sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -790,8 +834,10 @@ class DataTableGenerator:
                 if item not in lst_ran_col:
                     lst_ran_col.append(item)
 
-                str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
-                df_filter = df_data.query(str_query).loc[:, [qre_name]].copy()
+                # str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # df_filter = df_data.query(str_query).loc[:, [qre_name]].copy()
+
+                df_filter = dict_header_col_name[item]['df_data'].loc[:, [qre_name]].copy()
 
                 if df_filter.empty:
                     continue
@@ -818,9 +864,14 @@ class DataTableGenerator:
         return df_qre
 
 
-    def add_ma_qre_val_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
-                                  qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
-                                  sig_type: str, lst_sig_lvl: list, cat: str, lbl: str, lst_sub_cat: list = None) -> pd.DataFrame:
+    # def add_ma_qre_val_to_tbl_sig(self, df_data: pd.DataFrame, df_tbl: pd.DataFrame, df_qre: pd.DataFrame,
+    #                               qre_info: dict, dict_header_col_name: dict, lst_sig_pair: list,
+    #                               sig_type: str, lst_sig_lvl: list, cat: str, lbl: str, lst_sub_cat: list = None) -> pd.DataFrame:
+
+
+
+    def add_ma_qre_val_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
+                                  lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, cat: str, lbl: str, lst_sub_cat: list = None) -> pd.DataFrame:
 
         if lst_sub_cat is None:
             lst_sub_cat = []
@@ -859,9 +910,12 @@ class DataTableGenerator:
                 if item not in lst_ran_col:
                     lst_ran_col.append(item)
 
-                str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
-                # df_filter = df_data.query(str_query).loc[:, df_ma_info['var_name'].values.tolist()].copy()
-                df_filter = df_data.query(str_query).loc[:, lst_qre_col].copy()
+                # str_query = f"{df_tbl.at[0, dict_header_col_name[item]['val_col']]}"
+                # # df_filter = df_data.query(str_query).loc[:, df_ma_info['var_name'].values.tolist()].copy()
+                # df_filter = df_data.query(str_query).loc[:, lst_qre_col].copy()
+
+                df_filter = dict_header_col_name[item]['df_data'].loc[:, lst_qre_col].copy()
+
 
                 if df_filter.empty:
                     continue
@@ -1017,7 +1071,7 @@ class DataTableGenerator:
             'cat_lbl': list(),
         }
 
-        dict_header_col_name = dict()
+        dict_header_col_name_origin = dict()
 
         for hd_k, hd_v in dict_grp_header.items():
             str_hd_val = f"{hd_v['query']}@{hd_v['lbl']}@val@{dict_char_sig[hd_k]}"
@@ -1028,10 +1082,11 @@ class DataTableGenerator:
                 str_hd_sig: str_hd_sig.split('@'),
             })
 
-            dict_header_col_name.update({
+            dict_header_col_name_origin.update({
                 dict_char_sig[hd_k]: {
                     'val_col': str_hd_val,
                     'sig_col': str_hd_sig,
+                    'df_data': df_data.query(hd_v['query']).copy(),
                 }
             })
 
@@ -1050,14 +1105,14 @@ class DataTableGenerator:
             if tbl_info_sig['sig_test_info']['sig_cols']:
                 lst_sig_pair = tbl_info_sig['sig_test_info']['sig_cols']
             else:
-                lst_sig_char = list(dict_header_col_name.keys())
+                lst_sig_char = list(dict_header_col_name_origin.keys())
                 lst_sig_pair = list()
                 for i in range(len(lst_sig_char)-1):
                     for j in range(i + 1, len(lst_sig_char)):
                         lst_sig_pair.append([lst_sig_char[i], lst_sig_char[j]])
 
         else:
-            lst_sig_char = list(dict_header_col_name.keys())
+            lst_sig_char = list(dict_header_col_name_origin.keys())
             lst_sig_pair = list()
             # for j in range(1, len(lst_sig_char)):
             #     lst_sig_pair.append([lst_sig_char[0], lst_sig_char[j]])
@@ -1078,6 +1133,7 @@ class DataTableGenerator:
         ]
 
         # lst_ignore_col_name = list()
+        # df_tbl.to_csv('df_tbl_temp.csv', encoding='utf-8-sig')
 
         for idx in df_info.index:
 
@@ -1094,8 +1150,23 @@ class DataTableGenerator:
             # if qre_name == 'Q2_OL_Com':
             #     a = 1
 
-            # filter data base on qre_fil
-            df_data_qre_fil = df_data.query(qre_fil).copy() if qre_fil else df_data.copy()
+            # # filter data base on qre_fil
+            # df_data_qre_fil = df_data.query(qre_fil).copy() if qre_fil else df_data.copy()
+
+            # dict_header_col_name = dict(dict_header_col_name_origin)
+            # if qre_fil:
+            #     for key, val in dict_header_col_name.items():
+            #         val['df_data'] = val['df_data'].query(qre_fil)
+
+            dict_header_col_name = dict()
+            for key, val in dict_header_col_name_origin.items():
+                dict_header_col_name[key] = val.copy()
+
+                if qre_fil:
+                    dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'].query(qre_fil)
+
+
+
 
             qre_info = {
                 'qre_name': qre_name,
@@ -1119,7 +1190,8 @@ class DataTableGenerator:
             if qre_type in ['MEAN', 'GROUP']:
                 pass
             else:
-                df_qre = self.add_base_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair)
+                # df_qre = self.add_base_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair)
+                df_qre = self.add_base_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair)
 
             # END BASE--------------------------------------------------------------------------------------------------
 
@@ -1153,24 +1225,28 @@ class DataTableGenerator:
 
                                 net_cat_val, net_cat_type, net_cat_lbl = net_cat.split('|')
 
-                                df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
+                                # df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
+                                df_qre = self.add_sa_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
 
                                 if 'NET' in net_cat_type.upper():
                                     for cat2, lbl2 in net_val.items():
-                                        df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
+                                        # df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
+                                        df_qre = self.add_sa_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
                             else:
-                                df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
+                                # df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
+                                df_qre = self.add_sa_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
 
                     else:
-                        df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
+                        # df_qre = self.add_sa_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
+                        df_qre = self.add_sa_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
 
                 mean_factor = df_info.at[idx, 'mean']
                 if mean_factor.keys():
                     # Run Mean
-                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor)
+                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor)
 
                     # Run Std
-                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor, is_mean=False)
+                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor, is_mean=False)
 
                 dict_cal = df_info.at[idx, 'calculate']
                 if dict_cal:
@@ -1187,7 +1263,8 @@ class DataTableGenerator:
 
             elif qre_type in ['NUM']:
 
-                df_qre = self.add_num_qre_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl)
 
             elif qre_type in ['MA', 'MA_mtr', 'MA_comb', 'MA_Rank']:
 
@@ -1223,17 +1300,21 @@ class DataTableGenerator:
                                 # list_net_cat = net_cat.split('|')
                                 net_cat_val, net_cat_type, net_cat_lbl = net_cat.split('|')
 
-                                df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
+                                # df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
+                                df_qre = self.add_ma_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat_val, net_cat_lbl, lst_sub_cat)
 
                                 if 'NET' in net_cat_type.upper():
                                     for cat2, lbl2 in net_val.items():
-                                        df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
+                                        # df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
+                                        df_qre = self.add_ma_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat2, f' - {lbl2}')
 
                             else:
-                                df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
+                                # df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
+                                df_qre = self.add_ma_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, net_cat, net_val)
 
                     else:
-                        df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
+                        # df_qre = self.add_ma_qre_val_to_tbl_sig(df_data_qre_fil, df_tbl, df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
+                        df_qre = self.add_ma_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl)
 
 
             # SORTING---------------------------------------------------------------------------------------------------
