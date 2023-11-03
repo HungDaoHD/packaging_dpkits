@@ -4,6 +4,8 @@ import numpy as np
 import time
 import json
 from scipy import stats
+from datetime import datetime
+
 
 
 
@@ -20,6 +22,14 @@ class DataTableGenerator:
 
         self.file_name = xlsx_name
 
+        # Check file permission
+        a1 = os.access(xlsx_name, os.R_OK)  # Check for read access
+        a2 = os.access(xlsx_name, os.W_OK)  # Check for write access
+        a3 = os.access(xlsx_name, os.X_OK)  # Check for execution access
+        a4 = os.access(xlsx_name, os.F_OK)  # Check for existence of file
+
+        a = 1
+
         # lst_qre_group: list = [], lst_qre_mean: list = []
         # self.lst_qre_group = lst_qre_group
         # self.lst_qre_mean = lst_qre_mean
@@ -28,6 +38,16 @@ class DataTableGenerator:
         for idx in self.df_info.index:
             if 'net_code' in self.df_info.at[idx, 'val_lbl'].keys():
                 self.dict_unnetted_qres.update({self.df_info.at[idx, 'var_name']: self.unnetted_qre_val(self.df_info.at[idx, 'val_lbl'])})
+
+
+
+        try:
+            check_perm = open(xlsx_name)
+            check_perm.close()
+        except PermissionError:
+            print(f'\x1b[31;20mPermission Error when access file: {xlsx_name}', 'Processing terminated.')
+            exit()
+
 
 
     def convert_md_to_mc(self, df_data: pd.DataFrame, df_info: pd.DataFrame):
@@ -92,13 +112,15 @@ class DataTableGenerator:
         # self.add_mean()
 
         if not is_append:
-            if os.path.exists(self.file_name):
-                os.remove(self.file_name)
-
+            file_name = self.file_name
             df_content_null = pd.DataFrame(columns=['#', 'Content'], data=[])
 
-            with pd.ExcelWriter(self.file_name) as writer:
+            if os.path.exists(file_name):
+                os.remove(file_name)
+
+            with pd.ExcelWriter(file_name) as writer:
                 df_content_null.to_excel(writer, sheet_name='Content', index=False)
+
 
         for item in lst_func_to_run:
             self.run_tables_by_item(item)

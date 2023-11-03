@@ -590,13 +590,16 @@ lst_func_to_run = [
     },
 ]
 
+
 # RUN TABLE FOR SCREENER
 dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
 dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
-# # RUN TABLE FOR MAIN
-# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+
+
+# RUN TABLE FOR MAIN
+dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 
