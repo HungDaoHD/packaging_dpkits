@@ -198,36 +198,35 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# # ----------------------------------------------------------------------------------------------------------------------
-# # OE RUNNING------------------------------------------------------------------------------------------------------------
-# # ----------------------------------------------------------------------------------------------------------------------
-# # NOT YET START
-#
-# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-#
-# cfr.to_dataframe_file()
-#
-# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-#
-# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-#
-# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-#
-# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-#
-# lst_drop = df_coding.columns.tolist()
-# lst_drop.remove('ID')
-# lst_drop.remove('Ma_SP')
-#
+# ----------------------------------------------------------------------------------------------------------------------
+# OE RUNNING------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+# NOT YET START
+
+cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+
+cfr.to_dataframe_file()
+
+df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+
+df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+
+df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+
+df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+
+lst_oe_col = df_coding.columns.tolist()
+lst_oe_col.remove('ID')
+lst_oe_col.remove('Ma_SP')
+
 # df_data_stack.drop(columns=lst_drop, inplace=True)
-#
-# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-#
-# for i in lst_drop:
-#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
+df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+
+for i in lst_oe_col:
+    df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -397,16 +396,17 @@ lst_header = [
 ]
 
 lst_side_scr_tagon = [
-    # {"qre_name": "S1"},
-    # {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
-    # {"qre_name": "S3_b"},
-    # {"qre_name": "S4"},
-    # {"qre_name": "S5"},
+    {"qre_name": "S1"},
+    {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
+    {"qre_name": "S3_b"},
+    {"qre_name": "S4"},
+    {"qre_name": "S5"},
 
     {"qre_name": "$S6"},
-    {"qre_name": "$S6", "qre_lbl": "S6. Testing", "cats": {
+    {"qre_name": "$S6", "qre_lbl": "S6. Test define without full cats", "cats": {
         'net_code': {
             # '1': 'Bia lon/chai',
+            '2': 'Cà phê hòa tan/ uống liền',
             '900001|net|G1': {
                 '2': 'Cà phê hòa tan/ uống liền',
                 '3': 'Nước ngọt có ga',
@@ -416,12 +416,12 @@ lst_side_scr_tagon = [
         }
     }},
 
-    # {"qre_name": "S7"},
-    # {"qre_name": "S8"},
-    # {"qre_name": "S10"},
-    #
-    # {"qre_name": "Dealer_HCM_01_Rank1"},
-    # {"qre_name": "$Dealer_HCM_02_Rank"},
+    {"qre_name": "S7"},
+    {"qre_name": "S8"},
+    {"qre_name": "S10"},
+
+    {"qre_name": "Dealer_HCM_01_Rank1"},
+    {"qre_name": "$Dealer_HCM_02_Rank"},
 
 
 
@@ -442,55 +442,55 @@ lst_side_main = [
         "4 - Thích weight 0.2": "[4 - Thích]*0.2",
         "5 - Rất thích weight 0.8": "[5 - Rất thích]*0.8",
     }},
-    # {"qre_name": "Q4", 'cats': {
-    #     '1': 'Hoàn toàn không phù hợp', '2': 'Không phù hợp', '3': 'Hơi không phù hợp', '4': 'Phù hợp', '5': 'Rất Phù hợp',
-    #     'net_code': {
-    #         '900001|combine|T2B': {'4': '4', '5': '5'},
-    #         '900002|combine|Medium': {'3': '3'},
-    #         '900003|combine|B2B': {'1': '1', '2': '2'},
-    #     }
-    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-    #
-    # {"qre_name": "Q5", 'cats': {
-    #     '1': 'Hoàn toàn không mới lạ và khác biệt', '2': 'Không mới lạ và khác biệt', '3': 'Hơi không mới lạ và khác biệt', '4': 'Mới lạ và khác biệt', '5': 'Rất mới lạ và khác biệt',
-    #     'net_code': {
-    #         '900001|combine|T2B': {'4': '4', '5': '5'},
-    #         '900002|combine|Medium': {'3': '3'},
-    #         '900003|combine|B2B': {'1': '1', '2': '2'},
-    #     }
-    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-    #
-    # {"qre_name": "Q9", 'cats': {
-    #     '1': 'Hoàn toàn không cao cấp', '2': 'Không cao cấp', '3': 'Hơi không cao cấp', '4': 'Cao cấp', '5': 'Rất cao cấp',
-    #     'net_code': {
-    #         '900001|combine|T2B': {'4': '4', '5': '5'},
-    #         '900002|combine|Medium': {'3': '3'},
-    #         '900003|combine|B2B': {'1': '1', '2': '2'},
-    #     }
-    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-    #
-    # {"qre_name": "Q6", 'cats': {
-    #     '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
-    #     'net_code': {
-    #         '900001|combine|T2B': {'4': '4', '5': '5'},
-    #         '900002|combine|Medium': {'3': '3'},
-    #         '900003|combine|B2B': {'1': '1', '2': '2'},
-    #     }
-    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-    #
-    # {"qre_name": "Q10", 'cats': {
-    #     '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
-    #     'net_code': {
-    #         '900001|combine|T2B': {'4': '4', '5': '5'},
-    #         '900002|combine|Medium': {'3': '3'},
-    #         '900003|combine|B2B': {'1': '1', '2': '2'},
-    #     },
-    # }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
-    #
-    # {"qre_name": "F1_YN_New", "calculate": {
-    #     "Yes*0.2": "[Yes]*0.2",
-    #     "Yes*0.8": "[Yes]*0.8",
-    # }},
+    {"qre_name": "Q4", 'cats': {
+        '1': 'Hoàn toàn không phù hợp', '2': 'Không phù hợp', '3': 'Hơi không phù hợp', '4': 'Phù hợp', '5': 'Rất Phù hợp',
+        'net_code': {
+            '900001|combine|T2B': {'4': '4', '5': '5'},
+            '900002|combine|Medium': {'3': '3'},
+            '900003|combine|B2B': {'1': '1', '2': '2'},
+        }
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+
+    {"qre_name": "Q5", 'cats': {
+        '1': 'Hoàn toàn không mới lạ và khác biệt', '2': 'Không mới lạ và khác biệt', '3': 'Hơi không mới lạ và khác biệt', '4': 'Mới lạ và khác biệt', '5': 'Rất mới lạ và khác biệt',
+        'net_code': {
+            '900001|combine|T2B': {'4': '4', '5': '5'},
+            '900002|combine|Medium': {'3': '3'},
+            '900003|combine|B2B': {'1': '1', '2': '2'},
+        }
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+
+    {"qre_name": "Q9", 'cats': {
+        '1': 'Hoàn toàn không cao cấp', '2': 'Không cao cấp', '3': 'Hơi không cao cấp', '4': 'Cao cấp', '5': 'Rất cao cấp',
+        'net_code': {
+            '900001|combine|T2B': {'4': '4', '5': '5'},
+            '900002|combine|Medium': {'3': '3'},
+            '900003|combine|B2B': {'1': '1', '2': '2'},
+        }
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+
+    {"qre_name": "Q6", 'cats': {
+        '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
+        'net_code': {
+            '900001|combine|T2B': {'4': '4', '5': '5'},
+            '900002|combine|Medium': {'3': '3'},
+            '900003|combine|B2B': {'1': '1', '2': '2'},
+        }
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+
+    {"qre_name": "Q10", 'cats': {
+        '1': 'Chắc chắn sẽ không mua', '2': 'Không mua', '3': 'Có thể sẽ mua hoặc không', '4': 'Sẽ mua', '5': 'Chắc chắn sẽ mua',
+        'net_code': {
+            '900001|combine|T2B': {'4': '4', '5': '5'},
+            '900002|combine|Medium': {'3': '3'},
+            '900003|combine|B2B': {'1': '1', '2': '2'},
+        },
+    }, "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}},
+
+    {"qre_name": "F1_YN_New", "calculate": {
+        "Yes*0.2": "[Yes]*0.2",
+        "Yes*0.8": "[Yes]*0.8",
+    }},
 
 ]
 
@@ -508,7 +508,7 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Scr_Tagon_count',
+            # 'Scr_Tagon_count',
             'Scr_Tagon_pct',
         ],
         'tables_format': {
@@ -519,11 +519,7 @@ lst_func_to_run = [
                 "is_pct_sign": 0,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
-                "sig_test_info": {
-                    "sig_type": "",
-                    "sig_cols": [],
-                    "lst_sig_lvl": []
-                },
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
                 "lst_header_qres": lst_header[:-1]
             },
@@ -534,11 +530,7 @@ lst_func_to_run = [
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
-                "sig_test_info": {
-                    "sig_type": "",
-                    "sig_cols": [],
-                    "lst_sig_lvl": []
-                },
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
                 "lst_header_qres": lst_header[:-1]
             },
@@ -549,8 +541,8 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Main',
-            # 'Main_oe',
+            # 'Main',
+            'Main_oe',
         ],
         'tables_format': {
 
@@ -561,11 +553,7 @@ lst_func_to_run = [
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
-                "sig_test_info": {
-                    "sig_type": "rel",
-                    "sig_cols": [],
-                    "lst_sig_lvl": [90, 95]
-                },
+                "sig_test_info": {"sig_type": "rel", "sig_cols": [], "lst_sig_lvl": [90, 95]},
                 "lst_side_qres": lst_side_main,
                 "lst_header_qres": lst_header
             },
@@ -577,11 +565,7 @@ lst_func_to_run = [
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
-                "sig_test_info": {
-                    "sig_type": "",
-                    "sig_cols": [],
-                    "lst_sig_lvl": []
-                },
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_oe,
                 "lst_header_qres": lst_header
             },
@@ -610,5 +594,5 @@ dtf.format_sig_table()
 
 
 
-print('\n==>TESTING PROCESS DONE | Duration', datetime.timedelta(seconds=time.time() - st))
+print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=time.time() - st))
 
