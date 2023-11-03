@@ -1277,9 +1277,12 @@ class DataTableGenerator:
                     if f'{qre_name}_1' in self.dict_unnetted_qres.keys():
                         qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
                     else:
+
                         if 'net_code' in qre_val.keys():
-                            self.dict_unnetted_qres.update({f'{qre_name}_1': self.unnetted_qre_val(qre_val)})
-                            qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
+                            # self.dict_unnetted_qres.update({f'{qre_name}_1': self.unnetted_qre_val(qre_val)})
+                            # qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
+                            qre_val_unnetted = self.df_info.loc[self.df_info.eval(f"var_name == '{qre_name}_1'"), 'val_lbl'].values[0]
+
                         else:
                             qre_val_unnetted = qre_val
 

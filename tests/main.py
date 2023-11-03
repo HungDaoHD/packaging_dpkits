@@ -350,37 +350,37 @@ lst_header = [
             "qre_name": "S1",
             "qre_lbl": "City",
             "cats": {
-                # "TOTAL": "TOTAL",
+                "TOTAL": "TOTAL",
                 '3': 'Hồ Chí Minh',
-                # '4': 'Cần Thơ'
+                '4': 'Cần Thơ'
             }
         },
     ],
     # header lvl 2
     [
-        # {
-        #     "qre_name": "@S3_b_Group",
-        #     "qre_lbl": "Age",
-        #     "cats": {
-        #         "S3_b > 0": "TOTAL",
-        #         "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-        #         "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-        #     }
-        # },
-        # {
-        #     "qre_name": "@S4_Class",
-        #     "qre_lbl": "Class",
-        #     "cats": {
-        #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-        #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-        #     }
-        # },
+        {
+            "qre_name": "@S3_b_Group",
+            "qre_lbl": "Age",
+            "cats": {
+                "S3_b > 0": "TOTAL",
+                "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+            }
+        },
+        {
+            "qre_name": "@S4_Class",
+            "qre_lbl": "Class",
+            "cats": {
+                "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+                "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+            }
+        },
         {
             "qre_name": "@S8_BUMO",
             "qre_lbl": "BUMO",
             "cats": {
-                # "S8.isin([2])": "Tiger nâu",
-                # "S8.isin([6, 7, 8])": "Sài Gòn",
+                "S8.isin([2])": "Tiger nâu",
+                "S8.isin([6, 7, 8])": "Sài Gòn",
                 "S8.isin([12, 13, 14])": "Larue",
             }
         },
@@ -397,18 +397,32 @@ lst_header = [
 ]
 
 lst_side_scr_tagon = [
-    {"qre_name": "S1"},
-    {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
-    {"qre_name": "S3_b"},
-    {"qre_name": "S4"},
-    {"qre_name": "S5"},
-    {"qre_name": "$S6"},
-    {"qre_name": "S7"},
-    {"qre_name": "S8"},
-    {"qre_name": "S10"},
+    # {"qre_name": "S1"},
+    # {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
+    # {"qre_name": "S3_b"},
+    # {"qre_name": "S4"},
+    # {"qre_name": "S5"},
 
-    {"qre_name": "Dealer_HCM_01_Rank1"},
-    {"qre_name": "$Dealer_HCM_02_Rank"},
+    {"qre_name": "$S6"},
+    {"qre_name": "$S6", "qre_lbl": "S6. Testing", "cats": {
+        'net_code': {
+            # '1': 'Bia lon/chai',
+            '900001|net|G1': {
+                '2': 'Cà phê hòa tan/ uống liền',
+                '3': 'Nước ngọt có ga',
+            },
+            '900002|net|G2': {'4': 'Nước uống đóng chai', '5': 'Nước tăng lực'},
+            '6': 'Tôi không uống loại nào ở trên'
+        }
+    }},
+
+    # {"qre_name": "S7"},
+    # {"qre_name": "S8"},
+    # {"qre_name": "S10"},
+    #
+    # {"qre_name": "Dealer_HCM_01_Rank1"},
+    # {"qre_name": "$Dealer_HCM_02_Rank"},
+
 
 
 ]
@@ -494,14 +508,30 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Scr_Tagon',
+            'Scr_Tagon_count',
+            'Scr_Tagon_pct',
         ],
         'tables_format': {
-            "Scr_Tagon": {
-                "tbl_name": "Screener",
+            "Scr_Tagon_count": {
+                "tbl_name": "Scr_Tagon_count",
                 "tbl_filter": "S1 > 0",
                 "is_count": 1,
                 "is_pct_sign": 0,
+                "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
+                "sig_test_info": {
+                    "sig_type": "",
+                    "sig_cols": [],
+                    "lst_sig_lvl": []
+                },
+                "lst_side_qres": lst_side_scr_tagon,
+                "lst_header_qres": lst_header[:-1]
+            },
+            "Scr_Tagon_pct": {
+                "tbl_name": "Scr_Tagon_pct",
+                "tbl_filter": "S1 > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {
@@ -564,9 +594,9 @@ lst_func_to_run = [
 dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
 dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
-# RUN TABLE FOR MAIN
-dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+# # RUN TABLE FOR MAIN
+# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 
