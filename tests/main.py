@@ -541,8 +541,8 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            # 'Main',
-            'Main_oe',
+            'Main',
+            # 'Main_oe',
         ],
         'tables_format': {
 

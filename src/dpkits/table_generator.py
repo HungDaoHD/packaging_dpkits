@@ -27,15 +27,14 @@ class DataTableGenerator:
             if 'net_code' in self.df_info.at[idx, 'val_lbl'].keys():
                 self.dict_unnetted_qres.update({self.df_info.at[idx, 'var_name']: self.unnetted_qre_val(self.df_info.at[idx, 'val_lbl'])})
 
-
-
         try:
             check_perm = open(xlsx_name)
             check_perm.close()
         except PermissionError:
             print(f'\x1b[31;20mPermission Error when access file: {xlsx_name}', 'Processing terminated.')
             exit()
-
+        except FileNotFoundError:
+            pass
 
 
     def convert_md_to_mc(self, df_data: pd.DataFrame, df_info: pd.DataFrame):
@@ -1095,8 +1094,9 @@ class DataTableGenerator:
                     qre_val_unnetted = self.dict_unnetted_qres[qre_name]
                 else:
                     if 'net_code' in qre_val.keys():
-                        self.dict_unnetted_qres.update({qre_name: self.unnetted_qre_val(qre_val)})
-                        qre_val_unnetted = self.dict_unnetted_qres[qre_name]
+                        # self.dict_unnetted_qres.update({qre_name: self.unnetted_qre_val(qre_val)})
+                        # qre_val_unnetted = self.dict_unnetted_qres[qre_name]
+                        qre_val_unnetted = self.df_info.loc[self.df_info.eval(f"var_name == '{qre_name}'"), 'val_lbl'].values[0]
                     else:
                         qre_val_unnetted = qre_val
 
