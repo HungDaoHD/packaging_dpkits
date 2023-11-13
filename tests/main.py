@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import time
 import datetime
+import copy
 
 
 # from dpkits.ap_data_converter import APDataConverter
@@ -74,16 +75,16 @@ dict_add_new_qres = {
     'New_FT': ['New FT', 'FT', {}, np.nan],
     'New_Num': ['New Num', 'NUM', {}, np.nan],
     'New_MA|6': ['New MA', 'MA', {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7'}, np.nan],
+
+    'Weight_Var': ['Weight_Var', 'NUM', {}, np.nan]
 }
 
 df_data, df_info = DataProcessing.add_qres(df_data, df_info, dict_add_new_qres)
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
 
-
-
-
-
+df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 0.3
+df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.7
 
 
 # Just for checking
@@ -198,66 +199,66 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# OE RUNNING------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-# NOT YET START
-
-cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-
-cfr.to_dataframe_file()
-
-df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-
-df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-
-df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-
-df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-
-lst_oe_col = df_coding.columns.tolist()
-lst_oe_col.remove('ID')
-lst_oe_col.remove('Ma_SP')
-
-# df_data_stack.drop(columns=lst_drop, inplace=True)
-df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-
-for i in lst_oe_col:
-    df_data_stack[i].replace({99999: np.nan}, inplace=True)
-
-
-
 # # ----------------------------------------------------------------------------------------------------------------------
-# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# # OE RUNNING------------------------------------------------------------------------------------------------------------
 # # ----------------------------------------------------------------------------------------------------------------------
-# dict_dfs = {
-#     1: {
-#         'data': df_data,
-#         'info': df_info,
-#         'tail_name': 'ByCode',
-#         'sheet_name': 'ByCode',
-#         'is_recode_to_lbl': False,
-#     },
-#     2: {
-#         'data': df_data_stack,
-#         'info': df_info_stack,
-#         'tail_name': 'Stack',
-#         'sheet_name': 'Stack',
-#         'is_recode_to_lbl': False,
-#     },
-#     3: {
-#         'data': df_data_unstack,
-#         'info': df_info_unstack,
-#         'tail_name': 'Unstack',
-#         'sheet_name': 'Unstack',
-#         'is_recode_to_lbl': False,
-#     },
-# }
+# # NOT YET START
 #
-# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=False)
+# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+#
+# cfr.to_dataframe_file()
+#
+# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+#
+# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+#
+# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+#
+# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+#
+# lst_oe_col = df_coding.columns.tolist()
+# lst_oe_col.remove('ID')
+# lst_oe_col.remove('Ma_SP')
+#
+# # df_data_stack.drop(columns=lst_drop, inplace=True)
+# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+#
+# for i in lst_oe_col:
+#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+dict_dfs = {
+    1: {
+        'data': df_data,
+        'info': df_info,
+        'tail_name': 'ByCode',
+        'sheet_name': 'ByCode',
+        'is_recode_to_lbl': False,
+    },
+    # 2: {
+    #     'data': df_data_stack,
+    #     'info': df_info_stack,
+    #     'tail_name': 'Stack',
+    #     'sheet_name': 'Stack',
+    #     'is_recode_to_lbl': False,
+    # },
+    # 3: {
+    #     'data': df_data_unstack,
+    #     'info': df_info_unstack,
+    #     'tail_name': 'Unstack',
+    #     'sheet_name': 'Unstack',
+    #     'is_recode_to_lbl': False,
+    # },
+}
+
+converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=True, is_export_xlsx=True)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -395,6 +396,154 @@ lst_header = [
     ],
 ]
 
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# TO DO: Run multiple header with same level
+# ----------------------------------------------------------------------------------------------------------------------
+dict_header_scr = {
+    'lst_1': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "S1",
+                "qre_lbl": "City",
+                "cats": {
+                    "TOTAL": "TOTAL",
+                    '3': 'Hồ Chí Minh',
+                    '4': 'Cần Thơ'
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "@S3_b_Group",
+                "qre_lbl": "Age",
+                "cats": {
+                    "S3_b > 0": "TOTAL",
+                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+                }
+            },
+            {
+                "qre_name": "@S4_Class",
+                "qre_lbl": "Class",
+                "cats": {
+                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+                }
+            },
+            {
+                "qre_name": "@S8_BUMO",
+                "qre_lbl": "BUMO",
+                "cats": {
+                    "S8.isin([2])": "Tiger nâu",
+                    "S8.isin([6, 7, 8])": "Sài Gòn",
+                    "S8.isin([12, 13, 14])": "Larue",
+                }
+            },
+
+        ],
+    ],
+    'lst_2': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "@S4_Class",
+                "qre_lbl": "Class",
+                "cats": {
+                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "S1",
+                "qre_lbl": "City",
+                "cats": {
+                    "TOTAL": "TOTAL",
+                    '3': 'Hồ Chí Minh',
+                    '4': 'Cần Thơ'
+                }
+            },
+            {
+                "qre_name": "@S8_BUMO",
+                "qre_lbl": "BUMO",
+                "cats": {
+                    "S8.isin([2])": "Tiger nâu",
+                    "S8.isin([6, 7, 8])": "Sài Gòn",
+                    "S8.isin([12, 13, 14])": "Larue",
+                }
+            },
+
+        ],
+    ],
+    'lst_3': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "@S8_BUMO",
+                "qre_lbl": "BUMO",
+                "cats": {
+                    "S8.isin([2])": "Tiger nâu",
+                    "S8.isin([6, 7, 8])": "Sài Gòn",
+                    "S8.isin([12, 13, 14])": "Larue",
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "@S3_b_Group",
+                "qre_lbl": "Age",
+                "cats": {
+                    "S3_b > 0": "TOTAL",
+                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+                }
+            },
+            {
+                "qre_name": "@S4_Class",
+                "qre_lbl": "Class",
+                "cats": {
+                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+                }
+            },
+        ],
+    ],
+}
+
+dict_header_main = copy.deepcopy(dict_header_scr)
+
+dict_header_main['lst_1'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+    },
+]]
+
+dict_header_main['lst_2'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+    },
+]]
+
+dict_header_main['lst_3'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+    },
+]]
+
+# SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
     {"qre_name": "S1"},
     {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
@@ -422,12 +571,7 @@ lst_side_scr_tagon = [
 
     {"qre_name": "Dealer_HCM_01_Rank1"},
     {"qre_name": "$Dealer_HCM_02_Rank"},
-
-
-
 ]
-
-
 
 lst_side_main = [
     {"qre_name": "Q1", 'cats': {
@@ -521,7 +665,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
-                "lst_header_qres": lst_header[:-1]
+                # "lst_header_qres": lst_header[:-1],
+                "dict_header_qres": dict_header_scr,
             },
             "Scr_Tagon_pct": {
                 "tbl_name": "Scr_Tagon_pct",
@@ -532,7 +677,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
-                "lst_header_qres": lst_header[:-1]
+                # "lst_header_qres": lst_header[:-1],
+                "dict_header_qres": dict_header_scr,
             },
         },
     },
@@ -555,7 +701,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "rel", "sig_cols": [], "lst_sig_lvl": [90, 95]},
                 "lst_side_qres": lst_side_main,
-                "lst_header_qres": lst_header
+                # "lst_header_qres": lst_header,
+                "dict_header_qres": dict_header_main,
             },
 
             "Main_oe": {
@@ -567,7 +714,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_oe,
-                "lst_header_qres": lst_header
+                # "lst_header_qres": lst_header,
+                "dict_header_qres": dict_header_main,
             },
         },
 
@@ -581,9 +729,9 @@ dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
 
 
-# RUN TABLE FOR MAIN
-dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+# # RUN TABLE FOR MAIN
+# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 

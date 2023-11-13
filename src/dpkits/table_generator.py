@@ -344,8 +344,26 @@ class DataTableGenerator:
             # ----------------------------------------------------------------------------------------------------------
 
 
-        # Maximum 5 levels of header
-        lst_group_header = self.group_sig_table_header(tbl['lst_header_qres'])
+        if tbl.get('lst_header_qres'):
+            # Maximum 5 levels of header
+            lst_group_header = self.group_sig_table_header(tbl['lst_header_qres'])
+        else:
+            # TO DO: Run multiple header with same level
+            lst_group_header = list()
+            lvl_hd = -1
+            for key_hd, val_hd in tbl['dict_header_qres'].items():
+
+                if lvl_hd == -1:
+                    lvl_hd = len(val_hd)
+                else:
+                    if lvl_hd != len(val_hd):
+                        print("\x1b[31;20mHeader don't have the same level:", tbl['dict_header_qres'])
+                        exit()
+
+                # Maximum 5 levels for each header
+                lst_group_header.extend(self.group_sig_table_header(val_hd))
+
+
 
         for grp_hd in lst_group_header:
 
