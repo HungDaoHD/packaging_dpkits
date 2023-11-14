@@ -199,66 +199,65 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# # ----------------------------------------------------------------------------------------------------------------------
-# # OE RUNNING------------------------------------------------------------------------------------------------------------
-# # ----------------------------------------------------------------------------------------------------------------------
-# # NOT YET START
-#
-# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-#
-# cfr.to_dataframe_file()
-#
-# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-#
-# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-#
-# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-#
-# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-#
-# lst_oe_col = df_coding.columns.tolist()
-# lst_oe_col.remove('ID')
-# lst_oe_col.remove('Ma_SP')
-#
-# # df_data_stack.drop(columns=lst_drop, inplace=True)
-# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-#
-# for i in lst_oe_col:
-#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
-
-
-
 # ----------------------------------------------------------------------------------------------------------------------
-# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# OE RUNNING------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
-dict_dfs = {
-    1: {
-        'data': df_data,
-        'info': df_info,
-        'tail_name': 'ByCode',
-        'sheet_name': 'ByCode',
-        'is_recode_to_lbl': False,
-    },
-    # 2: {
-    #     'data': df_data_stack,
-    #     'info': df_info_stack,
-    #     'tail_name': 'Stack',
-    #     'sheet_name': 'Stack',
-    #     'is_recode_to_lbl': False,
-    # },
-    # 3: {
-    #     'data': df_data_unstack,
-    #     'info': df_info_unstack,
-    #     'tail_name': 'Unstack',
-    #     'sheet_name': 'Unstack',
-    #     'is_recode_to_lbl': False,
-    # },
-}
 
-converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=True, is_export_xlsx=True)
+cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+
+cfr.to_dataframe_file()
+
+df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+
+df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+
+# ['ID', 'Ma_SP'] will be defined base on each project
+df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+
+df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+
+lst_oe_col = df_coding.columns.tolist()
+lst_oe_col.remove('ID')
+lst_oe_col.remove('Ma_SP')
+
+df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+
+for i in lst_oe_col:
+    df_data_stack[i].replace({99999: np.nan}, inplace=True)
+
+
+
+# # ----------------------------------------------------------------------------------------------------------------------
+# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# # ----------------------------------------------------------------------------------------------------------------------
+# dict_dfs = {
+#     1: {
+#         'data': df_data,
+#         'info': df_info,
+#         'tail_name': 'ByCode',
+#         'sheet_name': 'ByCode',
+#         'is_recode_to_lbl': False,
+#     },
+#     # 2: {
+#     #     'data': df_data_stack,
+#     #     'info': df_info_stack,
+#     #     'tail_name': 'Stack',
+#     #     'sheet_name': 'Stack',
+#     #     'is_recode_to_lbl': False,
+#     # },
+#     # 3: {
+#     #     'data': df_data_unstack,
+#     #     'info': df_info_unstack,
+#     #     'tail_name': 'Unstack',
+#     #     'sheet_name': 'Unstack',
+#     #     'is_recode_to_lbl': False,
+#     # },
+# }
+#
+# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=True, is_export_xlsx=True)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -399,9 +398,10 @@ lst_header = [
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# TO DO: Run multiple header with same level
+# Run multiple header with same level
 # ----------------------------------------------------------------------------------------------------------------------
 dict_header_scr = {
+    # Group header 1st
     'lst_1': [
         # header lvl 1
         [
@@ -446,6 +446,8 @@ dict_header_scr = {
 
         ],
     ],
+
+    # Group header 2nd
     'lst_2': [
         # header lvl 1
         [
@@ -652,7 +654,7 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            # 'Scr_Tagon_count',
+            'Scr_Tagon_count',
             'Scr_Tagon_pct',
         ],
         'tables_format': {
@@ -688,7 +690,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main',
-            # 'Main_oe',
+            'Main_oe',
         ],
         'tables_format': {
 
@@ -729,9 +731,9 @@ dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
 
 
-# # RUN TABLE FOR MAIN
-# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+# RUN TABLE FOR MAIN
+dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 
