@@ -10,7 +10,9 @@ import copy
 # from dpkits.data_transpose import DataTranspose
 # from dpkits.table_generator import DataTableGenerator
 # from dpkits.table_formater import TableFormatter
+# from dpkits.codeframe_reader import CodeframeReader
 # from dpkits.calculate_lsm import LSMCalculation
+
 
 
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
@@ -199,34 +201,32 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# OE RUNNING------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-
-cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-
-cfr.to_dataframe_file()
-
-df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-
-df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-
-# ['ID', 'Ma_SP'] will be defined base on each project
-df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-
-df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-
-lst_oe_col = df_coding.columns.tolist()
-lst_oe_col.remove('ID')
-lst_oe_col.remove('Ma_SP')
-
-df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-
-for i in lst_oe_col:
-    df_data_stack[i].replace({99999: np.nan}, inplace=True)
+# # ----------------------------------------------------------------------------------------------------------------------
+# # OE RUNNING------------------------------------------------------------------------------------------------------------
+# # ----------------------------------------------------------------------------------------------------------------------
+# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+# cfr.to_dataframe_file()
+#
+# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+#
+# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+#
+# # ['ID', 'Ma_SP'] will be defined base on each project
+# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+#
+# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+#
+# lst_oe_col = df_coding.columns.tolist()
+# lst_oe_col.remove('ID')
+# lst_oe_col.remove('Ma_SP')
+#
+# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+#
+# for i in lst_oe_col:
+#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -349,9 +349,9 @@ lst_header = [
             "qre_name": "S1",
             "qre_lbl": "City",
             "cats": {
-                "TOTAL": "TOTAL",
-                '3': 'Hồ Chí Minh',
-                '4': 'Cần Thơ'
+                # "TOTAL": "TOTAL",
+                # '3': 'Hồ Chí Minh',
+                # '4': 'Cần Thơ'
             }
         },
     ],
@@ -384,13 +384,23 @@ lst_header = [
             }
         },
 
+        {
+            "qre_name": "$S6",
+            "qre_lbl": "S6",
+            "cats": {}
+        },
+
+
+
+
+
     ],
     # header lvl 3
     [
         {
             "qre_name": "Ma_SP",
             "qre_lbl": "Mã Concept",
-            "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+            "cats": {}  # {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
         },
     ],
 ]
@@ -654,7 +664,7 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Scr_Tagon_count',
+            # 'Scr_Tagon_count',
             'Scr_Tagon_pct',
         ],
         'tables_format': {
@@ -667,8 +677,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
-                # "lst_header_qres": lst_header[:-1],
-                "dict_header_qres": dict_header_scr,
+                "lst_header_qres": lst_header[:-1],
+                # "dict_header_qres": dict_header_scr,
             },
             "Scr_Tagon_pct": {
                 "tbl_name": "Scr_Tagon_pct",
@@ -679,8 +689,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
-                # "lst_header_qres": lst_header[:-1],
-                "dict_header_qres": dict_header_scr,
+                "lst_header_qres": lst_header[:-1],
+                # "dict_header_qres": dict_header_scr,
             },
         },
     },
@@ -690,7 +700,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main',
-            'Main_oe',
+            # 'Main_oe',
         ],
         'tables_format': {
 
@@ -703,8 +713,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "rel", "sig_cols": [], "lst_sig_lvl": [90, 95]},
                 "lst_side_qres": lst_side_main,
-                # "lst_header_qres": lst_header,
-                "dict_header_qres": dict_header_main,
+                "lst_header_qres": lst_header,
+                # "dict_header_qres": dict_header_main,
             },
 
             "Main_oe": {
@@ -730,12 +740,9 @@ dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_fil
 dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
 
-
 # RUN TABLE FOR MAIN
 dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
 dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
-
-
 
 
 # FORMAT TABLES---------------------------------------------------------------------------------------------------------

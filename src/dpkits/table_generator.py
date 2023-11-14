@@ -121,7 +121,17 @@ class DataTableGenerator:
             print(f"create sheet: {tbl_val['tbl_name']} Duration: ", timedelta(seconds=time.time() - start_time))
 
 
+
+    def get_cats_by_qre_name(self, qre_name: str) -> dict:
+        df_info = self.df_info.copy()
+        str_qre_name = f'{qre_name[1:]}_1' if '$' in qre_name else qre_name
+        return df_info.loc[df_info.eval(f"var_name == '{str_qre_name}'"), 'val_lbl'].values[0]
+
+
+
     def group_sig_table_header(self, lst_header_qres: list) -> list:
+
+        df_info = self.df_info.copy()
 
         lst_group_header = list()
 
@@ -131,6 +141,9 @@ class DataTableGenerator:
         lvl1, lvl2, lvl3, lvl4, lvl5 = lst_header_qres
 
         for a in lvl1:
+
+            if not a['cats']:
+                a['cats'] = self.get_cats_by_qre_name(a['qre_name'])
 
             if not lvl2:
                 dict_grp_hd = dict()
@@ -156,6 +169,9 @@ class DataTableGenerator:
 
                 for b in lvl2:
 
+                    if not b['cats']:
+                        b['cats'] = self.get_cats_by_qre_name(b['qre_name'])
+
                     if not lvl3:
                         dict_grp_hd = dict()
                         dict_idx = {list(b['cats'].keys())[i]: i for i in range(len(b['cats'].keys()))}
@@ -179,6 +195,9 @@ class DataTableGenerator:
                         qb = self.group_sig_table_header_query(b, b_k)
 
                         for c in lvl3:
+
+                            if not c['cats']:
+                                c['cats'] = self.get_cats_by_qre_name(c['qre_name'])
 
                             if not lvl4:
                                 dict_grp_hd = dict()
@@ -204,6 +223,9 @@ class DataTableGenerator:
 
                                 for d in lvl4:
 
+                                    if not d['cats']:
+                                        d['cats'] = self.get_cats_by_qre_name(d['qre_name'])
+
                                     if not lvl5:
                                         dict_grp_hd = dict()
                                         dict_idx = {list(d['cats'].keys())[i]: i for i in range(len(d['cats'].keys()))}
@@ -227,6 +249,10 @@ class DataTableGenerator:
                                         qd = self.group_sig_table_header_query(d, d_k)
 
                                         for e in lvl5:
+
+                                            if not e['cats']:
+                                                e['cats'] = self.get_cats_by_qre_name(e['qre_name'])
+
                                             dict_grp_hd = dict()
                                             dict_idx = {list(e['cats'].keys())[i]: i for i in range(len(e['cats'].keys()))}
 
