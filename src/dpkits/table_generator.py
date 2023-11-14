@@ -27,6 +27,9 @@ class DataTableGenerator:
             if 'net_code' in self.df_info.at[idx, 'val_lbl'].keys():
                 self.dict_unnetted_qres.update({self.df_info.at[idx, 'var_name']: self.unnetted_qre_val(self.df_info.at[idx, 'val_lbl'])})
 
+
+        self.check_value_df_data_vs_df_info()
+
         try:
             check_perm = open(xlsx_name)
             check_perm.close()
@@ -35,6 +38,46 @@ class DataTableGenerator:
             exit()
         except FileNotFoundError:
             pass
+
+
+
+    def check_value_df_data_vs_df_info(self):
+
+        df_data, df_info = self.df_data.copy(), self.df_info.copy()
+        df_info.set_index('var_name', inplace=True)
+
+        df_info = df_info.loc[df_info.eval("~var_type.isin(['FT', 'FT_mtr', 'NUM'])"), :].copy()
+        df_info.drop(columns=['var_lbl', 'var_type'], inplace=True)
+
+        for idx in df_info.index:
+
+            if idx in self.dict_unnetted_qres.keys():
+                old_dict = self.dict_unnetted_qres.get(idx)
+            else:
+                old_dict = df_info.at[idx, 'val_lbl']
+
+            df_info.at[idx, 'val_lbl'] = {int(k): np.nan for k, v in old_dict.items()}
+
+        dict_replace = df_info.to_dict()['val_lbl']
+
+        df_data = df_data.loc[:, df_info.index].copy()
+        df_data.replace(dict_replace, inplace=True)
+
+        df_data.dropna(how='all', inplace=True)
+        df_data.dropna(axis=1, how='all', inplace=True)
+        df_data = pd.DataFrame(df_data)
+
+        if not df_data.empty:
+            df_data.reset_index(drop=False, inplace=True)
+            df_data = pd.melt(df_data, id_vars=df_data.columns[0], value_vars=df_data.columns[1:])
+            df_data.dropna(inplace=True)
+
+
+            print('\x1b[31;20m\nPlease check values not in codelist:\n', df_data)
+            exit()
+
+        print("Check value - df_data & df_info - Done")
+
 
 
     def convert_md_to_mc(self, df_data: pd.DataFrame, df_info: pd.DataFrame):

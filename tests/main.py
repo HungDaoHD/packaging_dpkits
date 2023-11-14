@@ -96,23 +96,7 @@ with pd.ExcelWriter(f'{str_file_name}_preview.xlsx', engine="openpyxl") as write
 
 
 # TRANSPOSE TO STACK----------------------------------------------------------------------------------------------------
-lst_scr = [
-    'S1',
-    'S2',
-    'S3_a',
-    'S3_b',
-    'S4',
-    'S5',
-    'S6_1',
-    'S6_2',
-    'S6_3',
-    'S6_4',
-    'S6_5',
-    'S6_6',
-    'S7',
-    'S8',
-    'S10',
-]
+lst_scr = ['S1', 'S2', 'S3_a', 'S3_b', 'S4', 'S5', 'S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6', 'S7', 'S8', 'S10']
 
 lst_fc = ['F1_ByProdCode']
 
@@ -174,59 +158,44 @@ df_data_stack, df_info_stack = DataTranspose.to_stack(df_data, df_info, dict_sta
 
 
 
-
 # TRANSPOSE TO UNSTACK--------------------------------------------------------------------------------------------------
 dict_unstack_structure = {
     'id_col': 'ID',
     'sp_col': 'Ma_SP',
     'lst_col_part_head': lst_fc,
-    'lst_col_part_body': [
-        'Ma_SP',
-        'Q1',
-        'Q2',
-        'Q3',
-        'Q4',
-        'Q5',
-        'Q9',
-        'Q6',
-        'Q7',
-        'Q8',
-        'Q10',
-        'F1_YN_New',
-        'F2_OE_New',
-    ],
+    'lst_col_part_body': ['Ma_SP', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q9', 'Q6', 'Q7', 'Q8', 'Q10', 'F1_YN_New', 'F2_OE_New'],
     'lst_col_part_tail': lst_fc
 }
 
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# # ----------------------------------------------------------------------------------------------------------------------
-# # OE RUNNING------------------------------------------------------------------------------------------------------------
-# # ----------------------------------------------------------------------------------------------------------------------
-# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-# cfr.to_dataframe_file()
-#
-# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-#
-# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-#
-# # ['ID', 'Ma_SP'] will be defined base on each project
-# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-#
-# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-#
-# lst_oe_col = df_coding.columns.tolist()
-# lst_oe_col.remove('ID')
-# lst_oe_col.remove('Ma_SP')
-#
-# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-#
-# for i in lst_oe_col:
-#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
+# ----------------------------------------------------------------------------------------------------------------------
+# OE RUNNING------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+cfr.to_dataframe_file()
+
+df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+
+df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+
+# ['ID', 'Ma_SP'] will be defined base on each project
+df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+
+df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+
+lst_oe_col = df_coding.columns.tolist()
+lst_oe_col.remove('ID')
+lst_oe_col.remove('Ma_SP')
+
+df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+
+for i in lst_oe_col:
+    df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -241,23 +210,23 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 #         'sheet_name': 'ByCode',
 #         'is_recode_to_lbl': False,
 #     },
-#     # 2: {
-#     #     'data': df_data_stack,
-#     #     'info': df_info_stack,
-#     #     'tail_name': 'Stack',
-#     #     'sheet_name': 'Stack',
-#     #     'is_recode_to_lbl': False,
-#     # },
-#     # 3: {
-#     #     'data': df_data_unstack,
-#     #     'info': df_info_unstack,
-#     #     'tail_name': 'Unstack',
-#     #     'sheet_name': 'Unstack',
-#     #     'is_recode_to_lbl': False,
-#     # },
+#     2: {
+#         'data': df_data_stack,
+#         'info': df_info_stack,
+#         'tail_name': 'Stack',
+#         'sheet_name': 'Stack',
+#         'is_recode_to_lbl': False,
+#     },
+#     3: {
+#         'data': df_data_unstack,
+#         'info': df_info_unstack,
+#         'tail_name': 'Unstack',
+#         'sheet_name': 'Unstack',
+#         'is_recode_to_lbl': False,
+#     },
 # }
 #
-# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=False, is_export_sav=True, is_export_xlsx=True)
+# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=True, is_export_sav=True, is_export_xlsx=True)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -491,6 +460,13 @@ dict_header_scr = {
                 }
             },
 
+            {
+                "qre_name": "$S6",
+                "qre_lbl": "S6. testing",
+                "cats": {}
+            },
+
+
         ],
     ],
     'lst_3': [
@@ -535,7 +511,7 @@ dict_header_main['lst_1'] += [[
     {
         "qre_name": "Ma_SP",
         "qre_lbl": "Mã Concept",
-        "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+        "cats": {}
     },
 ]]
 
@@ -543,7 +519,7 @@ dict_header_main['lst_2'] += [[
     {
         "qre_name": "Ma_SP",
         "qre_lbl": "Mã Concept",
-        "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+        "cats": {}
     },
 ]]
 
@@ -551,7 +527,7 @@ dict_header_main['lst_3'] += [[
     {
         "qre_name": "Ma_SP",
         "qre_lbl": "Mã Concept",
-        "cats": {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}
+        "cats": {}
     },
 ]]
 
@@ -664,7 +640,7 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            # 'Scr_Tagon_count',
+            'Scr_Tagon_count',
             'Scr_Tagon_pct',
         ],
         'tables_format': {
@@ -677,8 +653,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
-                "lst_header_qres": lst_header[:-1],
-                # "dict_header_qres": dict_header_scr,
+                # "lst_header_qres": lst_header[:-1],
+                "dict_header_qres": dict_header_scr,
             },
             "Scr_Tagon_pct": {
                 "tbl_name": "Scr_Tagon_pct",
@@ -689,8 +665,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_scr_tagon,
-                "lst_header_qres": lst_header[:-1],
-                # "dict_header_qres": dict_header_scr,
+                # "lst_header_qres": lst_header[:-1],
+                "dict_header_qres": dict_header_scr,
             },
         },
     },
@@ -700,7 +676,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main',
-            # 'Main_oe',
+            'Main_oe',
         ],
         'tables_format': {
 
@@ -713,8 +689,8 @@ lst_func_to_run = [
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "rel", "sig_cols": [], "lst_sig_lvl": [90, 95]},
                 "lst_side_qres": lst_side_main,
-                "lst_header_qres": lst_header,
-                # "dict_header_qres": dict_header_main,
+                # "lst_header_qres": lst_header,
+                "dict_header_qres": dict_header_main,
             },
 
             "Main_oe": {
@@ -735,14 +711,14 @@ lst_func_to_run = [
 ]
 
 
-# RUN TABLE FOR SCREENER
-dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[:1])
+# # RUN TABLE FOR SCREENER
+# dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
 
 # RUN TABLE FOR MAIN
 dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=False)  # is_append=True
 
 
 # FORMAT TABLES---------------------------------------------------------------------------------------------------------

@@ -652,6 +652,7 @@ class APDataConverter:
         for col_name in df_info_fil['var_name'].values.tolist():
             try:
                 df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='float')
+                df_info.loc[df_info.eval(f"var_name == '{col_name}'"), 'var_type'] = 'NUM'
                 print(f'Convert {col_name} from FT to NUM type')
             except Exception:
                 print(f'Cannot convert {col_name} from FT to NUM type')
