@@ -151,6 +151,14 @@ class DataTableGenerator:
 
             dict_tables = dict_tables_selected
 
+
+
+        for tbl_key, tbl_val in dict_tables.items():
+            if tbl_val.get('weight_var') and tbl_val.get('sig_test_info').get('sig_type'):
+                print(f'\x1b[31;20m\nCannot run table "{tbl_key}" with significant test and weighting at the same time. Processing terminated!!!')
+                exit()
+
+
         for tbl_key, tbl_val in dict_tables.items():
             start_time = time.time()
 
@@ -375,7 +383,7 @@ class DataTableGenerator:
         df_tbl = pd.DataFrame()
 
         # create df_data with tbl_filter in json file
-        df_data = self.df_data.query(tbl['tbl_filter']).copy()
+        df_data = self.df_data.query(tbl['tbl_filter']).copy() if tbl.get('tbl_filter') else self.df_data.copy()
 
         # create df_info with lst_side_qres in json file
         df_info = pd.DataFrame(columns=['var_name', 'var_lbl', 'var_type', 'val_lbl', 'qre_fil'], data=[])
@@ -533,7 +541,6 @@ class DataTableGenerator:
                 df_fil_base = df_filter[lst_qre_col].dropna(how='all')
                 df_filter = df_filter.loc[df_fil_base.index, :]
 
-
                 if df_filter.empty:
                     num_base = 0
                 else:
@@ -542,7 +549,6 @@ class DataTableGenerator:
                 if weight_var:
                     mean_weight = df_filter.loc[:, weight_var].mean()
                     num_base *= mean_weight
-
 
                 if len(lst_tbl_row_data) == 0:
                     str_qre_name = qre_info['qre_name']
@@ -637,7 +643,7 @@ class DataTableGenerator:
                     df_qre.loc[df_qre['cat_val'] == cat, [val_col_name, sig_col_name]] = [num_val, np.nan]
 
 
-            if sig_type and lst_sig_lvl:
+            if sig_type and lst_sig_lvl and not weight_var:
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre
@@ -752,7 +758,7 @@ class DataTableGenerator:
                     df_qre.loc[df_qre['cat_val'] == 'std', [val_col_name, sig_col_name]] = [num_val_std, np.nan]
 
 
-            if sig_type and lst_sig_lvl and is_mean:
+            if sig_type and lst_sig_lvl and is_mean and not weight_var:
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre
@@ -840,7 +846,7 @@ class DataTableGenerator:
                     df_qre.loc[df_qre['cat_val'] == cat, [val_col_name, sig_col_name]] = [num_val, np.nan]
 
 
-            if sig_type and lst_sig_lvl:
+            if sig_type and lst_sig_lvl and not weight_var:
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre
@@ -955,10 +961,9 @@ class DataTableGenerator:
                         df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
 
                 else:
-
                     df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
 
-            if sig_type and lst_sig_lvl:
+            if sig_type and lst_sig_lvl and not weight_var:
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre
@@ -1057,7 +1062,7 @@ class DataTableGenerator:
                 else:
                     df_qre.loc[df_qre['cat_val'] == cat, [val_col_name, sig_col_name]] = [num_val, np.nan]
 
-            if sig_type and lst_sig_lvl:
+            if sig_type and lst_sig_lvl and not weight_var:
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre

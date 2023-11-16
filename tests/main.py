@@ -718,12 +718,12 @@ lst_func_to_run = [
 
             "Main_Unweight": {
                 "tbl_name": "Main_Unweight",
-                "tbl_filter": "Ma_SP > 0",
+                "tbl_filter": "",
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
-                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
+                "sig_test_info": {"sig_type": "rel", "sig_cols": [], "lst_sig_lvl": [90, 95]},
                 "lst_side_qres": lst_side_main,
                 # "lst_header_qres": lst_header,
                 "dict_header_qres": dict_header_main,
@@ -732,7 +732,7 @@ lst_func_to_run = [
 
             "Main_Weight": {
                 "tbl_name": "Main_Weight",
-                "tbl_filter": "Ma_SP > 0",
+                "tbl_filter": "",
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
