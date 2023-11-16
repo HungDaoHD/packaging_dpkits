@@ -396,116 +396,116 @@ dict_header_scr = {
                 }
             },
         ],
-        # # header lvl 2
-        # [
-        #     {
-        #         "qre_name": "@S3_b_Group",
-        #         "qre_lbl": "Age",
-        #         "cats": {
-        #             "S3_b > 0": "TOTAL",
-        #             "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-        #             "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-        #         }
-        #     },
-        #     {
-        #         "qre_name": "@S4_Class",
-        #         "qre_lbl": "Class",
-        #         "cats": {
-        #             "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-        #             "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-        #         }
-        #     },
-        #     {
-        #         "qre_name": "@S8_BUMO",
-        #         "qre_lbl": "BUMO",
-        #         "cats": {
-        #             "S8.isin([2])": "Tiger nâu",
-        #             "S8.isin([6, 7, 8])": "Sài Gòn",
-        #             "S8.isin([12, 13, 14])": "Larue",
-        #         }
-        #     },
-        #
-        # ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "@S3_b_Group",
+                "qre_lbl": "Age",
+                "cats": {
+                    "S3_b > 0": "TOTAL",
+                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+                }
+            },
+            # {
+            #     "qre_name": "@S4_Class",
+            #     "qre_lbl": "Class",
+            #     "cats": {
+            #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+            #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+            #     }
+            # },
+            # {
+            #     "qre_name": "@S8_BUMO",
+            #     "qre_lbl": "BUMO",
+            #     "cats": {
+            #         "S8.isin([2])": "Tiger nâu",
+            #         "S8.isin([6, 7, 8])": "Sài Gòn",
+            #         "S8.isin([12, 13, 14])": "Larue",
+            #     }
+            # },
+
+        ],
     ],
 
-    # # Group header 2nd
-    # 'lst_2': [
-    #     # header lvl 1
-    #     [
-    #         {
-    #             "qre_name": "@S4_Class",
-    #             "qre_lbl": "Class",
-    #             "cats": {
-    #                 "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-    #                 "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-    #             }
-    #         },
-    #     ],
-    #     # header lvl 2
-    #     [
-    #         {
-    #             "qre_name": "S1",
-    #             "qre_lbl": "City",
-    #             "cats": {
-    #                 "TOTAL": "TOTAL",
-    #                 '3': 'Hồ Chí Minh',
-    #                 '4': 'Cần Thơ'
-    #             }
-    #         },
-    #         {
-    #             "qre_name": "@S8_BUMO",
-    #             "qre_lbl": "BUMO",
-    #             "cats": {
-    #                 "S8.isin([2])": "Tiger nâu",
-    #                 "S8.isin([6, 7, 8])": "Sài Gòn",
-    #                 "S8.isin([12, 13, 14])": "Larue",
-    #             }
-    #         },
-    #
-    #         {
-    #             "qre_name": "$S6",
-    #             "qre_lbl": "S6. testing",
-    #             "cats": {}
-    #         },
-    #
-    #
-    #     ],
-    # ],
-    # # Group header 3rd
-    # 'lst_3': [
-    #     # header lvl 1
-    #     [
-    #         {
-    #             "qre_name": "@S8_BUMO",
-    #             "qre_lbl": "BUMO",
-    #             "cats": {
-    #                 "S8.isin([2])": "Tiger nâu",
-    #                 "S8.isin([6, 7, 8])": "Sài Gòn",
-    #                 "S8.isin([12, 13, 14])": "Larue",
-    #             }
-    #         },
-    #     ],
-    #     # header lvl 2
-    #     [
-    #         {
-    #             "qre_name": "@S3_b_Group",
-    #             "qre_lbl": "Age",
-    #             "cats": {
-    #                 "S3_b > 0": "TOTAL",
-    #                 "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-    #                 "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-    #             }
-    #         },
-    #         {
-    #             "qre_name": "@S4_Class",
-    #             "qre_lbl": "Class",
-    #             "cats": {
-    #                 "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-    #                 "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-    #             }
-    #         },
-    #     ],
-    # ],
+    # Group header 2nd
+    'lst_2': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "@S4_Class",
+                "qre_lbl": "Class",
+                "cats": {
+                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "S1",
+                "qre_lbl": "City",
+                "cats": {
+                    "TOTAL": "TOTAL",
+                    '3': 'Hồ Chí Minh',
+                    '4': 'Cần Thơ'
+                }
+            },
+            # {
+            #     "qre_name": "@S8_BUMO",
+            #     "qre_lbl": "BUMO",
+            #     "cats": {
+            #         "S8.isin([2])": "Tiger nâu",
+            #         "S8.isin([6, 7, 8])": "Sài Gòn",
+            #         "S8.isin([12, 13, 14])": "Larue",
+            #     }
+            # },
+            #
+            # {
+            #     "qre_name": "$S6",
+            #     "qre_lbl": "S6. testing",
+            #     "cats": {}
+            # },
+
+
+        ],
+    ],
+    # Group header 3rd
+    'lst_3': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "@S8_BUMO",
+                "qre_lbl": "BUMO",
+                "cats": {
+                    "S8.isin([2])": "Tiger nâu",
+                    "S8.isin([6, 7, 8])": "Sài Gòn",
+                    "S8.isin([12, 13, 14])": "Larue",
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "@S3_b_Group",
+                "qre_lbl": "Age",
+                "cats": {
+                    "S3_b > 0": "TOTAL",
+                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+                }
+            },
+            # {
+            #     "qre_name": "@S4_Class",
+            #     "qre_lbl": "Class",
+            #     "cats": {
+            #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+            #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+            #     }
+            # },
+        ],
+    ],
 }
 
 dict_header_main = copy.deepcopy(dict_header_scr)
@@ -518,21 +518,21 @@ dict_header_main['lst_1'] += [[
     },
 ]]
 
-# dict_header_main['lst_2'] += [[
-#     {
-#         "qre_name": "Ma_SP",
-#         "qre_lbl": "Mã Concept",
-#         "cats": {}
-#     },
-# ]]
-#
-# dict_header_main['lst_3'] += [[
-#     {
-#         "qre_name": "Ma_SP",
-#         "qre_lbl": "Mã Concept",
-#         "cats": {}
-#     },
-# ]]
+dict_header_main['lst_2'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {}
+    },
+]]
+
+dict_header_main['lst_3'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {}
+    },
+]]
 
 # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
@@ -639,23 +639,32 @@ lst_side_oe = [
 ]
 
 
-"""
-To Do
-Add weight variable to table below
-"""
-
 lst_func_to_run = [
     # SCREENER
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Scr_Tagon_count',
+            'Scr_Tagon_count_Unweight',
+            'Scr_Tagon_count_Weight',
             'Scr_Tagon_pct_Unweight',
             'Scr_Tagon_pct_Weight',
         ],
         'tables_format': {
-            "Scr_Tagon_count": {
-                "tbl_name": "Scr_Tagon_count",
+            "Scr_Tagon_count_Unweight": {
+                "tbl_name": "Scr_Tagon_count_Unweight",
+                "tbl_filter": "S1 > 0",
+                "is_count": 1,
+                "is_pct_sign": 0,
+                "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
+                "lst_side_qres": lst_side_scr_tagon,
+                # "lst_header_qres": lst_header[:-1],
+                "dict_header_qres": dict_header_scr,
+                "weight_var": '',
+            },
+            "Scr_Tagon_count_Weight": {
+                "tbl_name": "Scr_Tagon_count_Weight",
                 "tbl_filter": "S1 > 0",
                 "is_count": 1,
                 "is_pct_sign": 0,
@@ -671,7 +680,7 @@ lst_func_to_run = [
                 "tbl_name": "Scr_Tagon_pct_Unweight",
                 "tbl_filter": "S1 > 0",
                 "is_count": 0,
-                "is_pct_sign": 1,
+                "is_pct_sign": 0,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
@@ -702,7 +711,8 @@ lst_func_to_run = [
         'tables_to_run': [
             'Main_Unweight',
             'Main_Weight',
-            # 'Main_oe',
+            # 'Main_oe_Unweight',
+            # 'Main_oe_Weight',
         ],
         'tables_format': {
 
@@ -734,8 +744,22 @@ lst_func_to_run = [
                 "weight_var": 'Weight_Var',
             },
 
-            "Main_oe": {
-                "tbl_name": "Main_oe",
+            "Main_oe_Unweight": {
+                "tbl_name": "Main_oe_Unweight",
+                "tbl_filter": "Ma_SP > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
+                "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
+                "lst_side_qres": lst_side_oe,
+                # "lst_header_qres": lst_header,
+                "dict_header_qres": dict_header_main,
+                "weight_var": '',
+            },
+
+            "Main_oe_Weight": {
+                "tbl_name": "Main_oe_Weight",
                 "tbl_filter": "Ma_SP > 0",
                 "is_count": 0,
                 "is_pct_sign": 1,

@@ -411,7 +411,7 @@ class DataTableGenerator:
                 'mean': qre['mean'] if qre.get('mean') else {},
                 'sort': qre['sort'] if qre.get('sort') else "",
                 'calculate': qre['calculate'] if qre.get('calculate') else {},
-                'weight_var': tbl['weight_var'],
+                'weight_var': tbl['weight_var'] if tbl.get('weight_var') else "",
             }
 
             df_info = pd.concat([df_info, pd.DataFrame(columns=list(dict_row.keys()), data=[list(dict_row.values())])], axis=0, ignore_index=True)
