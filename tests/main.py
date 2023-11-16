@@ -96,7 +96,7 @@ with pd.ExcelWriter(f'{str_file_name}_preview.xlsx', engine="openpyxl") as write
 
 
 # TRANSPOSE TO STACK----------------------------------------------------------------------------------------------------
-lst_scr = ['S1', 'S2', 'S3_a', 'S3_b', 'S4', 'S5', 'S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6', 'S7', 'S8', 'S10']
+lst_scr = ['S1', 'S2', 'S3_a', 'S3_b', 'S4', 'S5', 'S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6', 'S7', 'S8', 'S10', 'Weight_Var']
 
 lst_fc = ['F1_ByProdCode']
 
@@ -170,32 +170,32 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# OE RUNNING------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-cfr.to_dataframe_file()
-
-df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-
-df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-
-# ['ID', 'Ma_SP'] will be defined base on each project
-df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-
-df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-
-lst_oe_col = df_coding.columns.tolist()
-lst_oe_col.remove('ID')
-lst_oe_col.remove('Ma_SP')
-
-df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-
-for i in lst_oe_col:
-    df_data_stack[i].replace({99999: np.nan}, inplace=True)
+# # ----------------------------------------------------------------------------------------------------------------------
+# # OE RUNNING------------------------------------------------------------------------------------------------------------
+# # ----------------------------------------------------------------------------------------------------------------------
+# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+# cfr.to_dataframe_file()
+#
+# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+#
+# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+#
+# # ['ID', 'Ma_SP'] will be defined base on each project
+# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+#
+# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+#
+# lst_oe_col = df_coding.columns.tolist()
+# lst_oe_col.remove('ID')
+# lst_oe_col.remove('Ma_SP')
+#
+# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+#
+# for i in lst_oe_col:
+#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -305,7 +305,9 @@ README:
                 "lst_sig_lvl": [90, 95]  # sig level: maximum 2 levels
             },
             "lst_side_qres": lst_side_main,  # list of side question
-            "lst_header_qres": lst_header  # list of header defines
+            "lst_header_qres": lst_header,  # list of header defines
+            "dict_header_qres": dict_header_main, # dict of header defines to run multiple group header
+            "weight_var": [num type], # name of weighting variable in dataframe 
         },
 
 """
@@ -394,115 +396,116 @@ dict_header_scr = {
                 }
             },
         ],
-        # header lvl 2
-        [
-            {
-                "qre_name": "@S3_b_Group",
-                "qre_lbl": "Age",
-                "cats": {
-                    "S3_b > 0": "TOTAL",
-                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-                }
-            },
-            {
-                "qre_name": "@S4_Class",
-                "qre_lbl": "Class",
-                "cats": {
-                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-                }
-            },
-            {
-                "qre_name": "@S8_BUMO",
-                "qre_lbl": "BUMO",
-                "cats": {
-                    "S8.isin([2])": "Tiger nâu",
-                    "S8.isin([6, 7, 8])": "Sài Gòn",
-                    "S8.isin([12, 13, 14])": "Larue",
-                }
-            },
-
-        ],
+        # # header lvl 2
+        # [
+        #     {
+        #         "qre_name": "@S3_b_Group",
+        #         "qre_lbl": "Age",
+        #         "cats": {
+        #             "S3_b > 0": "TOTAL",
+        #             "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+        #             "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+        #         }
+        #     },
+        #     {
+        #         "qre_name": "@S4_Class",
+        #         "qre_lbl": "Class",
+        #         "cats": {
+        #             "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+        #             "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+        #         }
+        #     },
+        #     {
+        #         "qre_name": "@S8_BUMO",
+        #         "qre_lbl": "BUMO",
+        #         "cats": {
+        #             "S8.isin([2])": "Tiger nâu",
+        #             "S8.isin([6, 7, 8])": "Sài Gòn",
+        #             "S8.isin([12, 13, 14])": "Larue",
+        #         }
+        #     },
+        #
+        # ],
     ],
 
-    # Group header 2nd
-    'lst_2': [
-        # header lvl 1
-        [
-            {
-                "qre_name": "@S4_Class",
-                "qre_lbl": "Class",
-                "cats": {
-                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-                }
-            },
-        ],
-        # header lvl 2
-        [
-            {
-                "qre_name": "S1",
-                "qre_lbl": "City",
-                "cats": {
-                    "TOTAL": "TOTAL",
-                    '3': 'Hồ Chí Minh',
-                    '4': 'Cần Thơ'
-                }
-            },
-            {
-                "qre_name": "@S8_BUMO",
-                "qre_lbl": "BUMO",
-                "cats": {
-                    "S8.isin([2])": "Tiger nâu",
-                    "S8.isin([6, 7, 8])": "Sài Gòn",
-                    "S8.isin([12, 13, 14])": "Larue",
-                }
-            },
-
-            {
-                "qre_name": "$S6",
-                "qre_lbl": "S6. testing",
-                "cats": {}
-            },
-
-
-        ],
-    ],
-    'lst_3': [
-        # header lvl 1
-        [
-            {
-                "qre_name": "@S8_BUMO",
-                "qre_lbl": "BUMO",
-                "cats": {
-                    "S8.isin([2])": "Tiger nâu",
-                    "S8.isin([6, 7, 8])": "Sài Gòn",
-                    "S8.isin([12, 13, 14])": "Larue",
-                }
-            },
-        ],
-        # header lvl 2
-        [
-            {
-                "qre_name": "@S3_b_Group",
-                "qre_lbl": "Age",
-                "cats": {
-                    "S3_b > 0": "TOTAL",
-                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-                }
-            },
-            {
-                "qre_name": "@S4_Class",
-                "qre_lbl": "Class",
-                "cats": {
-                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-                }
-            },
-        ],
-    ],
+    # # Group header 2nd
+    # 'lst_2': [
+    #     # header lvl 1
+    #     [
+    #         {
+    #             "qre_name": "@S4_Class",
+    #             "qre_lbl": "Class",
+    #             "cats": {
+    #                 "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+    #                 "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+    #             }
+    #         },
+    #     ],
+    #     # header lvl 2
+    #     [
+    #         {
+    #             "qre_name": "S1",
+    #             "qre_lbl": "City",
+    #             "cats": {
+    #                 "TOTAL": "TOTAL",
+    #                 '3': 'Hồ Chí Minh',
+    #                 '4': 'Cần Thơ'
+    #             }
+    #         },
+    #         {
+    #             "qre_name": "@S8_BUMO",
+    #             "qre_lbl": "BUMO",
+    #             "cats": {
+    #                 "S8.isin([2])": "Tiger nâu",
+    #                 "S8.isin([6, 7, 8])": "Sài Gòn",
+    #                 "S8.isin([12, 13, 14])": "Larue",
+    #             }
+    #         },
+    #
+    #         {
+    #             "qre_name": "$S6",
+    #             "qre_lbl": "S6. testing",
+    #             "cats": {}
+    #         },
+    #
+    #
+    #     ],
+    # ],
+    # # Group header 3rd
+    # 'lst_3': [
+    #     # header lvl 1
+    #     [
+    #         {
+    #             "qre_name": "@S8_BUMO",
+    #             "qre_lbl": "BUMO",
+    #             "cats": {
+    #                 "S8.isin([2])": "Tiger nâu",
+    #                 "S8.isin([6, 7, 8])": "Sài Gòn",
+    #                 "S8.isin([12, 13, 14])": "Larue",
+    #             }
+    #         },
+    #     ],
+    #     # header lvl 2
+    #     [
+    #         {
+    #             "qre_name": "@S3_b_Group",
+    #             "qre_lbl": "Age",
+    #             "cats": {
+    #                 "S3_b > 0": "TOTAL",
+    #                 "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+    #                 "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+    #             }
+    #         },
+    #         {
+    #             "qre_name": "@S4_Class",
+    #             "qre_lbl": "Class",
+    #             "cats": {
+    #                 "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+    #                 "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+    #             }
+    #         },
+    #     ],
+    # ],
 }
 
 dict_header_main = copy.deepcopy(dict_header_scr)
@@ -515,26 +518,27 @@ dict_header_main['lst_1'] += [[
     },
 ]]
 
-dict_header_main['lst_2'] += [[
-    {
-        "qre_name": "Ma_SP",
-        "qre_lbl": "Mã Concept",
-        "cats": {}
-    },
-]]
-
-dict_header_main['lst_3'] += [[
-    {
-        "qre_name": "Ma_SP",
-        "qre_lbl": "Mã Concept",
-        "cats": {}
-    },
-]]
+# dict_header_main['lst_2'] += [[
+#     {
+#         "qre_name": "Ma_SP",
+#         "qre_lbl": "Mã Concept",
+#         "cats": {}
+#     },
+# ]]
+#
+# dict_header_main['lst_3'] += [[
+#     {
+#         "qre_name": "Ma_SP",
+#         "qre_lbl": "Mã Concept",
+#         "cats": {}
+#     },
+# ]]
 
 # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
     {"qre_name": "S1"},
     {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
+    {"qre_name": "S3_a"},
     {"qre_name": "S3_b"},
     {"qre_name": "S4"},
     {"qre_name": "S5"},
@@ -635,13 +639,19 @@ lst_side_oe = [
 ]
 
 
+"""
+To Do
+Add weight variable to table below
+"""
+
 lst_func_to_run = [
     # SCREENER
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Scr_Tagon_count',
-            'Scr_Tagon_pct',
+            'Scr_Tagon_pct_Unweight',
+            'Scr_Tagon_pct_Weight',
         ],
         'tables_format': {
             "Scr_Tagon_count": {
@@ -655,9 +665,10 @@ lst_func_to_run = [
                 "lst_side_qres": lst_side_scr_tagon,
                 # "lst_header_qres": lst_header[:-1],
                 "dict_header_qres": dict_header_scr,
+                "weight_var": 'Weight_Var',
             },
-            "Scr_Tagon_pct": {
-                "tbl_name": "Scr_Tagon_pct",
+            "Scr_Tagon_pct_Unweight": {
+                "tbl_name": "Scr_Tagon_pct_Unweight",
                 "tbl_filter": "S1 > 0",
                 "is_count": 0,
                 "is_pct_sign": 1,
@@ -667,6 +678,20 @@ lst_func_to_run = [
                 "lst_side_qres": lst_side_scr_tagon,
                 # "lst_header_qres": lst_header[:-1],
                 "dict_header_qres": dict_header_scr,
+                "weight_var": '',
+            },
+            "Scr_Tagon_pct_Weight": {
+                "tbl_name": "Scr_Tagon_pct_Weight",
+                "tbl_filter": "S1 > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
+                "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
+                "lst_side_qres": lst_side_scr_tagon,
+                # "lst_header_qres": lst_header[:-1],
+                "dict_header_qres": dict_header_scr,
+                "weight_var": 'Weight_Var',
             },
         },
     },
@@ -675,22 +700,38 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Main',
-            'Main_oe',
+            'Main_Unweight',
+            'Main_Weight',
+            # 'Main_oe',
         ],
         'tables_format': {
 
-            "Main": {
-                "tbl_name": "Main",
+            "Main_Unweight": {
+                "tbl_name": "Main_Unweight",
                 "tbl_filter": "Ma_SP > 0",
                 "is_count": 0,
                 "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
-                "sig_test_info": {"sig_type": "rel", "sig_cols": [], "lst_sig_lvl": [90, 95]},
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
                 "lst_side_qres": lst_side_main,
                 # "lst_header_qres": lst_header,
                 "dict_header_qres": dict_header_main,
+                "weight_var": '',
+            },
+
+            "Main_Weight": {
+                "tbl_name": "Main_Weight",
+                "tbl_filter": "Ma_SP > 0",
+                "is_count": 0,
+                "is_pct_sign": 1,
+                "is_hide_oe_zero_cats": 1,
+                "is_hide_zero_cols": 1,
+                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
+                "lst_side_qres": lst_side_main,
+                # "lst_header_qres": lst_header,
+                "dict_header_qres": dict_header_main,
+                "weight_var": 'Weight_Var',
             },
 
             "Main_oe": {
@@ -704,6 +745,7 @@ lst_func_to_run = [
                 "lst_side_qres": lst_side_oe,
                 # "lst_header_qres": lst_header,
                 "dict_header_qres": dict_header_main,
+                "weight_var": 'Weight_Var',
             },
         },
 
@@ -711,14 +753,14 @@ lst_func_to_run = [
 ]
 
 
-# # RUN TABLE FOR SCREENER
-# dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
-# dtg.run_tables_by_js_files(lst_func_to_run[:1])
+# RUN TABLE FOR SCREENER
+dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+dtg.run_tables_by_js_files(lst_func_to_run[:1])
 
 
 # RUN TABLE FOR MAIN
 dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=False)  # is_append=True
+dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 # FORMAT TABLES---------------------------------------------------------------------------------------------------------

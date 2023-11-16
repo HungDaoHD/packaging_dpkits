@@ -424,7 +424,7 @@ class TableFormatter:
 
             last_header_row = 2
 
-            while ws.cell(last_header_row, 5).value != 'Base':
+            while ws.cell(last_header_row, 4).value != 'base':
                 last_header_row += 1
 
                 if last_header_row >= 30:
