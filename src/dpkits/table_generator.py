@@ -460,7 +460,8 @@ class DataTableGenerator:
                 'is_count': tbl['is_count'],
                 'is_pct_sign': tbl['is_pct_sign'],
                 'sig_test_info': tbl['sig_test_info'],
-                'dict_grp_header': grp_hd
+                'dict_grp_header': grp_hd,
+                'weight_var': tbl.get('weight_var') if tbl.get('weight_var') else ''
             }
 
             df_temp = self.run_standard_header_sig(df_data, df_info, tbl_info_sig=tbl_info_sig)
@@ -614,7 +615,7 @@ class DataTableGenerator:
 
                 dict_pair_to_sig.update({item: df_filter})
 
-                # HERE UPDATE FOR WEIGHTED TABLE
+                # UPDATE FOR WEIGHTED TABLE
                 if weight_var:
 
                     df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{qre_name}.isnull()"), qre_name].copy()
@@ -711,7 +712,7 @@ class DataTableGenerator:
 
                 if is_mean:
 
-                    # HERE UPDATE FOR WEIGHTED TABLE
+                    # UPDATE FOR WEIGHTED TABLE
                     if weight_var:
 
                         df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{org_qre_name}.isnull()"), org_qre_name].copy()
@@ -738,7 +739,7 @@ class DataTableGenerator:
 
                 else:
 
-                    # HERE UPDATE FOR WEIGHTED TABLE
+                    # UPDATE FOR WEIGHTED TABLE
                     if weight_var:
 
                         df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{org_qre_name}.isnull()"), org_qre_name].copy()
@@ -816,7 +817,7 @@ class DataTableGenerator:
 
                 dict_pair_to_sig.update({item: df_filter})
 
-                # HERE UPDATE FOR WEIGHTED TABLE
+                # UPDATE FOR WEIGHTED TABLE
                 if weight_var:
 
                     df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{org_qre_name}.isnull()"), org_qre_name].copy()
@@ -886,11 +887,11 @@ class DataTableGenerator:
                 df_temp.loc[key, col] = eval(str_syntax)
 
             # HERE: Find solution for warning
-            a = 0
+            # a = 0
 
             df_qre = pd.concat([df_qre, df_temp], axis=0)
 
-            a = 1
+            # a = 1
 
 
         df_qre.reset_index(drop=True, inplace=True)
@@ -899,8 +900,20 @@ class DataTableGenerator:
 
 
 
-    def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
+    def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, cal_act: str,
                                lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, weight_var: str = None) -> pd.DataFrame:
+
+        # HERE:
+        # To do: add option: std, quantile 25/50/75, min, max
+        dict_cal_act = {
+            'mean': 'Mean',
+            'std': 'Std',
+            'min': 'Minimum',
+            'max': 'Maximum',
+            '25%': 'Quantile 25%',
+            '50%': 'Quantile 50%',
+            '75%': 'Quantile 75%',
+        }
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -911,8 +924,8 @@ class DataTableGenerator:
             'qre_name': qre_name,
             'qre_lbl': qre_lbl,
             'qre_type': qre_type,
-            'cat_val': 'mean',
-            'cat_lbl': 'Mean',
+            'cat_val': cal_act,
+            'cat_lbl': dict_cal_act.get(cal_act),
         })
 
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
@@ -938,7 +951,7 @@ class DataTableGenerator:
 
                 dict_pair_to_sig.update({item: df_filter})
 
-                # HERE UPDATE FOR WEIGHTED TABLE
+                # UPDATE FOR WEIGHTED TABLE
                 if weight_var:
 
                     df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{qre_name}.isnull()"), qre_name].copy()
@@ -946,24 +959,51 @@ class DataTableGenerator:
                     if df_temp_for_weight.empty:
                         num_val = np.nan
                     else:
-                        num_val = np.average(df_temp_for_weight, weights=dict_header_col_name[item]['df_data'].loc[df_temp_for_weight.index, weight_var])
-                else:
-                    num_val = df_filter[qre_name].mean()
+                        df_weight = dict_header_col_name[item]['df_data'].loc[df_temp_for_weight.index, weight_var].copy()
 
+                        if cal_act in ['std']:
+                            num_mean = np.average(df_temp_for_weight, weights=df_weight)
+                            num_variance = np.average((df_temp_for_weight - num_mean) ** 2, weights=df_weight)
+                            num_val = math.sqrt(num_variance)
+                        elif cal_act in ['min', 'max']:
+                            num_val = df_filter[qre_name].describe().loc[cal_act]
+
+                        elif cal_act in ['25%', '50%', '75%']:
+
+                            def weighted_percentile(data, percents, weights=None):
+                                """ percents in units of 1%
+                                weights specifies the frequency (count) of data.
+                                """
+                                if weights is None:
+                                    return np.percentile(data, percents)
+                                ind = np.argsort(data)
+                                d = data[ind]
+                                w = weights[ind]
+                                p = 1. * w.cumsum() / w.sum() * 100
+                                y = np.interp(percents, p, d)
+                                return y
+
+                            num_val = weighted_percentile(np.array(df_temp_for_weight), int(cal_act.replace('%', '')), np.array(df_weight))
+
+                        else:
+                            num_val = np.average(df_temp_for_weight, weights=dict_header_col_name[item]['df_data'].loc[df_temp_for_weight.index, weight_var])
+
+                else:
+                    num_val = df_filter[qre_name].describe().loc[cal_act]
 
                 val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
 
                 if sig_type and lst_sig_lvl:
 
-                    num_val_old = df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name]].values[0, 0]
+                    num_val_old = df_qre.loc[df_qre['cat_val'] == cal_act, [val_col_name]].values[0, 0]
 
                     if pd.isnull(num_val_old):
-                        df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
+                        df_qre.loc[df_qre['cat_val'] == cal_act, [val_col_name, sig_col_name]] = [num_val, np.nan]
 
                 else:
-                    df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
+                    df_qre.loc[df_qre['cat_val'] == cal_act, [val_col_name, sig_col_name]] = [num_val, np.nan]
 
-            if sig_type and lst_sig_lvl and not weight_var:
+            if sig_type and lst_sig_lvl and not weight_var and cal_act == 'mean':
                 df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
         return df_qre
@@ -1032,7 +1072,7 @@ class DataTableGenerator:
 
                 dict_pair_to_sig.update({item: df_filter['ma_val_sum']})
 
-                # HERE UPDATE FOR WEIGHTED TABLE
+                # UPDATE FOR WEIGHTED TABLE
                 if weight_var:
 
                     df_temp_for_weight = df_filter.loc[df_filter.eval(f"~ma_val_sum.isnull()"), 'ma_val_sum'].copy()
@@ -1208,12 +1248,26 @@ class DataTableGenerator:
 
         df_tbl['qre_lbl'] = df_tbl['qre_lbl'].astype('object')
 
-        df_tbl.loc[1:4, ['qre_lbl']] = [
-            f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}",
-            '' if is_count or sig_type == '' else f"{'Dependent' if sig_type == 'rel' else 'Independent'} Pair T-test at level {' & '.join([f'{i}%' for i in lst_sig_lvl_pct])}",
-            '' if is_count or sig_type == '' else f"Columns Tested: {', '.join(['/'.join(i) for i in lst_sig_pair])}",
-            '' if is_count or sig_type == '' else f"Uppercase for {lst_sig_lvl_pct[-1]}%, lowercase for {lst_sig_lvl_pct[0]}%" if len(lst_sig_lvl_pct) > 1 else np.nan
-        ]
+        lst_tbl_info = [f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}"]
+
+        if not is_count and sig_type != '':
+            lst_tbl_info.extend([
+                f"{'Dependent' if sig_type == 'rel' else 'Independent'} Pair T-test at level {' & '.join([f'{i}%' for i in lst_sig_lvl_pct])}",
+                f"Columns Tested: {', '.join(['/'.join(i) for i in lst_sig_pair])}",
+                f"Uppercase for {lst_sig_lvl_pct[-1]}%, lowercase for {lst_sig_lvl_pct[0]}%" if len(lst_sig_lvl_pct) > 1 else np.nan
+            ])
+
+        if tbl_info_sig['weight_var']:
+            lst_tbl_info.extend([f"Weighted with: {tbl_info_sig['weight_var']}"])
+
+        df_tbl.loc[1:len(lst_tbl_info), ['qre_lbl']] = lst_tbl_info
+
+        # df_tbl.loc[1:4, ['qre_lbl']] = [
+        #     f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}",
+        #     '' if is_count or sig_type == '' else f"{'Dependent' if sig_type == 'rel' else 'Independent'} Pair T-test at level {' & '.join([f'{i}%' for i in lst_sig_lvl_pct])}",
+        #     '' if is_count or sig_type == '' else f"Columns Tested: {', '.join(['/'.join(i) for i in lst_sig_pair])}",
+        #     '' if is_count or sig_type == '' else f"Uppercase for {lst_sig_lvl_pct[-1]}%, lowercase for {lst_sig_lvl_pct[0]}%" if len(lst_sig_lvl_pct) > 1 else np.nan
+        # ]
 
         # lst_ignore_col_name = list()
         # df_tbl.to_csv('df_tbl_temp.csv', encoding='utf-8-sig')
@@ -1309,7 +1363,16 @@ class DataTableGenerator:
                     df_qre = self.add_sa_qre_cal_to_tbl_sig(df_qre, qre_info, dict_cal)
 
             elif qre_type in ['NUM']:
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'mean', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'std', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'min', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'max', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '25%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '50%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '75%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+
+
+
 
             elif qre_type in ['MA', 'MA_mtr', 'MA_comb', 'MA_Rank']:
 

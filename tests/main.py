@@ -85,8 +85,8 @@ df_data, df_info = DataProcessing.add_qres(df_data, df_info, dict_add_new_qres)
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
 
-df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 0.3
-df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.7
+df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
+df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 
 
 # Just for checking
@@ -210,20 +210,20 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 #         'sheet_name': 'ByCode',
 #         'is_recode_to_lbl': False,
 #     },
-#     2: {
-#         'data': df_data_stack,
-#         'info': df_info_stack,
-#         'tail_name': 'Stack',
-#         'sheet_name': 'Stack',
-#         'is_recode_to_lbl': False,
-#     },
-#     3: {
-#         'data': df_data_unstack,
-#         'info': df_info_unstack,
-#         'tail_name': 'Unstack',
-#         'sheet_name': 'Unstack',
-#         'is_recode_to_lbl': False,
-#     },
+#     # 2: {
+#     #     'data': df_data_stack,
+#     #     'info': df_info_stack,
+#     #     'tail_name': 'Stack',
+#     #     'sheet_name': 'Stack',
+#     #     'is_recode_to_lbl': False,
+#     # },
+#     # 3: {
+#     #     'data': df_data_unstack,
+#     #     'info': df_info_unstack,
+#     #     'tail_name': 'Unstack',
+#     #     'sheet_name': 'Unstack',
+#     #     'is_recode_to_lbl': False,
+#     # },
 # }
 #
 # converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=True, is_export_sav=True, is_export_xlsx=True)
@@ -644,8 +644,8 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            'Scr_Tagon_count_Unweight',
-            'Scr_Tagon_count_Weight',
+            # 'Scr_Tagon_count_Unweight',
+            # 'Scr_Tagon_count_Weight',
             'Scr_Tagon_pct_Unweight',
             'Scr_Tagon_pct_Weight',
         ],
@@ -680,7 +680,7 @@ lst_func_to_run = [
                 "tbl_name": "Scr_Tagon_pct_Unweight",
                 "tbl_filter": "S1 > 0",
                 "is_count": 0,
-                "is_pct_sign": 0,
+                "is_pct_sign": 1,
                 "is_hide_oe_zero_cats": 1,
                 "is_hide_zero_cols": 1,
                 "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},

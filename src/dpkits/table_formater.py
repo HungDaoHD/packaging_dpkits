@@ -364,10 +364,20 @@ class TableFormatter:
                             cur_cell.font = Font(bold=True)
                             cur_cell.number_format = '0.00'
 
+                        elif ws.cell(irow, 4).value in ['min', 'max']:
+                            ws.cell(irow, 5).font = Font(bold=True, color='00B050')
+                            cur_cell.font = Font(italic=True)
+                            cur_cell.number_format = '0.00'
+
+                        elif ws.cell(irow, 4).value in ['25%', '50%', '75%']:
+                            ws.cell(irow, 5).font = Font(bold=True, color='963634')
+                            cur_cell.font = Font(italic=True)
+                            cur_cell.number_format = '0.00'
+
                         elif 'calculate' in ws.cell(irow, 4).value:
 
                             ws.cell(irow, 5).font = Font(bold=True, color='E26B0A')
-                            cur_cell.font = Font(bold=True)
+                            cur_cell.font = Font(italic=True)
                             cur_cell.number_format = '0.00'
 
                         elif ws.cell(irow, 3).value == 'GROUP':
@@ -433,7 +443,10 @@ class TableFormatter:
 
             last_header_row -= 1
 
-            is_sig_tbl = True if ws.cell(4, 2).value else False
+            if not ws.cell(4, 2).value:
+                is_sig_tbl = False
+            else:
+                is_sig_tbl = True if 'Dependent' in ws.cell(4, 2).value or 'Independent' in ws.cell(4, 2).value else False
 
             if not is_sig_tbl:
                 ws.delete_rows(last_header_row - 1, 2)
