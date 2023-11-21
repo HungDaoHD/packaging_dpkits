@@ -26,6 +26,7 @@ from table_generator import DataTableGenerator
 from table_formater import TableFormatter
 from codeframe_reader import CodeframeReader
 from calculate_lsm import LSMCalculation
+from data_analysis import DataAnalysis
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
@@ -777,19 +778,90 @@ lst_func_to_run = [
 ]
 
 
-# RUN TABLE FOR SCREENER
-dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[:1])
+# # RUN TABLE FOR SCREENER
+# dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[:1])
+#
+#
+# # RUN TABLE FOR MAIN
+# dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+#
+#
+# # FORMAT TABLES---------------------------------------------------------------------------------------------------------
+# dtf = TableFormatter(xlsx_name=str_tbl_file_name)
+# dtf.format_sig_table()
 
 
-# RUN TABLE FOR MAIN
-dtg = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-dtg.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+
+# PENALTY ANALYSIS------------------------------------------------------------------------------------------------------
+da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
+
+dict_jar_qres = {
+    'Q4': {
+        'label': 'Q4. AAA',
+        'b2b': {'label': 'Weak', 'code': [1, 2]},
+        'jar': {'label': 'Just about right', 'code': [3]},
+        't2b': {'label': 'Strong', 'code': [4, 5]},
+    },
+    'Q5': {
+        'label': 'Q5. BBB',
+        'b2b': {'label': 'Weak', 'code': [1, 2]},
+        'jar': {'label': 'Just about right', 'code': [3]},
+        't2b': {'label': 'Strong', 'code': [4, 5]},
+    },
+    'Q9': {
+        'label': 'Q9. CCC',
+        'b2b': {'label': 'Weak', 'code': [1, 2]},
+        'jar': {'label': 'Just about right', 'code': [3]},
+        't2b': {'label': 'Strong', 'code': [4, 5]},
+    },
+    'Q6': {
+        'label': 'Q6. DDD',
+        'b2b': {'label': 'Weak', 'code': [1, 2]},
+        'jar': {'label': 'Just about right', 'code': [3]},
+        't2b': {'label': 'Strong', 'code': [4, 5]},
+    },
+    'Q10': {
+        'label': 'Q10. EEE',
+        'b2b': {'label': 'Weak', 'code': [1, 2]},
+        'jar': {'label': 'Just about right', 'code': [3]},
+        't2b': {'label': 'Strong', 'code': [4, 5]},
+    },
+}
+
+dict_define_pen = {
+    'Total': {
+        'query': '',
+        'prod_pre': 'Ma_SP',
+        'ol_qre': 'Q1',
+        'jar_qres': dict_jar_qres
+    },
+    'Male': {
+        'query': 'S2 == 2',
+        'prod_pre': 'Ma_SP',
+        'ol_qre': 'Q1',
+        'jar_qres': dict_jar_qres
+    },
+    'HCM': {
+        'query': 'S1 == 3',
+        'prod_pre': 'Ma_SP',
+        'ol_qre': 'Q1',
+        'jar_qres': dict_jar_qres
+    },
+    'CanTho': {
+        'query': 'S1 == 4',
+        'prod_pre': 'Ma_SP',
+        'ol_qre': 'Q1',
+        'jar_qres': dict_jar_qres
+    },
+}
+
+da.penalty_analysis(dict_define_pen=dict_define_pen, output_name='VN8413_Penalty_Analysis')
 
 
-# FORMAT TABLES---------------------------------------------------------------------------------------------------------
-dtf = TableFormatter(xlsx_name=str_tbl_file_name)
-dtf.format_sig_table()
+
+
 
 
 
