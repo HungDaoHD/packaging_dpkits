@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
+import pingouin as pg
 
-
-
-# TO DO: add new feature to run Penalty score, linear regression
 
 
 
@@ -12,7 +10,6 @@ class DataAnalysis:
 
         self.df_data = df_data
         self.df_info = df_info
-
 
 
 
@@ -73,6 +70,20 @@ class DataAnalysis:
 
 
 
+    def linear_regression(self, dict_define_linear: dict, output_name: str):
+
+        with pd.ExcelWriter(f'{output_name}.xlsx', engine='openpyxl') as writer:
+            for k_ln, v_ln in dict_define_linear.items():
+                print(f'Processing linear regression - {k_ln}')
+                df_data = self.df_data.query(str_query).copy() if v_ln['str_query'] else self.df_data.copy()
+
+                df_data.loc[:, 'dep_var'] = df_data.loc[:, v_ln['dependent_vars']].mean(axis=1)
+
+                ln_reg = pg.linear_regression(df_data.loc[:, v_ln['explanatory_vars']], df_data['dep_var'])
+
+                ln_reg.to_excel(writer, sheet_name=k_ln)
+            
 
 
+    # MORE ANALYSIS HERE
 

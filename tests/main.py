@@ -12,6 +12,7 @@ import copy
 # from dpkits.table_formater import TableFormatter
 # from dpkits.codeframe_reader import CodeframeReader
 # from dpkits.calculate_lsm import LSMCalculation
+# from dpkits.data_analysis import DataAnalysis
 
 
 
@@ -860,6 +861,22 @@ dict_define_pen = {
 da.penalty_analysis(dict_define_pen=dict_define_pen, output_name='VN8413_Penalty_Analysis')
 
 
+# LINEAR REGRESSION-----------------------------------------------------------------------------------------------------
+dict_define_linear = {
+    'ln1': {
+        'str_query': '',
+        'dependent_vars': ['Q1'],
+        'explanatory_vars': ['Q4', 'Q5', 'Q9', 'Q6', 'Q10'],
+    },
+    'ln2': {
+        'str_query': '',
+        'dependent_vars': ['Q1'],
+        'explanatory_vars': ['Q4', 'Q5', 'Q9', 'Q10'],
+    },
+
+}
+
+da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN8413_Linear_Regression')
 
 
 
