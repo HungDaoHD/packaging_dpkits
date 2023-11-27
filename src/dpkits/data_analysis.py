@@ -82,7 +82,17 @@ class DataAnalysis:
                 ln_reg = pg.linear_regression(df_data.loc[:, v_ln['explanatory_vars']], df_data['dep_var'])
 
                 ln_reg.to_excel(writer, sheet_name=k_ln)
-            
+
+
+
+    def logistic_regression(self, dict_define_logistic: dict, output_name: str):
+        
+        # add calculate function here
+
+
+        pass
+
+
 
 
     # MORE ANALYSIS HERE

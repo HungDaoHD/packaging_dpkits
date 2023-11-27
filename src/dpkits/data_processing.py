@@ -33,3 +33,25 @@ class DataProcessing:
 
         return df_data, df_info
 
+
+
+    @staticmethod
+    def align_ma_values_to_left(df_data: pd.DataFrame, qre_name: str, fillna_val: float = None) -> pd.DataFrame:
+
+        qre, max_col = qre_name.rsplit('|', 1)
+
+        lst_qre = [f'{qre}_{i}' for i in range(1, int(max_col) + 1)]
+
+        df_fil = df_data.loc[:, lst_qre].copy()
+        df_fil = df_fil.T
+        df_sort = pd.DataFrame(np.sort(df_fil.values, axis=0), index=df_fil.index, columns=df_fil.columns)
+        df_sort = df_sort.T
+        for col in lst_qre:
+            df_data[col] = df_sort[col]
+
+        del df_fil, df_sort
+
+        if fillna_val:
+            df_data.loc[df_data.eval(f"{qre}_1.isnull()"), f'{qre}_1'] = fillna_val
+
+        return df_data

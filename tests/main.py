@@ -83,9 +83,18 @@ dict_add_new_qres = {
     'Weight_Var': ['Weight_Var', 'NUM', {}, np.nan]
 }
 
+# Add new question to df_data & df_info
 df_data, df_info = DataProcessing.add_qres(df_data, df_info, dict_add_new_qres)
+
+# Align MA data values to left
+df_data['New_MA_2'] = 2
+df_data['New_MA_4'] = 4
+
+df_data = DataProcessing.align_ma_values_to_left(df_data=df_data, qre_name='New_MA|6')
+
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
+
 
 df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
 df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
@@ -873,12 +882,9 @@ dict_define_linear = {
         'dependent_vars': ['Q1'],
         'explanatory_vars': ['Q4', 'Q5', 'Q9', 'Q10'],
     },
-
 }
 
 da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN8413_Linear_Regression')
-
-
 
 
 
