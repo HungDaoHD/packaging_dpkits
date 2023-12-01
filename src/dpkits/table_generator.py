@@ -419,6 +419,7 @@ class DataTableGenerator:
                 'mean': qre['mean'] if qre.get('mean') else {},
                 'sort': qre['sort'] if qre.get('sort') else "",
                 'calculate': qre['calculate'] if qre.get('calculate') else {},
+                'friedman': qre['friedman'] if qre.get('friedman') else {},
                 'weight_var': tbl['weight_var'] if tbl.get('weight_var') else "",
             }
 
@@ -653,7 +654,7 @@ class DataTableGenerator:
 
     def add_sa_qre_mean_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
                                    lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, mean_factor: dict,
-                                   is_mean: bool, weight_var: str = None) -> pd.DataFrame:
+                                   is_mean: bool, weight_var: str = None, is_friedman_sig: bool = False) -> pd.DataFrame:
 
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -669,6 +670,18 @@ class DataTableGenerator:
                 'cat_val': 'mean',
                 'cat_lbl': 'Mean',
             })
+
+        elif is_friedman_sig:
+
+            dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
+            dict_new_row.update({
+                'qre_name': qre_name,
+                'qre_lbl': qre_lbl,
+                'qre_type': qre_type,
+                'cat_val': 'friedman_pval',
+                'cat_lbl': 'Friedman P-value',
+            })
+
         else:
             dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
             dict_new_row.update({
@@ -684,6 +697,8 @@ class DataTableGenerator:
         df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
         lst_ran_col = list()
+
+        dict_sig_friedman = dict()
 
         for idx_pair, sig_pair in enumerate(lst_sig_pair):
 
@@ -709,6 +724,12 @@ class DataTableGenerator:
                     df_filter.replace(qre_val, inplace=True)
 
                 dict_pair_to_sig.update({item: df_filter})
+
+                if is_friedman_sig:
+                    if item in dict_sig_friedman.keys():
+                        continue
+
+                    dict_sig_friedman.update({item: df_filter})
 
                 if is_mean:
 
@@ -758,9 +779,36 @@ class DataTableGenerator:
 
                     df_qre.loc[df_qre['cat_val'] == 'std', [val_col_name, sig_col_name]] = [num_val_std, np.nan]
 
+            if weight_var or (not is_mean and not is_friedman_sig):
+                continue
 
-            if sig_type and lst_sig_lvl and is_mean and not weight_var:
-                df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
+            if is_mean:
+                if sig_type and lst_sig_lvl:
+                    df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
+
+
+        if is_friedman_sig:
+
+            lst_val_col_name = list()
+            for k in dict_sig_friedman.keys():
+                lst_val_col_name.append(dict_header_col_name[k]['val_col'])
+
+            if len(dict_sig_friedman.keys()) < 3:
+                df_qre.loc[df_qre['cat_val'] == 'friedman_pval', lst_val_col_name] = ['NAN'] * len(lst_val_col_name)
+
+            else:
+                df_friedman_sig = pd.DataFrame()
+
+                for k, df in dict_sig_friedman.items():
+                    df_frm_temp = df.reset_index(drop=True)
+                    df_friedman_sig = pd.concat([df_friedman_sig, df_frm_temp], axis=1, ignore_index=True)
+
+                arr_friedman_sig = df_friedman_sig.to_numpy()
+                arr_friedman_sig = arr_friedman_sig.transpose()
+                frm = stats.friedmanchisquare(*arr_friedman_sig)
+
+                df_qre.loc[df_qre['cat_val'] == 'friedman_pval', lst_val_col_name] = [frm.pvalue] * len(lst_val_col_name)
+
 
         return df_qre
 
@@ -1357,6 +1405,11 @@ class DataTableGenerator:
 
                     # Run Std
                     df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor, is_mean=False, weight_var=weight_var)
+
+                friedman_factor = df_info.at[idx, 'friedman']
+                if friedman_factor.keys():
+                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor=friedman_factor, is_mean=False, weight_var=weight_var, is_friedman_sig=True)
+
 
                 dict_cal = df_info.at[idx, 'calculate']
                 if dict_cal:

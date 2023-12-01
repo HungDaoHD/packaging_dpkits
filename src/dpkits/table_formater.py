@@ -375,7 +375,11 @@ class TableFormatter:
                             cur_cell.number_format = '0.00'
 
                         elif 'calculate' in ws.cell(irow, 4).value:
+                            ws.cell(irow, 5).font = Font(bold=True, color='E26B0A')
+                            cur_cell.font = Font(italic=True)
+                            cur_cell.number_format = '0.00'
 
+                        elif 'friedman_pval' in ws.cell(irow, 4).value:
                             ws.cell(irow, 5).font = Font(bold=True, color='E26B0A')
                             cur_cell.font = Font(italic=True)
                             cur_cell.number_format = '0.00'

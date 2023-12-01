@@ -3,6 +3,17 @@ import numpy as np
 import pingouin as pg
 
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+# from pptx import Presentation
+# from pptx.chart.data import XyChartData
+# from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION
+# from pptx.util import Inches
+
+
+
 
 
 class DataAnalysis:
@@ -68,9 +79,58 @@ class DataAnalysis:
         with pd.ExcelWriter(f'{output_name}.xlsx', engine='openpyxl') as writer:
             df_pen.to_excel(writer, sheet_name=f'Penalty_Analysis')
 
+        # # # --------------------------------------------------------------------------------------------------------------
+        # df_pen['Qre_GroupCode'] = df_pen['Qre'] + '_' + df_pen['GroupCode']
+        # df_pen['Penalty_Score'] = abs(df_pen['Penalty_Score'])
+        #
+        # df_pen = df_pen.loc[df_pen.eval("Section == 'Total' & Ma_SP_Lbl == 'Concept 1'"), :].copy()
+        #
+        # df_pen['Penalty_Score'] = df_pen['Penalty_Score'].astype(float)
+        # df_pen['GroupCode_Pct'] = df_pen['GroupCode_Pct'].astype(float)
+        #
+        #
+        # fig = plt.subplots(figsize=(10, 6))
+        #
+        # sns.scatterplot(data=df_pen, x="Penalty_Score", y="GroupCode_Pct", hue="Qre_GroupCode", legend=True)
+        #
+        # plt.show()
+
+
+        # # --------------------------------------------------------------------------------------------------------------
+        # # create presentation with 1 slide ------
+        # prs = Presentation()
+        # slide = prs.slides.add_slide(prs.slide_layouts[5])
+        #
+        # # Export ppt chart after penalty score table
+        # chart_data = XyChartData()
+        #
+        # series_1 = chart_data.add_series('Model 1')
+        # series_1.add_data_point(0.7, 2.7)
+        #
+        # series_2 = chart_data.add_series('Model 2')
+        # series_2.add_data_point(1.3, 3.7)
+        #
+        # series_2 = chart_data.add_series('Model 3')
+        # series_2.add_data_point(0.6, 1.3)
+        #
+        # x, y, cx, cy = Inches(0.5), Inches(2), Inches(9), Inches(4.5)
+        #
+        # chart = slide.shapes.add_chart(XL_CHART_TYPE.XY_SCATTER, x, y, cx, cy, chart_data)
+        #
+        # prs.save('chart-01.pptx')
+
+
+
+
+
+
+
 
 
     def linear_regression(self, dict_define_linear: dict, output_name: str):
+
+        # Single: y = b + a*x
+        # Multiple: y = b + a1*x1 + a2*x2 + ... + an*xn
 
         with pd.ExcelWriter(f'{output_name}.xlsx', engine='openpyxl') as writer:
             for k_ln, v_ln in dict_define_linear.items():
@@ -88,6 +148,8 @@ class DataAnalysis:
     def logistic_regression(self, dict_define_logistic: dict, output_name: str):
         
         # add calculate function here
+        
+
 
 
         pass
