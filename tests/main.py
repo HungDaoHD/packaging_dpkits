@@ -3,6 +3,7 @@ import numpy as np
 import time
 import datetime
 import copy
+# import tqdm
 
 
 # from dpkits.ap_data_converter import APDataConverter
@@ -29,11 +30,6 @@ from codeframe_reader import CodeframeReader
 from calculate_lsm import LSMCalculation
 from data_analysis import DataAnalysis
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-
-
-
-
-
 
 st = time.time()
 
@@ -100,20 +96,28 @@ df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
 df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 
 
-
-s1 = df_data['S1'].value_counts()
-s3b = df_data['S3_b'].value_counts()
-
-s6_1 = df_data['S6_1'].value_counts()
-s6_2 = df_data['S6_2'].value_counts()
-s6_3 = df_data['S6_3'].value_counts()
-s6_4 = df_data['S6_4'].value_counts()
-s6_5 = df_data['S6_5'].value_counts()
-s6_6 = df_data['S6_6'].value_counts()
-
-s6 = pd.concat([s6_1, s6_2, s6_3, s6_4, s6_5, s6_6], axis=1)
-s6 = s6.sum(axis=1)
-
+# # test new way to generate table
+#
+# s1 = df_data['S1'].value_counts()
+# s3b = df_data['S3_b'].value_counts()
+#
+# s6_1 = df_data['S6_1'].value_counts()
+# s6_2 = df_data['S6_2'].value_counts()
+# s6_3 = df_data['S6_3'].value_counts()
+# s6_4 = df_data['S6_4'].value_counts()
+# s6_5 = df_data['S6_5'].value_counts()
+# s6_6 = df_data['S6_6'].value_counts()
+#
+# s6 = pd.concat([s6_1, s6_2, s6_3, s6_4, s6_5, s6_6], axis=1)
+# s6_count = s6.sum(axis=1)
+# s6_pct = s6.sum(axis=1) / df_data.shape[0]
+#
+#
+# aaa = df_data[['S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6']].groupby(by=['S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6']).count()
+#
+#
+# here = 1
+# # END test new way to generate table
 
 
 # Just for checking
@@ -226,34 +230,34 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 
 
 
-# # ----------------------------------------------------------------------------------------------------------------------
-# # EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
-# # ----------------------------------------------------------------------------------------------------------------------
-# dict_dfs = {
-#     1: {
-#         'data': df_data,
-#         'info': df_info,
-#         'tail_name': 'ByCode',
-#         'sheet_name': 'ByCode',
-#         'is_recode_to_lbl': False,
-#     },
-#     # 2: {
-#     #     'data': df_data_stack,
-#     #     'info': df_info_stack,
-#     #     'tail_name': 'Stack',
-#     #     'sheet_name': 'Stack',
-#     #     'is_recode_to_lbl': False,
-#     # },
-#     # 3: {
-#     #     'data': df_data_unstack,
-#     #     'info': df_info_unstack,
-#     #     'tail_name': 'Unstack',
-#     #     'sheet_name': 'Unstack',
-#     #     'is_recode_to_lbl': False,
-#     # },
-# }
-#
-# converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=True, is_export_sav=True, is_export_xlsx=True)
+# ----------------------------------------------------------------------------------------------------------------------
+# EXPORT SAV DATA FILES-------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+dict_dfs = {
+    1: {
+        'data': df_data,
+        'info': df_info,
+        'tail_name': 'ByCode',
+        'sheet_name': 'ByCode',
+        'is_recode_to_lbl': False,
+    },
+    # 2: {
+    #     'data': df_data_stack,
+    #     'info': df_info_stack,
+    #     'tail_name': 'Stack',
+    #     'sheet_name': 'Stack',
+    #     'is_recode_to_lbl': False,
+    # },
+    # 3: {
+    #     'data': df_data_unstack,
+    #     'info': df_info_unstack,
+    #     'tail_name': 'Unstack',
+    #     'sheet_name': 'Unstack',
+    #     'is_recode_to_lbl': False,
+    # },
+}
+
+converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=True, is_export_sav=True, is_export_xlsx=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
@@ -262,11 +266,11 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 README:
     - Side question properties:
     {
-        
-        "qre_name": 
+
+        "qre_name":
             - "$Q15",  # column name, must set '$' if it is MA question
             - "Q16_Merge#combine(Q16a_1, Q16a_2, Q16a_3, Q16a_4, Q16b_1, Q16b_2, Q16b_3)"  # Combine multiple MA questions with same 'cats' define
-        
+
         "qre_lbl": "{lbl}: new label",  # default df_info label, input {lbl} top keep original label and addin new label
         "qre_filter": "Age.isin([2, 3])",  # use for filter question
         "sort": "des", # sort options: acs / des
@@ -333,7 +337,7 @@ README:
             "lst_side_qres": lst_side_main,  # list of side question
             "lst_header_qres": lst_header,  # list of header defines
             "dict_header_qres": dict_header_main, # dict of header defines to run multiple group header
-            "weight_var": [num type], # name of weighting variable in dataframe 
+            "weight_var": [num type], # name of weighting variable in dataframe
         },
 
 """
@@ -667,8 +671,8 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-            # 'Scr_Tagon_count_Unweight',
-            # 'Scr_Tagon_count_Weight',
+            'Scr_Tagon_count_Unweight',
+            'Scr_Tagon_count_Weight',
             'Scr_Tagon_pct_Unweight',
             'Scr_Tagon_pct_Weight',
         ],
@@ -733,7 +737,7 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main_Unweight',
-            # 'Main_Weight',
+            'Main_Weight',
             # 'Main_oe_Unweight',
             # 'Main_oe_Weight',
         ],
@@ -800,19 +804,19 @@ lst_func_to_run = [
 ]
 
 
-# # RUN TABLE FOR SCREENER
-# dtg_1 = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
-# dtg_1.run_tables_by_js_files(lst_func_to_run[:1])
-#
-#
+# RUN TABLE FOR SCREENER
+dtg_1 = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+dtg_1.run_tables_by_js_files(lst_func_to_run[:1])
+
+
 # # RUN TABLE FOR MAIN
 # dtg_2 = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
 # dtg_2.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
-#
-#
-# # FORMAT TABLES---------------------------------------------------------------------------------------------------------
-# dtf = TableFormatter(xlsx_name=str_tbl_file_name)
-# dtf.format_sig_table()
+
+
+# FORMAT TABLES---------------------------------------------------------------------------------------------------------
+dtf = TableFormatter(xlsx_name=str_tbl_file_name)
+dtf.format_sig_table()
 
 
 
@@ -925,5 +929,4 @@ da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN8413_
 
 
 
-print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=time.time() - st))
-
+print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=time.time() - st), '\n')

@@ -65,6 +65,7 @@ class CodeframeReader:
 
             lst_qre_comb = list(dict.fromkeys([a.replace('Y1_', 'Y1|').replace('Y2_', 'Y2|').rsplit('|', 1)[0] for a in df_ws['COLUMN_NAME'].values.tolist()]))
 
+            df_ws['RESPONDENTID'] = df_ws['RESPONDENTID'].astype(str)
             df_ws['VERBATIM'] = df_ws['VERBATIM'].astype(str)
             df_ws['CODING'] = df_ws['CODING'].astype(str)
 
@@ -72,7 +73,7 @@ class CodeframeReader:
             for rid in lst_rid:
                 for qre in lst_qre_comb:
 
-                    df_fil = df_ws.query(f"RESPONDENTID == '{rid}' & COLUMN_NAME.str.contains('{qre}')")
+                    df_fil = df_ws.query(f"RESPONDENTID.str.contains('{rid}') & COLUMN_NAME.str.contains('{qre}')")
 
                     verbatim = '|'.join(df_fil['VERBATIM'].values.tolist())
                     coding = '\\'.join(df_fil['CODING'].values.tolist())
@@ -101,6 +102,9 @@ class CodeframeReader:
             for rid in lst_rid:
                 df_fil = df_ws_new.query(f"RESPONDENTID == '{rid}' & COLUMN_NAME.isin({lst_qre_comb})")
                 qre_total_name = lst_qre_comb[0].replace('_Y1', '_Total')
+
+                if not df_fil['VERBATIM'].values.tolist():
+                    continue
 
                 verbatim = '|'.join(df_fil['VERBATIM'].values.tolist())
 

@@ -7,7 +7,7 @@ import re
 import os
 from fastapi import UploadFile
 from colorama import Fore, Back, Style
-
+from statsmodels.iolib.summary import d_or_f
 
 
 class APDataConverter:
@@ -125,6 +125,7 @@ class APDataConverter:
         else:
             self.upload_files = files
 
+        self.is_zip = True if '.zip' in file_name else False
 
         # Output vars
         self.str_file_name = str()
@@ -144,15 +145,40 @@ class APDataConverter:
         return lst_dup_vars
 
 
-    def read_file_xlsx(self, file, is_qme: bool) -> (pd.DataFrame, pd.DataFrame):
+    def read_file_xlsx(self, file, is_qme: bool, is_zip: bool = False) -> (pd.DataFrame, pd.DataFrame):
 
         print(f'Read file "{file.filename}"')
 
-        xlsx = io.BytesIO(file.file.read())
-
         if is_qme:
 
-            df_data = pd.read_excel(xlsx, sheet_name='Data')
+            if is_zip:
+
+                df_data = pd.DataFrame()
+                df_qres = pd.DataFrame()
+
+                with zipfile.ZipFile(io.BytesIO(file.file.read())) as z:
+                    for f in z.filelist:
+                        with z.open(f.filename) as ff:
+                            if 'Questions' in f.filename:
+                                df_qres = pd.read_csv(ff)
+
+                                dict_col_converted = dict()
+                                for i, col in enumerate(list(df_qres.columns)):
+                                    try:
+                                        dict_col_converted[col] = int(col)
+                                    except Exception:
+                                        dict_col_converted[col] = col
+
+                                df_qres.rename(columns=dict_col_converted, inplace=True)
+
+                            else:
+                                df_data = pd.read_csv(ff)
+
+            else:
+                xlsx = io.BytesIO(file.file.read())
+                df_data = pd.read_excel(xlsx, sheet_name='Data')
+                df_qres = pd.read_excel(xlsx, sheet_name='Question')
+
 
             df_data_header = df_data.iloc[[3, 4, 5], :].copy().T
             df_data_header.loc[((pd.isnull(df_data_header[3])) & (df_data_header[5] == 'Images')), 3] = ['Images']
@@ -174,10 +200,11 @@ class APDataConverter:
             set_drop = set(dict_header.values()).intersection(set(self.lstDrop))
             df_data.drop(columns=list(set_drop), inplace=True, axis=1)
 
-            df_qres = pd.read_excel(xlsx, sheet_name='Question')
+
             df_qres.replace({np.nan: None}, inplace=True)
 
         else:
+            xlsx = io.BytesIO(file.file.read())
             df_data = pd.read_excel(xlsx, sheet_name='Rawdata')
             df_qres = pd.read_excel(xlsx, sheet_name='Datamap')
 
@@ -229,6 +256,11 @@ class APDataConverter:
                 # this function is pending
                 self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
                 self.zip_name = file.filename.replace('.sav', '_Data.zip')
+
+            elif '.zip' in file.filename:
+                self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
+                self.zip_name = file.filename.replace('.zip', '_Data.zip')
+
             else:
                 self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
                 self.zip_name = file.filename.replace('.xlsx', '_Data.zip')
@@ -329,6 +361,9 @@ class APDataConverter:
         df_info_output.reset_index(drop=True, inplace=True)
 
         df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
+
+        if self.is_zip:
+            df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
 
         return df_data_output, df_info_output
 
@@ -467,6 +502,9 @@ class APDataConverter:
 
         df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
 
+        if self.is_zip:
+            df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
+
         return df_data_output, df_info_output
 
 
@@ -567,20 +605,18 @@ class APDataConverter:
                 os.remove(f_name)
 
 
-    def generate_multiple_data_files(self, dict_dfs: dict, is_md: bool = False, is_export_sav: bool = True, is_export_xlsx: bool = True, is_zip: bool = True):
+    def generate_multiple_data_files(self, dict_dfs: dict, is_export_sav: bool = True, is_export_xlsx: bool = True, is_zip: bool = True):
 
         lst_zip_file_name = list()
 
         str_name = self.str_file_name.replace('.xlsx', '')
 
         xlsx_name = f"{str_name}_Rawdata.xlsx"
-        # topline_name = f"{str_name}_Topline.xlsx"
 
         for key, val in dict_dfs.items():
 
             str_full_file_name = f"{str_name}_{val['tail_name']}" if val['tail_name'] else str_name
             str_sav_name = f"{str_full_file_name}.sav"
-            # str_sps_name = f"{str_full_file_name}.sps"
 
             df_data = val['data']
             df_info = val['info']
@@ -595,11 +631,6 @@ class APDataConverter:
                 dict_val_lbl = {a: {int(k): str(v) for k, v in b.items()} for a, b in zip(df_info['var_name'], df_info['val_lbl'])}
                 dict_measure = {a: 'nominal' for a in df_info['var_name']}
                 pyreadstat.write_sav(df_data, str_sav_name, column_labels=df_info['var_lbl'].values.tolist(), variable_value_labels=dict_val_lbl, variable_measure=dict_measure)
-
-                # print(f'Create {str_sps_name}')
-                # self.generate_sps(df_info, is_md, str_sps_name)
-                # lst_zip_file_name.extend([str_sav_name, str_sps_name])
-
                 lst_zip_file_name.extend([str_sav_name])
 
             if is_export_xlsx:
@@ -649,18 +680,55 @@ class APDataConverter:
 
         df_info_fil = df_info.query("var_type == 'FT' & var_name != 'ID' & not var_name.str.contains('_o')")
 
+        if df_info_fil.empty:
+            return df_data, df_info
+
+        lst_converted = list()
+        lst_cannot_converted = list()
+
         for col_name in df_info_fil['var_name'].values.tolist():
             try:
                 df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='float')
                 df_info.loc[df_info.eval(f"var_name == '{col_name}'"), 'var_type'] = 'NUM'
-                print(f'Convert {col_name} from FT to NUM type')
+                lst_converted.append(col_name)
             except Exception:
-                print(f'Cannot convert {col_name} from FT to NUM type')
+                lst_cannot_converted.append(col_name)
                 continue
+
+        if lst_converted:
+            print(Fore.LIGHTYELLOW_EX, f'Converted from FT to NUM type:', ', '.join(lst_converted), Fore.RESET)
+
+        if lst_cannot_converted:
+            print(Fore.LIGHTYELLOW_EX, f'Cannot convert from FT to NUM type:', ', '.join(lst_cannot_converted), Fore.RESET)
 
         return df_data, df_info
 
 
+    @staticmethod
+    def auto_convert_sa_ma_to_int(df_data: pd.DataFrame, df_info: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
+        df_info_fil = df_info.query("var_type.isin(['SA', 'MA', 'SA_mtr', 'MA_mtr', 'RANKING'])")
+
+        if df_info_fil.empty:
+            return df_data, df_info
+
+        lst_converted = list()
+        lst_cannot_converted = list()
+
+        for col_name in df_info_fil['var_name'].values.tolist():
+            try:
+                df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='integer')
+                lst_converted.append(col_name)
+            except Exception:
+                lst_cannot_converted.append(col_name)
+                continue
+
+        if lst_converted:
+            print(Fore.LIGHTYELLOW_EX, f'Converted values to INT:', ', '.join(lst_converted), Fore.RESET)
+
+        if lst_cannot_converted:
+            print(Fore.LIGHTYELLOW_EX, f'Cannot convert values to INT:', ', '.join(lst_cannot_converted), Fore.RESET)
+
+        return df_data, df_info
 
 
