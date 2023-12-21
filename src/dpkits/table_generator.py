@@ -1438,7 +1438,12 @@ class DataTableGenerator:
                     if f'{qre_name}_1' in self.dict_unnetted_qres.keys():
                         qre_val_unnetted = self.dict_unnetted_qres[f'{qre_name}_1']
                     elif qre_type in ['MA_comb']:
-                        qre_val_unnetted = self.dict_unnetted_qres[lst_qre_col[0]]
+
+                        if lst_qre_col[0] in self.dict_unnetted_qres.keys():
+                            qre_val_unnetted = self.dict_unnetted_qres[lst_qre_col[0]]
+                        else:
+                            qre_val_unnetted = qre_val
+
                     else:
                         if 'net_code' in qre_val.keys():
 

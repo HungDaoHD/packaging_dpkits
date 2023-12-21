@@ -3,17 +3,15 @@ import numpy as np
 import time
 import datetime
 import copy
-# import tqdm
 
-
-# from dpkits.ap_data_converter import APDataConverter
-# from dpkits.data_processing import DataProcessing
-# from dpkits.data_transpose import DataTranspose
-# from dpkits.table_generator import DataTableGenerator
-# from dpkits.table_formater import TableFormatter
-# from dpkits.codeframe_reader import CodeframeReader
-# from dpkits.calculate_lsm import LSMCalculation
-# from dpkits.data_analysis import DataAnalysis
+from dpkits.ap_data_converter import APDataConverter
+from dpkits.data_processing import DataProcessing
+from dpkits.data_transpose import DataTranspose
+from dpkits.table_generator import DataTableGenerator
+from dpkits.table_formater import TableFormatter
+from dpkits.codeframe_reader import CodeframeReader
+from dpkits.calculate_lsm import LSMCalculation
+from dpkits.data_analysis import DataAnalysis
 
 
 
@@ -30,6 +28,8 @@ from codeframe_reader import CodeframeReader
 from calculate_lsm import LSMCalculation
 from data_analysis import DataAnalysis
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+
 
 st = time.time()
 
@@ -68,6 +68,14 @@ df_info = pd.DataFrame(df_info)
 # df_info columns must be ['var_name', 'var_lbl', 'var_type', 'val_lbl']
 
 dict_add_new_qres = {
+    # 'F1_ByProdCode': ['F1. ByProdCode', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, np.nan],
+    # 'F1_YN_1': {'FC. Y/N', 'SA', {'1': 'Yes', '2': 'No'}, 2},
+    # 'F1_YN_2': {'FC. Y/N', 'SA', {'1': 'Yes', '2': 'No'}, 2},
+    # 'F1_YN_3': {'FC. Y/N', 'SA', {'1': 'Yes', '2': 'No'}, 2},
+    # 'F2_OE_1': {'F2. OE', 'FT', {}, np.nan},
+    # 'F2_OE_2': {'F2. OE', 'FT', {}, np.nan},
+    # 'F2_OE_3': {'F2. OE', 'FT', {}, np.nan},
+
     'Ma_SP_1': ['Mã SP', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, 1],
     'Ma_SP_2': ['Mã SP', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, 2],
     'Ma_SP_3': ['Mã SP', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, 3],
@@ -96,28 +104,7 @@ df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
 df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 
 
-# # test new way to generate table
-#
-# s1 = df_data['S1'].value_counts()
-# s3b = df_data['S3_b'].value_counts()
-#
-# s6_1 = df_data['S6_1'].value_counts()
-# s6_2 = df_data['S6_2'].value_counts()
-# s6_3 = df_data['S6_3'].value_counts()
-# s6_4 = df_data['S6_4'].value_counts()
-# s6_5 = df_data['S6_5'].value_counts()
-# s6_6 = df_data['S6_6'].value_counts()
-#
-# s6 = pd.concat([s6_1, s6_2, s6_3, s6_4, s6_5, s6_6], axis=1)
-# s6_count = s6.sum(axis=1)
-# s6_pct = s6.sum(axis=1) / df_data.shape[0]
-#
-#
-# aaa = df_data[['S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6']].groupby(by=['S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6']).count()
-#
-#
-# here = 1
-# # END test new way to generate table
+
 
 
 # Just for checking
@@ -929,4 +916,4 @@ da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN8413_
 
 
 
-print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=time.time() - st), '\n')
+print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=round(time.time() - st, 0)), '\n')
