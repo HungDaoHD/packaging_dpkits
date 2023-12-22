@@ -119,16 +119,21 @@ class APDataConverter:
         self.is_qme = is_qme
 
         if file_name:
-            data_file = open(file_name, 'rb')
-            file = UploadFile(file=data_file, filename=file_name)
-            self.upload_files = [file]
+            try:
+                data_file = open(file_name, 'rb')
+                file = UploadFile(file=data_file, filename=file_name)
+                self.upload_files = [file]
+
+            except FileNotFoundError:
+                self.upload_files = None
+
         else:
             self.upload_files = files
 
         self.is_zip = True if '.zip' in file_name else False
 
         # Output vars
-        self.str_file_name = str()
+        self.str_file_name = file_name
         self.zip_name = str()
         self.df_data_converted, self.df_info_converted = pd.DataFrame(), pd.DataFrame()
 
@@ -670,8 +675,13 @@ class APDataConverter:
                     lst_zip_file_name.extend([xlsx_name])
 
         if is_zip:
-            print(f'Create {self.zip_name} with files: {", ".join(lst_zip_file_name)}')
-            self.zipfiles(self.zip_name, lst_zip_file_name)
+            str_zip_name = self.zip_name
+
+            if not str_zip_name:
+                str_zip_name = f"{str_name}_Data.zip"
+
+            print(f'Create {str_zip_name} with files: {", ".join(lst_zip_file_name)}')
+            self.zipfiles(str_zip_name, lst_zip_file_name)
 
 
 

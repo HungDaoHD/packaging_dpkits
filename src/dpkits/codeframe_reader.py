@@ -50,7 +50,12 @@ class CodeframeReader:
 
         print('EXPORT CODING FILE')
         df_rid.drop_duplicates(subset=['RESPONDENTID'], inplace=True)
-        df_rid.sort_values(by=['RESPONDENTID'], inplace=True)
+
+        try:
+            df_rid.sort_values(by=['RESPONDENTID'], inplace=True)
+        except TypeError:
+            pass
+
         lst_rid = df_rid['RESPONDENTID'].values.tolist()
 
         lst_ws_col = ['Unnamed: 0', 'RESPONDENTID', 'COLUMN_NAME', 'VERBATIM', 'CODING', 'FW_CHECK']

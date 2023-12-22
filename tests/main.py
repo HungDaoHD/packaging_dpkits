@@ -15,19 +15,19 @@ from dpkits.data_analysis import DataAnalysis
 
 
 
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
-import sys
-sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-
-from ap_data_converter import APDataConverter
-from data_processing import DataProcessing
-from data_transpose import DataTranspose
-from table_generator import DataTableGenerator
-from table_formater import TableFormatter
-from codeframe_reader import CodeframeReader
-from calculate_lsm import LSMCalculation
-from data_analysis import DataAnalysis
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# import sys
+# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+#
+# from ap_data_converter import APDataConverter
+# from data_processing import DataProcessing
+# from data_transpose import DataTranspose
+# from table_generator import DataTableGenerator
+# from table_formater import TableFormatter
+# from codeframe_reader import CodeframeReader
+# from calculate_lsm import LSMCalculation
+# from data_analysis import DataAnalysis
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
 
@@ -35,7 +35,7 @@ st = time.time()
 
 
 # Define input/output files name
-str_file_name = 'VN8413_Data'
+str_file_name = 'VN8413_ProjectName'
 str_tbl_file_name = f'{str_file_name}_Topline.xlsx'
 
 
@@ -245,6 +245,9 @@ dict_dfs = {
 }
 
 converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=True, is_export_sav=True, is_export_xlsx=True)
+
+
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # EXPORT DATA TABLES----------------------------------------------------------------------------------------------------
@@ -550,6 +553,7 @@ dict_header_main['lst_3'] += [[
 
 # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
+
     {"qre_name": "S1"},
     {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
     {"qre_name": "S3_a"},
@@ -570,7 +574,7 @@ lst_side_scr_tagon = [
             '6': 'Tôi không uống loại nào ở trên'
         }
     }},
-
+    
     {"qre_name": "S7"},
     {"qre_name": "S8"},
     {"qre_name": "S10"},
