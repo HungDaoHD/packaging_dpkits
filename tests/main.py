@@ -4,30 +4,30 @@ import time
 import datetime
 import copy
 
-from dpkits.ap_data_converter import APDataConverter
-from dpkits.data_processing import DataProcessing
-from dpkits.data_transpose import DataTranspose
-from dpkits.table_generator import DataTableGenerator
-from dpkits.table_formater import TableFormatter
-from dpkits.codeframe_reader import CodeframeReader
-from dpkits.calculate_lsm import LSMCalculation
-from dpkits.data_analysis import DataAnalysis
+# from dpkits.ap_data_converter import APDataConverter
+# from dpkits.data_processing import DataProcessing
+# from dpkits.data_transpose import DataTranspose
+# from dpkits.table_generator import DataTableGenerator
+# from dpkits.table_formater import TableFormatter
+# from dpkits.codeframe_reader import CodeframeReader
+# from dpkits.calculate_lsm import LSMCalculation
+# from dpkits.data_analysis import DataAnalysis
 
 
 
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-# import sys
-# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-#
-# from ap_data_converter import APDataConverter
-# from data_processing import DataProcessing
-# from data_transpose import DataTranspose
-# from table_generator import DataTableGenerator
-# from table_formater import TableFormatter
-# from codeframe_reader import CodeframeReader
-# from calculate_lsm import LSMCalculation
-# from data_analysis import DataAnalysis
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+import sys
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
+
+from ap_data_converter import APDataConverter
+from data_processing import DataProcessing
+from data_transpose import DataTranspose
+from table_generator import DataTableGenerator
+from table_formater import TableFormatter
+from codeframe_reader import CodeframeReader
+from calculate_lsm import LSMCalculation
+from data_analysis import DataAnalysis
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
 
@@ -578,6 +578,8 @@ lst_side_scr_tagon = [
     {"qre_name": "S7"},
     {"qre_name": "S8"},
     {"qre_name": "S10"},
+
+    {"qre_name": "S10111111"},
 
     {"qre_name": "Dealer_HCM_01_Rank1"},
     {"qre_name": "$Dealer_HCM_02_Rank"},

@@ -7,6 +7,8 @@ from scipy import stats
 from datetime import datetime, timedelta
 import sys
 import math
+from colorama import Fore, Back, Style
+
 
 
 
@@ -409,6 +411,10 @@ class DataTableGenerator:
             df_qre_info = self.df_info.query(f"var_name.isin({lst_qre_col})").copy()
             df_qre_info.reset_index(drop=True, inplace=True)
 
+            if df_qre_info.empty:
+                print(Fore.RED, f"\n\tQuestion(s) is not found: {lst_qre_col}\n\tProcess terminated.", Fore.RESET)
+                exit()
+            
             dict_row = {
                 'var_name': var_name,
                 'var_lbl': qre['qre_lbl'].replace('{lbl}', df_qre_info.at[0, 'var_lbl']) if qre.get('qre_lbl') else df_qre_info.at[0, 'var_lbl'],
