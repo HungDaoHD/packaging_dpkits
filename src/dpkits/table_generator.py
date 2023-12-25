@@ -412,9 +412,9 @@ class DataTableGenerator:
             df_qre_info.reset_index(drop=True, inplace=True)
 
             if df_qre_info.empty:
-                print(Fore.RED, f"\n\tQuestion(s) is not found: {lst_qre_col}\n\tProcess terminated.", Fore.RESET)
+                print(Fore.RED, f"\n\tQuestion(s) is not found: {qre['qre_name']}\n\tProcess terminated.", Fore.RESET)
                 exit()
-            
+
             dict_row = {
                 'var_name': var_name,
                 'var_lbl': qre['qre_lbl'].replace('{lbl}', df_qre_info.at[0, 'var_lbl']) if qre.get('qre_lbl') else df_qre_info.at[0, 'var_lbl'],
@@ -957,8 +957,7 @@ class DataTableGenerator:
     def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, cal_act: str,
                                lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, weight_var: str = None) -> pd.DataFrame:
 
-        # HERE:
-        # To do: add option: std, quantile 25/50/75, min, max
+        # Add option: std, quantile 25/50/75, min, max
         dict_cal_act = {
             'mean': 'Mean',
             'std': 'Std',
