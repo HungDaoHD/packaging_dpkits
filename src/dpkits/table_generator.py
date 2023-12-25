@@ -1250,6 +1250,7 @@ class DataTableGenerator:
         }
 
         dict_header_col_name_origin = dict()
+        df_data_query = pd.DataFrame()
 
         for hd_k, hd_v in dict_grp_header.items():
             str_hd_val = f"{hd_v['query']}@{hd_v['lbl']}@val@{dict_char_sig[hd_k]}"
@@ -1260,11 +1261,20 @@ class DataTableGenerator:
                 str_hd_sig: str_hd_sig.split('@'),
             })
 
+            try:
+                df_data_query = df_data.query(hd_v['query']).copy()
+            except ValueError:
+                print(Fore.RED, f"\tValueError, Cannot process: {hd_v}", Fore.RESET)
+                exit()
+            except pd.errors.UndefinedVariableError:
+                print(Fore.RED, f"\tpandas.errors.UndefinedVariableError, Cannot process: {hd_v}", Fore.RESET)
+                exit()
+
             dict_header_col_name_origin.update({
                 dict_char_sig[hd_k]: {
                     'val_col': str_hd_val,
                     'sig_col': str_hd_sig,
-                    'df_data': df_data.query(hd_v['query']).copy(),
+                    'df_data': df_data_query,
                 }
             })
 

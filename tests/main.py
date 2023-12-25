@@ -404,7 +404,7 @@ dict_header_scr = {
         # header lvl 1
         [
             {
-                "qre_name": "S1",
+                "qre_name": "S11111",
                 "qre_lbl": "City",
                 "cats": {
                     "TOTAL": "TOTAL",
@@ -579,7 +579,6 @@ lst_side_scr_tagon = [
     {"qre_name": "S8"},
     {"qre_name": "S10"},
 
-    {"qre_name": "S10111111"},
 
     {"qre_name": "Dealer_HCM_01_Rank1"},
     {"qre_name": "$Dealer_HCM_02_Rank"},
