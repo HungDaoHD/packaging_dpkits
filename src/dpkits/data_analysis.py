@@ -80,29 +80,29 @@ class DataAnalysis:
 
 
 
-
-        # --------------------------------------------------------------------------------------------------------------
-        # create presentation with 1 slide ------
-        prs = Presentation()
-        slide = prs.slides.add_slide(prs.slide_layouts[5])
-
-        # Export ppt chart after penalty score table
-        chart_data = XyChartData()
-
-        series_1 = chart_data.add_series('Model 1')
-        series_1.add_data_point(0.7, 2.7)
-
-        series_2 = chart_data.add_series('Model 2')
-        series_2.add_data_point(1.3, 3.7)
-
-        series_2 = chart_data.add_series('Model 3')
-        series_2.add_data_point(0.6, 1.3)
-
-        x, y, cx, cy = Inches(0.5), Inches(2), Inches(9), Inches(4.5)
-
-        chart = slide.shapes.add_chart(XL_CHART_TYPE.XY_SCATTER, x, y, cx, cy, chart_data)
-
-        prs.save('chart-01-test.pptx')
+        # HERE
+        # # --------------------------------------------------------------------------------------------------------------
+        # # create presentation with 1 slide ------
+        # prs = Presentation()
+        # slide = prs.slides.add_slide(prs.slide_layouts[5])
+        #
+        # # Export ppt chart after penalty score table
+        # chart_data = XyChartData()
+        #
+        # series_1 = chart_data.add_series('Model 1')
+        # series_1.add_data_point(0.7, 2.7)
+        #
+        # series_2 = chart_data.add_series('Model 2')
+        # series_2.add_data_point(1.3, 3.7)
+        #
+        # series_2 = chart_data.add_series('Model 3')
+        # series_2.add_data_point(0.6, 1.3)
+        #
+        # x, y, cx, cy = Inches(0.5), Inches(2), Inches(9), Inches(4.5)
+        #
+        # chart = slide.shapes.add_chart(XL_CHART_TYPE.XY_SCATTER, x, y, cx, cy, chart_data)
+        #
+        # prs.save('chart-01-test.pptx')
 
 
 

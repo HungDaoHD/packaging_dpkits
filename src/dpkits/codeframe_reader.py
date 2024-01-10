@@ -141,6 +141,7 @@ class CodeframeReader:
             df_ws_new.reset_index(drop=True, inplace=True)
 
             # df_ws_new['value'].replace({None: np.nan}, inplace=True)
+            df_ws_new = df_ws_new.loc[df_ws_new.eval("value != ''"), :].copy()
             df_ws_new['value'] = df_ws_new['value'].astype(float)
 
             df_ws_new['COLUMN_NAME'] = [f"{a1}_OE_{a2}" for a1, a2 in zip(df_ws_new['COLUMN_NAME'], df_ws_new['variable'])]

@@ -6,8 +6,8 @@ import zipfile
 import re
 import os
 from fastapi import UploadFile
-from colorama import Fore, Back, Style
-from statsmodels.iolib.summary import d_or_f
+from colorama import Fore
+
 
 
 class APDataConverter:

@@ -4,6 +4,7 @@ import time
 import datetime
 import copy
 
+
 # from dpkits.ap_data_converter import APDataConverter
 # from dpkits.data_processing import DataProcessing
 # from dpkits.data_transpose import DataTranspose
@@ -12,7 +13,6 @@ import copy
 # from dpkits.codeframe_reader import CodeframeReader
 # from dpkits.calculate_lsm import LSMCalculation
 # from dpkits.data_analysis import DataAnalysis
-
 
 
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
@@ -28,6 +28,9 @@ from codeframe_reader import CodeframeReader
 from calculate_lsm import LSMCalculation
 from data_analysis import DataAnalysis
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+
+
 
 
 
@@ -188,32 +191,32 @@ dict_unstack_structure = {
 df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_info_stack, dict_unstack_structure)
 
 
-# # ----------------------------------------------------------------------------------------------------------------------
-# # OE RUNNING------------------------------------------------------------------------------------------------------------
-# # ----------------------------------------------------------------------------------------------------------------------
-# cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
-# cfr.to_dataframe_file()
-#
-# df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
-# df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
-#
-# df_coding = pd.DataFrame(cfr.df_full_oe_coding)
-#
-# # ['ID', 'Ma_SP'] will be defined base on each project
-# df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
-# df_coding.drop(columns=['RESPONDENTID'], inplace=True)
-#
-# df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
-# df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
-#
-# lst_oe_col = df_coding.columns.tolist()
-# lst_oe_col.remove('ID')
-# lst_oe_col.remove('Ma_SP')
-#
-# df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
-#
-# for i in lst_oe_col:
-#     df_data_stack[i].replace({99999: np.nan}, inplace=True)
+# ----------------------------------------------------------------------------------------------------------------------
+# OE RUNNING------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
+cfr.to_dataframe_file()
+
+df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
+df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
+
+df_coding = pd.DataFrame(cfr.df_full_oe_coding)
+
+# ['ID', 'Ma_SP'] will be defined base on each project
+df_coding[['ID', 'Ma_SP']] = df_coding['RESPONDENTID'].str.rsplit('_', n=1, expand=True)
+df_coding.drop(columns=['RESPONDENTID'], inplace=True)
+
+df_data_stack['Ma_SP'] = df_data_stack['Ma_SP'].astype(int)
+df_coding['Ma_SP'] = df_coding['Ma_SP'].astype(int)
+
+lst_oe_col = df_coding.columns.tolist()
+lst_oe_col.remove('ID')
+lst_oe_col.remove('Ma_SP')
+
+df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
+
+for i in lst_oe_col:
+    df_data_stack[i].replace({99999: np.nan}, inplace=True)
 
 
 
@@ -256,15 +259,18 @@ converter.generate_multiple_data_files(dict_dfs=dict_dfs, is_zip=True, is_export
 README:
     - Side question properties:
     {
-
         "qre_name":
             - "$Q15",  # column name, must set '$' if it is MA question
             - "Q16_Merge#combine(Q16a_1, Q16a_2, Q16a_3, Q16a_4, Q16b_1, Q16b_2, Q16b_3)"  # Combine multiple MA questions with same 'cats' define
-
+            
         "qre_lbl": "{lbl}: new label",  # default df_info label, input {lbl} top keep original label and addin new label
+        
         "qre_filter": "Age.isin([2, 3])",  # use for filter question
+        
         "sort": "des", # sort options: acs / des
+        
         "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}  # calculate mean base on dict: key == code in data, value = weighted values
+        
         "cats": {  # use for define net/combine code with specify format
             'net_code': {
                 '900001|combine|Group 1 + 2': {
@@ -285,9 +291,10 @@ README:
             '8': 'Other (specify)',
             '9': 'No problem',
         },
+        
         "calculate": {"lbl": "Sum(T2B, B2B)", "syntax": "[T2B] + [B2B]"},
     },
-
+    
     - Header question properties:
     {
         "qre_name": "S1",  # define 'S1' if SA, '$S1' if MA, '@S1_xxx' if create header base on specify condition
@@ -404,7 +411,7 @@ dict_header_scr = {
         # header lvl 1
         [
             {
-                "qre_name": "S11111",
+                "qre_name": "S1",
                 "qre_lbl": "City",
                 "cats": {
                     "TOTAL": "TOTAL",
@@ -579,7 +586,6 @@ lst_side_scr_tagon = [
     {"qre_name": "S8"},
     {"qre_name": "S10"},
 
-
     {"qre_name": "Dealer_HCM_01_Rank1"},
     {"qre_name": "$Dealer_HCM_02_Rank"},
 ]
@@ -664,9 +670,9 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Scr_Tagon_count_Unweight',
-            'Scr_Tagon_count_Weight',
+            # 'Scr_Tagon_count_Weight',
             'Scr_Tagon_pct_Unweight',
-            'Scr_Tagon_pct_Weight',
+            # 'Scr_Tagon_pct_Weight',
         ],
         'tables_format': {
             "Scr_Tagon_count_Unweight": {
@@ -729,8 +735,8 @@ lst_func_to_run = [
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
             'Main_Unweight',
-            'Main_Weight',
-            # 'Main_oe_Unweight',
+            # 'Main_Weight',
+            'Main_oe_Unweight',
             # 'Main_oe_Weight',
         ],
         'tables_format': {
@@ -801,9 +807,9 @@ dtg_1 = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_f
 dtg_1.run_tables_by_js_files(lst_func_to_run[:1])
 
 
-# # RUN TABLE FOR MAIN
-# dtg_2 = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
-# dtg_2.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
+# RUN TABLE FOR MAIN
+dtg_2 = DataTableGenerator(df_data=df_data_stack, df_info=df_info_stack, xlsx_name=str_tbl_file_name)
+dtg_2.run_tables_by_js_files(lst_func_to_run[1:], is_append=True)
 
 
 # FORMAT TABLES---------------------------------------------------------------------------------------------------------

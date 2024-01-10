@@ -1,4 +1,5 @@
 import pandas as pd
+from colorama import Fore
 
 
 class DataTranspose:
@@ -37,6 +38,14 @@ class DataTranspose:
         lst_scr = dict_data_structure['lst_scr']
         dict_sp = dict_data_structure['dict_sp']
         lst_fc = dict_data_structure['lst_fc']
+
+        # check duplicate in id col
+        df_dup_id = df_data.loc[df_data.duplicated(subset=id_col), [id_col]].copy()
+        df_dup_id[id_col] = df_dup_id[id_col].astype(str)
+
+        if not df_dup_id.empty:
+            print(Fore.RED, f"Please check {df_dup_id.shape[0]} duplicated ID:\n{'\n'.join(df_dup_id[id_col].values.tolist())}", Fore.RESET)
+            exit()
 
         # df_data_stack generate
         df_data_scr = df_data.loc[:, [id_col] + lst_scr].copy()
@@ -77,6 +86,7 @@ class DataTranspose:
         df_info_stack.reset_index(drop=True, inplace=True)
 
         return df_data_stack, df_info_stack
+
 
 
     @staticmethod

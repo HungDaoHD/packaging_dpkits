@@ -7,8 +7,7 @@ from scipy import stats
 from datetime import datetime, timedelta
 import sys
 import math
-from colorama import Fore, Back, Style
-
+from colorama import Fore
 
 
 
@@ -1250,7 +1249,7 @@ class DataTableGenerator:
         }
 
         dict_header_col_name_origin = dict()
-        df_data_query = pd.DataFrame()
+        # df_data_query = pd.DataFrame()
 
         for hd_k, hd_v in dict_grp_header.items():
             str_hd_val = f"{hd_v['query']}@{hd_v['lbl']}@val@{dict_char_sig[hd_k]}"
