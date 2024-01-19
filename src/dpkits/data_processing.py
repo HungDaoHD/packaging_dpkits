@@ -55,3 +55,16 @@ class DataProcessing:
             df_data.loc[df_data.eval(f"{qre}_1.isnull()"), f'{qre}_1'] = fillna_val
 
         return df_data
+
+
+
+    @staticmethod
+    def delete_qres(df_data: pd.DataFrame, df_info: pd.DataFrame, lst_col: list) -> (pd.DataFrame, pd.DataFrame):
+
+        df_data.drop(columns=lst_col, inplace=True)
+        df_info = df_info.loc[df_info.eval(f"~var_name.isin({lst_col})"), :].copy()
+
+        df_data.reset_index(drop=True, inplace=True)
+        df_info.reset_index(drop=True, inplace=True)
+
+        return df_data, df_info

@@ -163,16 +163,16 @@ class DataTableGenerator:
         for tbl_key, tbl_val in dict_tables.items():
             start_time = time.time()
 
-            print(f"run table: {tbl_val['tbl_name']}")
+            print(Fore.GREEN, f"Run table: {tbl_val['tbl_name']}", Fore.RESET)
 
             df_tbl = getattr(self, item['func_name'])(tbl_val)
 
-            print(f"create sheet: {tbl_val['tbl_name']}")
+            print(Fore.GREEN, f"Create sheet: {tbl_val['tbl_name']}", Fore.RESET)
 
             with pd.ExcelWriter(self.file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
                 df_tbl.to_excel(writer, sheet_name=tbl_val['tbl_name'], index=False)  # encoding='utf-8-sig'
 
-            print(f"create sheet: {tbl_val['tbl_name']} Duration: ", timedelta(seconds=time.time() - start_time))
+            print(Fore.GREEN, f"Create sheet: {tbl_val['tbl_name']} Duration: ", timedelta(seconds=time.time() - start_time), Fore.RESET)
 
 
 
@@ -369,7 +369,7 @@ class DataTableGenerator:
                     if isinstance(net_val, str):
                         dict_unnetted.update({str(net_key): net_val})
                     else:
-                        print(f"Unnetted {net_key}")
+                        print(Fore.MAGENTA, f"Unnetted {net_key}", Fore.RESET)
                         dict_unnetted.update(net_val)
 
             else:
@@ -456,10 +456,10 @@ class DataTableGenerator:
 
         for grp_hd in lst_group_header:
 
-            print(f"run table: {tbl['tbl_name']} -> group header:")
+            print(Fore.LIGHTCYAN_EX, f"Run table: {tbl['tbl_name']} -> group header:", Fore.RESET)
 
             for i in grp_hd.values():
-                print(f"\t{i['lbl']}")
+                print(Fore.LIGHTGREEN_EX, f"\t{i['lbl']}", Fore.RESET)
 
             tbl_info_sig = {
                 'tbl_name': tbl['tbl_name'],
@@ -1371,7 +1371,7 @@ class DataTableGenerator:
 
             if qre_type in ['FT', 'FT_mtr']:
                 # Not run free text questions
-                print('Cannot create table for free text questions', qre_name, qre_type)
+                print(Fore.YELLOW, 'Cannot create table for free text questions', qre_name, qre_type, Fore.RESET)
                 pass
 
             elif qre_type in ['SA', 'SA_mtr', 'RANKING']:

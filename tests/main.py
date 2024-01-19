@@ -5,28 +5,31 @@ import datetime
 import copy
 
 
-# from dpkits.ap_data_converter import APDataConverter
-# from dpkits.data_processing import DataProcessing
-# from dpkits.data_transpose import DataTranspose
-# from dpkits.table_generator import DataTableGenerator
-# from dpkits.table_formater import TableFormatter
-# from dpkits.codeframe_reader import CodeframeReader
-# from dpkits.calculate_lsm import LSMCalculation
-# from dpkits.data_analysis import DataAnalysis
+# from dpkits import (
+#     APDataConverter,
+#     DataProcessing,
+#     DataTranspose,
+#     DataTableGenerator,
+#     TableFormatter,
+#     CodeframeReader,
+#     LSMCalculation,
+#     DataAnalysis
+# )
 
 
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 import sys
-sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits/src/dpkits')
-
-from ap_data_converter import APDataConverter
-from data_processing import DataProcessing
-from data_transpose import DataTranspose
-from table_generator import DataTableGenerator
-from table_formater import TableFormatter
-from codeframe_reader import CodeframeReader
-from calculate_lsm import LSMCalculation
-from data_analysis import DataAnalysis
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
+from src.dpkits import (
+    APDataConverter,
+    DataProcessing,
+    DataTranspose,
+    DataTableGenerator,
+    TableFormatter,
+    CodeframeReader,
+    LSMCalculation,
+    DataAnalysis
+)
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
@@ -183,7 +186,7 @@ df_data_stack, df_info_stack = DataTranspose.to_stack(df_data, df_info, dict_sta
 dict_unstack_structure = {
     'id_col': 'ID',
     'sp_col': 'Ma_SP',
-    'lst_col_part_head': lst_fc,
+    'lst_col_part_head': lst_scr,
     'lst_col_part_body': ['Ma_SP', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q9', 'Q6', 'Q7', 'Q8', 'Q10', 'F1_YN_New', 'F2_OE_New'],
     'lst_col_part_tail': lst_fc
 }
