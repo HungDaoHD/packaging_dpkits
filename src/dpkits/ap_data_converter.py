@@ -12,7 +12,8 @@ from colorama import Fore
 
 class APDataConverter:
 
-    def __init__(self, files: list[UploadFile] = None, file_name: str = '', is_qme: bool = True):
+    # def __init__(self, files: list[UploadFile] = None, file_name: str = '', is_qme: bool = True):
+    def __init__(self, file_name: str | list[UploadFile], is_qme: bool = True):
 
         self.lstDrop = [
             'Approve',
@@ -115,10 +116,23 @@ class APDataConverter:
             'Address',
         ]
 
+
         # Input vars
         self.is_qme = is_qme
 
-        if file_name:
+        # if file_name:
+        #     try:
+        #         data_file = open(file_name, 'rb')
+        #         file = UploadFile(file=data_file, filename=file_name)
+        #         self.upload_files = [file]
+        #
+        #     except FileNotFoundError:
+        #         self.upload_files = None
+        #
+        # else:
+        #     self.upload_files = files
+
+        if isinstance(file_name, str):
             try:
                 data_file = open(file_name, 'rb')
                 file = UploadFile(file=data_file, filename=file_name)
@@ -129,6 +143,7 @@ class APDataConverter:
 
         else:
             self.upload_files = files
+
 
         self.is_zip = True if '.zip' in file_name else False
 
