@@ -1,6 +1,8 @@
 import numpy
 import pandas as pd
 import numpy as np
+from colorama import Fore
+
 
 
 class CodeframeReader:
@@ -15,6 +17,9 @@ class CodeframeReader:
     def to_dataframe_file(self):
 
         file_name = self.cf_file_name
+        output_file_name = f'{file_name}_output.xlsx'
+
+        print(Fore.BLUE, f"\nREAD '{file_name}' -> CREATE '{output_file_name}' -> RUN OE\n", Fore.RESET)
 
         dict_df_ws = pd.read_excel(file_name, sheet_name=None, header=None)
         dict_df_coding = dict()
@@ -211,7 +216,7 @@ class CodeframeReader:
 
         df_full_codelist.drop(columns=['SEC'], inplace=True)
 
-        with pd.ExcelWriter(f'{file_name}_output.xlsx', engine="openpyxl") as writer:
+        with pd.ExcelWriter(output_file_name, engine="openpyxl") as writer:
             df_full_codelist.to_excel(writer, sheet_name='codelist')
             df_full_oe.to_excel(writer, sheet_name='coding')
 
@@ -224,3 +229,26 @@ class CodeframeReader:
             self.dict_add_new_qres_oe.update({k: list(v.values())})
 
         self.df_full_oe_coding = df_full_oe
+
+        print('\n')
+
+
+
+    def read_dataframe_output_file(self):
+
+        output_file_name = f'{self.cf_file_name}_output.xlsx'
+
+        print(Fore.BLUE, f"\nREAD '{output_file_name}' -> RUN OE\n", Fore.RESET)
+
+        df_codelist = pd.read_excel(output_file_name, sheet_name='codelist', index_col=0)
+        df_codelist.set_index('COL_NAME', inplace=True)
+        df_codelist.loc[:, 'VALUES'] = np.nan
+
+        dict_add_new_qres_oe = dict()
+        for k, v in df_codelist.to_dict(orient='index').items():
+            v['CODELIST'] = eval(v['CODELIST'])
+
+            dict_add_new_qres_oe.update({k: list(v.values())})
+
+        self.df_full_oe_coding = pd.read_excel(output_file_name, sheet_name='coding', index_col=0)
+        self.dict_add_new_qres_oe = dict_add_new_qres_oe

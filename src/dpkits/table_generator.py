@@ -956,6 +956,9 @@ class DataTableGenerator:
     def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, cal_act: str,
                                lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, weight_var: str = None) -> pd.DataFrame:
 
+
+
+
         # Add option: std, quantile 25/50/75, min, max
         dict_cal_act = {
             'mean': 'Mean',
@@ -1430,13 +1433,28 @@ class DataTableGenerator:
                     df_qre = self.add_sa_qre_cal_to_tbl_sig(df_qre, qre_info, dict_cal)
 
             elif qre_type in ['NUM']:
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'mean', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'std', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'min', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'max', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '25%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '50%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '75%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+
+                if not qre_info.get('qre_val'):
+                    qre_info['qre_val'] = {
+                        'mean': 'Mean',
+                        'std': 'Std',
+                        'min': 'Minimum',
+                        'max': 'Maximum',
+                        '25%': 'Quantile 25%',
+                        '50%': 'Quantile 50%',
+                        '75%': 'Quantile 75%',
+                    }
+
+                for key_num_opt in qre_info['qre_val'].keys():
+                    df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, key_num_opt, lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'mean', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'std', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'min', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'max', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '25%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '50%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
+                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '75%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
 
 
 
