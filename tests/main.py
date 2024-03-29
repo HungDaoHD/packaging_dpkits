@@ -3,6 +3,30 @@ import numpy as np
 import time
 import datetime
 import copy
+# import warnings
+
+
+
+# from scipy import stats
+#
+# df_test = pd.read_excel('VN8537_SPARROW_02_HoChiMinh_ExcelData.xlsx', sheet_name='Test')
+#
+# df_test = df_test.loc[df_test.eval("Q9a_489.notnull() & Q9a_513.notnull()"), :]
+#
+#
+# arr1 = df_test.loc[:, 'Q9a_489']
+# arr2 = df_test.loc[:, 'Q9a_513']
+#
+# aaa1 = arr1.mean()
+# aaa2 = arr2.mean()
+#
+# sigResult = stats.ttest_rel(df_test.loc[:, 'Q9a_489'], df_test.loc[:, 'Q9a_513'])
+#
+# a = 1
+
+
+
+
 
 
 # from dpkits import (
@@ -33,7 +57,7 @@ from src.dpkits import (
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
-
+# warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 
@@ -197,10 +221,10 @@ df_data_unstack, df_info_unstack = DataTranspose.to_unstack(df_data_stack, df_in
 cfr = CodeframeReader(cf_file_name='VN8413_Codeframe.xlsm')
 
 # READ '*.xlsm' file -> CREATE 'output.xlsx' file -> RUN OE
-cfr.to_dataframe_file()
+# cfr.to_dataframe_file()
 
 # READ 'output.xlsx' file create before -> RUN OE
-# cfr.read_dataframe_output_file()
+cfr.read_dataframe_output_file()
 
 df_data_stack, df_info_stack = DataProcessing.add_qres(df_data_stack, df_info_stack, cfr.dict_add_new_qres_oe)
 df_data_stack, df_info_stack = pd.DataFrame(df_data_stack), pd.DataFrame(df_info_stack)
@@ -221,8 +245,8 @@ lst_oe_col.remove('Ma_SP')
 df_data_stack = df_data_stack.merge(df_coding, how='left', on=['ID', 'Ma_SP'])
 
 for i in lst_oe_col:
-    df_data_stack[i].replace({99999: np.nan}, inplace=True)
-
+    # df_data_stack[i].replace({99999: np.nan}, inplace=True)
+    df_data_stack.replace({i: {99999: np.nan}}, inplace=True)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -430,122 +454,122 @@ dict_header_scr = {
                 "qre_name": "S1",
                 "qre_lbl": "City",
                 "cats": {
-                    "TOTAL": "TOTAL",
+                    "Total": "Total",
                     '3': 'Hồ Chí Minh',
                     '4': 'Cần Thơ'
                 }
             },
         ],
-        # # header lvl 2
-        # [
-        #     {
-        #         "qre_name": "@S3_b_Group",
-        #         "qre_lbl": "Age",
-        #         "cats": {
-        #             "S3_b > 0": "TOTAL",
-        #             "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-        #             "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-        #         }
-        #     },
-        #     # {
-        #     #     "qre_name": "@S4_Class",
-        #     #     "qre_lbl": "Class",
-        #     #     "cats": {
-        #     #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-        #     #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-        #     #     }
-        #     # },
-        #     # {
-        #     #     "qre_name": "@S8_BUMO",
-        #     #     "qre_lbl": "BUMO",
-        #     #     "cats": {
-        #     #         "S8.isin([2])": "Tiger nâu",
-        #     #         "S8.isin([6, 7, 8])": "Sài Gòn",
-        #     #         "S8.isin([12, 13, 14])": "Larue",
-        #     #     }
-        #     # },
-        #
-        # ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "@S3_b_Group",
+                "qre_lbl": "Age",
+                "cats": {
+                    "S3_b > 0": "TOTAL",
+                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+                }
+            },
+            # {
+            #     "qre_name": "@S4_Class",
+            #     "qre_lbl": "Class",
+            #     "cats": {
+            #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+            #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+            #     }
+            # },
+            # {
+            #     "qre_name": "@S8_BUMO",
+            #     "qre_lbl": "BUMO",
+            #     "cats": {
+            #         "S8.isin([2])": "Tiger nâu",
+            #         "S8.isin([6, 7, 8])": "Sài Gòn",
+            #         "S8.isin([12, 13, 14])": "Larue",
+            #     }
+            # },
+
+        ],
     ],
 
-    # # Group header 2nd
-    # 'lst_2': [
-    #     # header lvl 1
-    #     [
-    #         {
-    #             "qre_name": "@S4_Class",
-    #             "qre_lbl": "Class",
-    #             "cats": {
-    #                 "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-    #                 "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-    #             }
-    #         },
-    #     ],
-    #     # header lvl 2
-    #     [
-    #         {
-    #             "qre_name": "S1",
-    #             "qre_lbl": "City",
-    #             "cats": {
-    #                 "TOTAL": "TOTAL",
-    #                 '3': 'Hồ Chí Minh',
-    #                 '4': 'Cần Thơ'
-    #             }
-    #         },
-    #         # {
-    #         #     "qre_name": "@S8_BUMO",
-    #         #     "qre_lbl": "BUMO",
-    #         #     "cats": {
-    #         #         "S8.isin([2])": "Tiger nâu",
-    #         #         "S8.isin([6, 7, 8])": "Sài Gòn",
-    #         #         "S8.isin([12, 13, 14])": "Larue",
-    #         #     }
-    #         # },
-    #         #
-    #         # {
-    #         #     "qre_name": "$S6",
-    #         #     "qre_lbl": "S6. testing",
-    #         #     "cats": {}
-    #         # },
-    #
-    #
-    #     ],
-    # ],
-    # # Group header 3rd
-    # 'lst_3': [
-    #     # header lvl 1
-    #     [
-    #         {
-    #             "qre_name": "@S8_BUMO",
-    #             "qre_lbl": "BUMO",
-    #             "cats": {
-    #                 "S8.isin([2])": "Tiger nâu",
-    #                 "S8.isin([6, 7, 8])": "Sài Gòn",
-    #                 "S8.isin([12, 13, 14])": "Larue",
-    #             }
-    #         },
-    #     ],
-    #     # header lvl 2
-    #     [
-    #         {
-    #             "qre_name": "@S3_b_Group",
-    #             "qre_lbl": "Age",
-    #             "cats": {
-    #                 "S3_b > 0": "TOTAL",
-    #                 "S3_b.isin([2])": "<=30 (22-30 tuổi)",
-    #                 "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
-    #             }
-    #         },
-    #         # {
-    #         #     "qre_name": "@S4_Class",
-    #         #     "qre_lbl": "Class",
-    #         #     "cats": {
-    #         #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
-    #         #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
-    #         #     }
-    #         # },
-    #     ],
-    # ],
+    # Group header 2nd
+    'lst_2': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "@S4_Class",
+                "qre_lbl": "Class",
+                "cats": {
+                    "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+                    "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "S1",
+                "qre_lbl": "City",
+                "cats": {
+                    "TOTAL": "TOTAL",
+                    '3': 'Hồ Chí Minh',
+                    '4': 'Cần Thơ'
+                }
+            },
+            # {
+            #     "qre_name": "@S8_BUMO",
+            #     "qre_lbl": "BUMO",
+            #     "cats": {
+            #         "S8.isin([2])": "Tiger nâu",
+            #         "S8.isin([6, 7, 8])": "Sài Gòn",
+            #         "S8.isin([12, 13, 14])": "Larue",
+            #     }
+            # },
+            #
+            # {
+            #     "qre_name": "$S6",
+            #     "qre_lbl": "S6. testing",
+            #     "cats": {}
+            # },
+
+
+        ],
+    ],
+    # Group header 3rd
+    'lst_3': [
+        # header lvl 1
+        [
+            {
+                "qre_name": "@S8_BUMO",
+                "qre_lbl": "BUMO",
+                "cats": {
+                    "S8.isin([2])": "Tiger nâu",
+                    "S8.isin([6, 7, 8])": "Sài Gòn",
+                    "S8.isin([12, 13, 14])": "Larue",
+                }
+            },
+        ],
+        # header lvl 2
+        [
+            {
+                "qre_name": "@S3_b_Group",
+                "qre_lbl": "Age",
+                "cats": {
+                    "S3_b > 0": "TOTAL",
+                    "S3_b.isin([2])": "<=30 (22-30 tuổi)",
+                    "S3_b.isin([3, 4])": ">30 (31-39 tuổi)",
+                }
+            },
+            # {
+            #     "qre_name": "@S4_Class",
+            #     "qre_lbl": "Class",
+            #     "cats": {
+            #         "S4.isin([1, 2])": "A&B (Từ 13,500,000 đến 22,499,000 VND & Trên 22,500,000)",
+            #         "S4.isin([3])": "C (Từ 7,500,000 đến 13,499,000 VND)",
+            #     }
+            # },
+        ],
+    ],
 }
 
 dict_header_main = copy.deepcopy(dict_header_scr)
@@ -558,21 +582,21 @@ dict_header_main['lst_1'] += [[
     },
 ]]
 
-# dict_header_main['lst_2'] += [[
-#     {
-#         "qre_name": "Ma_SP",
-#         "qre_lbl": "Mã Concept",
-#         "cats": {}
-#     },
-# ]]
-#
-# dict_header_main['lst_3'] += [[
-#     {
-#         "qre_name": "Ma_SP",
-#         "qre_lbl": "Mã Concept",
-#         "cats": {}
-#     },
-# ]]
+dict_header_main['lst_2'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {}
+    },
+]]
+
+dict_header_main['lst_3'] += [[
+    {
+        "qre_name": "Ma_SP",
+        "qre_lbl": "Mã Concept",
+        "cats": {}
+    },
+]]
 
 # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
@@ -673,10 +697,10 @@ lst_side_main = [
 
 lst_side_oe = [
     {"qre_name": "$Q2_OE"},
-    # {"qre_name": "$Q3_OE"},
-    # {"qre_name": "$Q7_OE"},
-    # {"qre_name": "$Q8_OE"},
-    # {"qre_name": "$F2_OE_OE"},
+    {"qre_name": "$Q3_OE"},
+    {"qre_name": "$Q7_OE"},
+    {"qre_name": "$Q8_OE"},
+    {"qre_name": "$F2_OE_OE"},
 ]
 
 

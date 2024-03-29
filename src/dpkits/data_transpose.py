@@ -155,8 +155,10 @@ class DataTranspose:
                         dict_sort_col.update({var_name: [str_var_name_new]})
 
             df_data_by_k.rename(columns=dict_rename_col, inplace=True)
-            df_info_by_k['var_name'].replace(dict_rename_col, inplace=True)
-            df_info_by_k['var_lbl'].replace(dict_rename_var_lbl, inplace=True)
+            # df_info_by_k['var_name'].replace(dict_rename_col, inplace=True)
+            # df_info_by_k['var_lbl'].replace(dict_rename_var_lbl, inplace=True)
+            df_info_by_k.replace({'var_name': dict_rename_col}, inplace=True)
+            df_info_by_k.replace({'var_lbl': dict_rename_var_lbl}, inplace=True)
 
             if df_part_body.empty:
                 df_part_body = df_data_by_k.copy()

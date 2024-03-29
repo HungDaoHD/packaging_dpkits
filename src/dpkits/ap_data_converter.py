@@ -202,9 +202,7 @@ class APDataConverter:
 
             df_data_header = df_data.iloc[[3, 4, 5], :].copy().T
             df_data_header.loc[((pd.isnull(df_data_header[3])) & (df_data_header[5] == 'Images')), 3] = ['Images']
-            # df_data_header[3].fillna(method='ffill', inplace=True)
-
-            df_data_header[3].ffill(inplace=True)
+            df_data_header[3] = df_data_header[3].ffill()
 
             df_temp = df_data_header.loc[
                       (df_data_header[3].duplicated(keep=False)) & ~(pd.isnull(df_data_header[3])) & ~(
@@ -494,7 +492,9 @@ class APDataConverter:
 
                 for col_name in qre_info['MA_cols']:
                     maName, maCode = col_name.rsplit('_', 1)
-                    dfMA[col_name].replace({1: int(maCode)}, inplace=True)
+                    # dfMA[col_name].replace({1: int(maCode)}, inplace=True)
+                    dfMA.replace({col_name: {1: int(maCode)}}, inplace=True)
+
 
                 dfMA['combined'] = [[e for e in row if e == e] for row in dfMA[qre_info['MA_cols']].values.tolist()]
                 dfMA = pd.DataFrame(dfMA['combined'].tolist(), index=dfMA.index)
