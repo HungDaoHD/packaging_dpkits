@@ -29,22 +29,7 @@ import copy
 
 
 
-# from dpkits import (
-#     APDataConverter,
-#     DataProcessing,
-#     DataTranspose,
-#     DataTableGenerator,
-#     TableFormatter,
-#     CodeframeReader,
-#     LSMCalculation,
-#     DataAnalysis
-# )
-
-
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
-import sys
-sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
-from src.dpkits import (
+from dpkits import (
     APDataConverter,
     DataProcessing,
     DataTranspose,
@@ -54,7 +39,22 @@ from src.dpkits import (
     LSMCalculation,
     DataAnalysis
 )
-# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# import sys
+# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
+# from src.dpkits import (
+#     APDataConverter,
+#     DataProcessing,
+#     DataTranspose,
+#     DataTableGenerator,
+#     TableFormatter,
+#     CodeframeReader,
+#     LSMCalculation,
+#     DataAnalysis
+# )
+# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
 # warnings.simplefilter(action='ignore', category=FutureWarning)

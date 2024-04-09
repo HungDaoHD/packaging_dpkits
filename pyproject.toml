@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "dpkits"
-version = "0.0.72"
+version = "1.0"
 authors = [
   { name="Hung Dao", email="hung.daotuan.1991@gmail.com" },
 ]
@@ -20,3 +20,4 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/HungDaoHD/packaging_dpkits"
 "Bug Tracker" = "https://github.com/HungDaoHD/packaging_dpkits/issues"
+
