@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dpkits"
-version = "1.0"
+version = "1.1"
 authors = [
   { name="Hung Dao", email="hung.daotuan.1991@gmail.com" },
 ]
