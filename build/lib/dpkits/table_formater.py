@@ -344,6 +344,7 @@ class TableFormatter:
                         for irow_hd in range(3, start_side_row):
                             ws.cell(irow_hd, icol).border = self.medium_left_4_border
 
+
                     if ws.cell(irow, 4).value == 'base':
                         cur_cell.font = Font(bold=True)
                         cur_cell.fill = PatternFill(patternType='solid', fgColor='DAEEF3')
@@ -400,28 +401,10 @@ class TableFormatter:
                             elif num_format == 'pct_sign':
                                 cur_cell.number_format = '0%'
 
-                            cat_lbl = str(ws.cell(irow, 5).value)
-                            net_cell = ws.cell(irow, icol)
-
-                            # NET CODE UPDATE FOR MSN PROJECTS
-                            if 'NET 0' in cat_lbl.upper():
-                                # Net: #A02B93
-                                net_cell.fill = PatternFill(patternType='solid', fgColor='A02B93')
-                                net_cell.font = Font(bold=True, color='FFFFFF')
-
-                            elif 'NET 1' in cat_lbl.upper():
-                                # Sub-net: #F2CEEF
-                                net_cell.fill = PatternFill(patternType='solid', fgColor='F2CEEF')
-
-                            elif 'NET 2' in cat_lbl.upper():
-                                # Sub-sub-net: #B5E6A2
-                                net_cell.fill = PatternFill(patternType='solid', fgColor='B5E6A2')
-
+                            if '(NET)' in str(ws.cell(irow, 5).value).upper():
+                                ws.cell(irow, 5).font = Font(bold=True, underline='double')
                             else:
-                                if '(NET)' in cat_lbl.upper():
-                                    ws.cell(irow, 5).font = Font(bold=True, underline='double')
-                                else:
-                                    ws.cell(irow, 5).font = Font(bold=True, underline='single')
+                                ws.cell(irow, 5).font = Font(bold=True, underline='single')
 
                         else:
                             if icol > 5:
@@ -494,8 +477,7 @@ class TableFormatter:
 
                 for icol in range(6, ws.max_column + 1).__reversed__():
                     if icol % 2 != 0:
-                        # ws.delete_cols(icol, 1)
-                        ws.delete_cols(icol)
+                        ws.delete_cols(icol, 1)
 
             else:
                 for icol in range(6, ws.max_column + 1):

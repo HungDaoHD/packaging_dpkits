@@ -88,7 +88,7 @@ class DataTableGenerator:
         for idx in df_info_qre_ma_all_1st_col.index:
             qre = df_info_qre_ma_all_1st_col.at[idx, 'var_name'].rsplit('_', 1)[0]
 
-            df_info_ma = df_info.query(f"var_name.str.contains('^{qre}_[0-9]+$')").copy()
+            df_info_ma = df_info.query(f"var_name.str.contains('{qre}_[0-9]+')").copy()
 
             dict_val_lbl = dict()
             for idx_ma in df_info_ma.index:
@@ -332,9 +332,9 @@ class DataTableGenerator:
         if '$' in dict_qre['qre_name']:
 
             if 'RANK' in str(dict_qre['qre_name']).upper():
-                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('^{dict_qre['qre_name'][1:]}[0-9]+$')")['var_name'].values.tolist()
+                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}[0-9]+$')")['var_name'].values.tolist()
             else:
-                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('^{dict_qre['qre_name'][1:]}_[0-9]+$')")['var_name'].values.tolist()
+                lst_qre_ma_name = self.df_info.query(f"var_name.str.contains('{dict_qre['qre_name'][1:]}_[0-9]+$')")['var_name'].values.tolist()
 
             if str(str_cat_or_query).upper() == 'TOTAL':
                 return f"({' | '.join([f'{i} > 0' for i in lst_qre_ma_name])})"
@@ -393,9 +393,9 @@ class DataTableGenerator:
             if '$' in qre['qre_name']:
 
                 if '_RANK' in str(qre['qre_name']).upper():
-                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
                 else:
-                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
 
                 var_name = qre['qre_name'].replace('$', '')
 

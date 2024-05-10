@@ -2,12 +2,15 @@ import pandas as pd
 import numpy as np
 import pingouin as pg
 
+
+
+
+
 from pptx import Presentation
 from pptx.chart.data import XyChartData
 from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION
 from pptx.util import Inches
 
-from sklearn.linear_model import LinearRegression, LogisticRegression
 
 
 
@@ -103,12 +106,16 @@ class DataAnalysis:
 
 
 
+
+
+
+
+
+
     def linear_regression(self, dict_define_linear: dict, output_name: str):
 
         # Single: y = b + a*x
         # Multiple: y = b + a1*x1 + a2*x2 + ... + an*xn
-
-        # HERE: Going to replace with sklearn func
 
         with pd.ExcelWriter(f'{output_name}.xlsx', engine='openpyxl') as writer:
             for k_ln, v_ln in dict_define_linear.items():
