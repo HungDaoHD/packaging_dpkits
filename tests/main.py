@@ -5,46 +5,7 @@ import datetime
 import copy
 # import warnings
 
-
-
-# from scipy import stats
-#
-# df_test = pd.read_excel('VN8537_SPARROW_02_HoChiMinh_ExcelData.xlsx', sheet_name='Test')
-#
-# df_test = df_test.loc[df_test.eval("Q9a_489.notnull() & Q9a_513.notnull()"), :]
-#
-#
-# arr1 = df_test.loc[:, 'Q9a_489']
-# arr2 = df_test.loc[:, 'Q9a_513']
-#
-# aaa1 = arr1.mean()
-# aaa2 = arr2.mean()
-#
-# sigResult = stats.ttest_rel(df_test.loc[:, 'Q9a_489'], df_test.loc[:, 'Q9a_513'])
-#
-# a = 1
-
-
-
-
-
-
-from dpkits import (
-    APDataConverter,
-    DataProcessing,
-    DataTranspose,
-    DataTableGenerator,
-    TableFormatter,
-    CodeframeReader,
-    LSMCalculation,
-    DataAnalysis
-)
-
-
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-# import sys
-# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
-# from src.dpkits import (
+# from dpkits import (
 #     APDataConverter,
 #     DataProcessing,
 #     DataTranspose,
@@ -54,7 +15,21 @@ from dpkits import (
 #     LSMCalculation,
 #     DataAnalysis
 # )
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+import sys
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
+from src.dpkits import (
+    APDataConverter,
+    DataProcessing,
+    DataTranspose,
+    DataTableGenerator,
+    TableFormatter,
+    CodeframeReader,
+    LSMCalculation,
+    DataAnalysis
+)
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
 # warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -93,6 +68,12 @@ df_data, df_info = converter.convert_df_mc()  # Use 'converter.convert_df_md()' 
 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
+
+
+
+
+
+
 
 # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
 # df_info columns must be ['var_name', 'var_lbl', 'var_type', 'val_lbl']
@@ -291,15 +272,15 @@ README:
         "qre_name":
             - "$Q15",  # column name, must set '$' if it is MA question
             - "Q16_Merge#combine(Q16a_1, Q16a_2, Q16a_3, Q16a_4, Q16b_1, Q16b_2, Q16b_3)"  # Combine multiple MA questions with same 'cats' define
-            
+
         "qre_lbl": "{lbl}: new label",  # default df_info label, input {lbl} top keep original label and addin new label
-        
+
         "qre_filter": "Age.isin([2, 3])",  # use for filter question
-        
+
         "sort": "des", # sort options: acs / des
-        
+
         "mean": {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}  # calculate mean base on dict: key == code in data, value = weighted values
-        
+
         "cats": {  # use for define net/combine code with specify format
             'net_code': {
                 '900001|combine|Group 1 + 2': {
@@ -320,7 +301,7 @@ README:
             '8': 'Other (specify)',
             '9': 'No problem',
         },
-        
+
         # use for NUM questions
         "cats": {
             'mean': 'Mean',
@@ -331,10 +312,10 @@ README:
             '50%': 'Quantile 50%',
             '75%': 'Quantile 75%',
         },
-        
+
         "calculate": {"lbl": "Sum(T2B, B2B)", "syntax": "[T2B] + [B2B]"},
     },
-    
+
     - Header question properties:
     {
         "qre_name": "S1",  # define 'S1' if SA, '$S1' if MA, '@S1_xxx' if create header base on specify condition
@@ -611,13 +592,30 @@ lst_side_scr_tagon = [
     {"qre_name": "$S6"},
     {"qre_name": "$S6", "qre_lbl": "S6. Test define without full cats", "cats": {
         'net_code': {
-            # '1': 'Bia lon/chai',
-            '2': 'Cà phê hòa tan/ uống liền',
-            '900001|net|G1': {
+            '900001|net|Net 0: aaaa': {
+                '1': 'Bia lon/chai',
+            },
+            '900002|combine|Net 0: code 2 -> 5': {
+                '2': 'Cà phê hòa tan/ uống liền',
+                '3': 'Nước ngọt có ga',
+                '4': 'Nước uống đóng chai',
+                '5': 'Nước tăng lực'
+            },
+            '900003|combine|Net 1: code 2 - 3': {
                 '2': 'Cà phê hòa tan/ uống liền',
                 '3': 'Nước ngọt có ga',
             },
-            '900002|net|G2': {'4': 'Nước uống đóng chai', '5': 'Nước tăng lực'},
+            '900004|net|Net 2: code 2': {
+                '2': 'Cà phê hòa tan/ uống liền',
+            },
+            '900005|net|Net 2: code 3': {
+                '3': 'Nước ngọt có ga',
+            },
+            '900006|net|Net 1: 4 - 5': {
+                '4': 'Nước uống đóng chai',
+                '5': 'Nước tăng lực'
+            },
+
             '6': 'Tôi không uống loại nào ở trên'
         }
     }},
