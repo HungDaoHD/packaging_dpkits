@@ -35,7 +35,6 @@ from src.dpkits import (
 # warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-
 st = time.time()
 
 
@@ -68,10 +67,6 @@ df_data, df_info = converter.convert_df_mc()  # Use 'converter.convert_df_md()' 
 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
-
-
-
-
 
 
 
@@ -112,6 +107,13 @@ df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
 df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 
 
+# Here: 16/05
+# Read concept files
+# read txt file
+
+
+
+# END Read concept files
 
 
 
@@ -119,6 +121,8 @@ df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 with pd.ExcelWriter(f'{str_file_name}_preview.xlsx', engine="openpyxl") as writer:
     df_data.to_excel(writer, sheet_name='df_data')
     df_info.to_excel(writer, sheet_name='df_info')
+
+
 
 
 # TRANSPOSE TO STACK----------------------------------------------------------------------------------------------------
@@ -966,3 +970,6 @@ da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN8413_
 
 
 print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=round(time.time() - st, 0)), '\n')
+
+
+

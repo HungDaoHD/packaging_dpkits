@@ -5,6 +5,10 @@ import numpy as np
 
 class DataProcessing:
 
+    def __init__(self):
+        pass
+
+
     @staticmethod
     def add_qres(df_data: pd.DataFrame, df_info: pd.DataFrame, dict_add_new_qres: dict, is_add_oe_col: bool = False) -> (pd.DataFrame, pd.DataFrame):
         info_col_name = ['var_name', 'var_lbl', 'var_type', 'val_lbl']
@@ -74,6 +78,21 @@ class DataProcessing:
         df_info.reset_index(drop=True, inplace=True)
 
         return df_data, df_info
+
+
+
+    def concept_evaluate(self, cpt_filename: str, ) -> (pd.DataFrame, dict):
+        # Here: May 16
+        # 1. clean inputted concept
+        # 2. create codeframe for each word for concept
+        # 3. match verbatim to concept codeframe
+        # 4. return dataframe with codes of the words in concept
+
+
+
+        
+        return pd.DataFrame(), dict()  # dataframe & codelíst
+
 
 
 

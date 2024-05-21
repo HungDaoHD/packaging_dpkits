@@ -1516,23 +1516,24 @@ class DataTableGenerator:
                         df_qre = self.add_ma_qre_val_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, cat, lbl, None, weight_var)
 
 
+            # BUGGING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # SORTING---------------------------------------------------------------------------------------------------
             sort_opt = df_info.at[idx, 'sort']
 
-            if sort_opt:
-                is_asc = True if sort_opt == 'asc' else False
-                base_val = -999_999_999 if sort_opt == 'asc' else 999_999_999
-
-                df_qre['sort_col'] = df_qre[df_qre.columns.tolist()[5]]
-                df_qre.loc[df_qre['cat_val'] == 'base', 'sort_col'] = base_val
-
-                df_qre.sort_values(by=['sort_col'], ascending=is_asc, inplace=True, ignore_index=True)
-                df_qre.drop(columns=['sort_col'], inplace=True)
+            # if sort_opt:
+            #     is_asc = True if sort_opt == 'asc' else False
+            #     base_val = -999_999_999 if sort_opt == 'asc' else 999_999_999
+            #
+            #     df_qre['sort_col'] = df_qre[df_qre.columns.tolist()[5]]
+            #     df_qre.loc[df_qre['cat_val'] == 'base', 'sort_col'] = base_val
+            #
+            #     df_qre.sort_values(by=['sort_col'], ascending=is_asc, inplace=True, ignore_index=True)
+            #     df_qre.drop(columns=['sort_col'], inplace=True)
 
             # END SORTING-----------------------------------------------------------------------------------------------
 
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
 
             print(f'\t- Create table for {qre_name}[{qre_type}]: Done')
-
+        
         return df_tbl
