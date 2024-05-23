@@ -30,7 +30,11 @@ class DataTableGenerator:
                 self.dict_unnetted_qres.update({self.df_info.at[idx, 'var_name']: self.unnetted_qre_val(self.df_info.at[idx, 'val_lbl'])})
 
 
+        # Check matching of data và defines
         self.check_value_df_data_vs_df_info()
+
+        # Check duplicate value of MA qres
+        self.check_duplicate_value_ma_vars()
 
         try:
             check_perm = open(xlsx_name)
@@ -78,6 +82,30 @@ class DataTableGenerator:
             exit()
 
         print("Check value - df_data & df_info - Done")
+
+
+
+    def check_duplicate_value_ma_vars(self):
+
+        df_info_ma = self.df_info.query(r"var_name.str.contains('^\w+_1$') & var_type.str.contains('MA')")
+
+        for qre_ma in df_info_ma['var_name'].values.tolist():
+
+            prefix, suffix = qre_ma.rsplit('_', 1)
+            df_data_qre_ma = self.df_data.filter(regex=f"^{prefix}_[0-9]+$")
+            df_data_qre_ma = df_data_qre_ma.T
+
+            for col in df_data_qre_ma.columns:
+                df_data_qre_ma[col] = df_data_qre_ma[col].drop_duplicates(keep='first')
+
+
+            self.df_data.loc[:, list(df_data_qre_ma.index)] = df_data_qre_ma.T
+
+
+
+
+
+
 
 
 
@@ -1108,6 +1136,14 @@ class DataTableGenerator:
 
                 df_filter = dict_header_col_name[item]['df_data'].loc[:, lst_qre_col].copy()
 
+                # df_filter = dict_header_col_name[item]['df_data'].loc[:, lst_qre_col].copy().T
+                #
+                # for idx_col in df_filter.columns:
+                #     df_filter[idx_col] = df_filter[idx_col].drop_duplicates(keep='first')
+                #
+                # df_filter = df_filter.T
+
+
                 if df_filter.empty:
                     continue
 
@@ -1119,8 +1155,10 @@ class DataTableGenerator:
 
                 df_filter.replace(dict_re_qre_val, inplace=True)
 
-                df_fil_base = df_filter[lst_qre_col].dropna(how='all')
-                df_filter.loc[df_fil_base.index, 'ma_val_sum'] = df_filter.loc[df_fil_base.index, lst_qre_col].sum(axis='columns')
+                # df_fil_base = df_filter[lst_qre_col].dropna(how='all')
+                df_fil_base = df_filter.dropna(how='all')
+
+                df_filter.loc[df_fil_base.index, 'ma_val_sum'] = df_filter.loc[df_fil_base.index, :].sum(axis='columns')
 
                 if lst_sub_cat or qre_type == 'MA_comb':
                     df_filter.loc[df_filter['ma_val_sum'] > 1, 'ma_val_sum'] = 1
@@ -1455,9 +1493,6 @@ class DataTableGenerator:
                 # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '25%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
                 # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '50%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
                 # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '75%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-
-
-
 
             elif qre_type in ['MA', 'MA_mtr', 'MA_comb', 'MA_Rank']:
 

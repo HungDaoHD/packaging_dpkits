@@ -116,6 +116,8 @@ df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 # END Read concept files
 
 
+df_data.loc[df_data.eval("ID == '715385_2406381'"), ['S6_4', 'S6_5']] = [1, 2]
+
 
 # Just for checking
 with pd.ExcelWriter(f'{str_file_name}_preview.xlsx', engine="openpyxl") as writer:
@@ -586,50 +588,51 @@ dict_header_main['lst_3'] += [[
 # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
 
-    {"qre_name": "S1"},
-    {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
-    {"qre_name": "S3_a"},
-    {"qre_name": "S3_b"},
-    {"qre_name": "S4"},
-    {"qre_name": "S5"},
+    # {"qre_name": "S1"},
+    # {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
+    # {"qre_name": "S3_a"},
+    # {"qre_name": "S3_b"},
+    # {"qre_name": "S4"},
+    # {"qre_name": "S5"},
 
     {"qre_name": "$S6"},
-    {"qre_name": "$S6", "qre_lbl": "S6. Test define without full cats", "cats": {
-        'net_code': {
-            '900001|net|Net 0: aaaa': {
-                '1': 'Bia lon/chai',
-            },
-            '900002|combine|Net 0: code 2 -> 5': {
-                '2': 'Cà phê hòa tan/ uống liền',
-                '3': 'Nước ngọt có ga',
-                '4': 'Nước uống đóng chai',
-                '5': 'Nước tăng lực'
-            },
-            '900003|combine|Net 1: code 2 - 3': {
-                '2': 'Cà phê hòa tan/ uống liền',
-                '3': 'Nước ngọt có ga',
-            },
-            '900004|net|Net 2: code 2': {
-                '2': 'Cà phê hòa tan/ uống liền',
-            },
-            '900005|net|Net 2: code 3': {
-                '3': 'Nước ngọt có ga',
-            },
-            '900006|net|Net 1: 4 - 5': {
-                '4': 'Nước uống đóng chai',
-                '5': 'Nước tăng lực'
-            },
 
-            '6': 'Tôi không uống loại nào ở trên'
-        }
-    }},
-
-    {"qre_name": "S7"},
-    {"qre_name": "S8"},
-    {"qre_name": "S10"},
-
-    {"qre_name": "Dealer_HCM_01_Rank1"},
-    {"qre_name": "$Dealer_HCM_02_Rank"},
+    # {"qre_name": "$S6", "qre_lbl": "S6. Test derefine without full cats", "cats": {
+    #     'net_code': {
+    #         '900001|net|Net 0: aaaa': {
+    #             '1': 'Bia lon/chai',
+    #         },
+    #         '900002|combine|Net 0: code 2 -> 5': {
+    #             '2': 'Cà phê hòa tan/ uống liền',
+    #             '3': 'Nước ngọt có ga',
+    #             '4': 'Nước uống đóng chai',
+    #             '5': 'Nước tăng lực'
+    #         },
+    #         '900003|combine|Net 1: code 2 - 3': {
+    #             '2': 'Cà phê hòa tan/ uống liền',
+    #             '3': 'Nước ngọt có ga',
+    #         },
+    #         '900004|net|Net 2: code 2': {
+    #             '2': 'Cà phê hòa tan/ uống liền',
+    #         },
+    #         '900005|net|Net 2: code 3': {
+    #             '3': 'Nước ngọt có ga',
+    #         },
+    #         '900006|net|Net 1: 4 - 5': {
+    #             '4': 'Nước uống đóng chai',
+    #             '5': 'Nước tăng lực'
+    #         },
+    #
+    #         '6': 'Tôi không uống loại nào ở trên'
+    #     }
+    # }},
+    #
+    # {"qre_name": "S7"},
+    # {"qre_name": "S8"},
+    # {"qre_name": "S10"},
+    #
+    # {"qre_name": "Dealer_HCM_01_Rank1"},
+    # {"qre_name": "$Dealer_HCM_02_Rank"},
 ]
 
 lst_side_main = [
