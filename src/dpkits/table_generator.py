@@ -87,7 +87,9 @@ class DataTableGenerator:
 
     def check_duplicate_value_ma_vars(self):
 
-        df_info_ma = self.df_info.query(r"var_name.str.contains('^\w+_1$') & var_type.str.contains('MA')")
+        str_query = "var_name.str.contains(r'^\\w+_1$') & var_type.str.contains('MA')"
+        df_info_ma = self.df_info.query(str_query)
+
 
         for qre_ma in df_info_ma['var_name'].values.tolist():
 

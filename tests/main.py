@@ -3,7 +3,7 @@ import numpy as np
 import time
 import datetime
 import copy
-# import warnings
+import warnings
 
 # from dpkits import (
 #     APDataConverter,
@@ -32,7 +32,7 @@ from src.dpkits import (
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 
 
-# warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 st = time.time()
@@ -588,51 +588,51 @@ dict_header_main['lst_3'] += [[
 # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 lst_side_scr_tagon = [
 
-    # {"qre_name": "S1"},
-    # {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
-    # {"qre_name": "S3_a"},
-    # {"qre_name": "S3_b"},
-    # {"qre_name": "S4"},
-    # {"qre_name": "S5"},
+    {"qre_name": "S1"},
+    {"qre_name": "S2", "qre_lbl": "{lbl} - HCM", "qre_filter": "S1 == 3"},
+    {"qre_name": "S3_a"},
+    {"qre_name": "S3_b"},
+    {"qre_name": "S4"},
+    {"qre_name": "S5"},
 
     {"qre_name": "$S6"},
 
-    # {"qre_name": "$S6", "qre_lbl": "S6. Test derefine without full cats", "cats": {
-    #     'net_code': {
-    #         '900001|net|Net 0: aaaa': {
-    #             '1': 'Bia lon/chai',
-    #         },
-    #         '900002|combine|Net 0: code 2 -> 5': {
-    #             '2': 'Cà phê hòa tan/ uống liền',
-    #             '3': 'Nước ngọt có ga',
-    #             '4': 'Nước uống đóng chai',
-    #             '5': 'Nước tăng lực'
-    #         },
-    #         '900003|combine|Net 1: code 2 - 3': {
-    #             '2': 'Cà phê hòa tan/ uống liền',
-    #             '3': 'Nước ngọt có ga',
-    #         },
-    #         '900004|net|Net 2: code 2': {
-    #             '2': 'Cà phê hòa tan/ uống liền',
-    #         },
-    #         '900005|net|Net 2: code 3': {
-    #             '3': 'Nước ngọt có ga',
-    #         },
-    #         '900006|net|Net 1: 4 - 5': {
-    #             '4': 'Nước uống đóng chai',
-    #             '5': 'Nước tăng lực'
-    #         },
-    #
-    #         '6': 'Tôi không uống loại nào ở trên'
-    #     }
-    # }},
-    #
-    # {"qre_name": "S7"},
-    # {"qre_name": "S8"},
-    # {"qre_name": "S10"},
-    #
-    # {"qre_name": "Dealer_HCM_01_Rank1"},
-    # {"qre_name": "$Dealer_HCM_02_Rank"},
+    {"qre_name": "$S6", "qre_lbl": "S6. Test derefine without full cats", "cats": {
+        'net_code': {
+            '900001|net|Net 0: aaaa': {
+                '1': 'Bia lon/chai',
+            },
+            '900002|combine|Net 0: code 2 -> 5': {
+                '2': 'Cà phê hòa tan/ uống liền',
+                '3': 'Nước ngọt có ga',
+                '4': 'Nước uống đóng chai',
+                '5': 'Nước tăng lực'
+            },
+            '900003|combine|Net 1: code 2 - 3': {
+                '2': 'Cà phê hòa tan/ uống liền',
+                '3': 'Nước ngọt có ga',
+            },
+            '900004|net|Net 2: code 2': {
+                '2': 'Cà phê hòa tan/ uống liền',
+            },
+            '900005|net|Net 2: code 3': {
+                '3': 'Nước ngọt có ga',
+            },
+            '900006|net|Net 1: 4 - 5': {
+                '4': 'Nước uống đóng chai',
+                '5': 'Nước tăng lực'
+            },
+
+            '6': 'Tôi không uống loại nào ở trên'
+        }
+    }},
+
+    {"qre_name": "S7"},
+    {"qre_name": "S8"},
+    {"qre_name": "S10"},
+
+    {"qre_name": "Dealer_HCM_01_Rank1"},
+    {"qre_name": "$Dealer_HCM_02_Rank"},
 ]
 
 lst_side_main = [
