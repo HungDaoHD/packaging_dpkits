@@ -87,7 +87,9 @@ dict_add_new_qres = {
     'New_FT': ['New FT', 'FT', {}, np.nan],
     'New_Num': ['New Num', 'NUM', {}, np.nan],
     'New_MA|6': ['New MA', 'MA', {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7'}, np.nan],
-    'Weight_Var': ['Weight_Var', 'NUM', {}, np.nan]
+    'Weight_Var': ['Weight_Var', 'NUM', {}, np.nan],
+    'S6a|3': ['S6a. New', 'MA', {'1': 'Bia lon/chai', '2': 'Cà phê hòa tan/ uống liền', '3': 'Nước ngọt có ga', '4': 'Nước uống đóng chai', '5': 'Nước tăng lực', '6': 'Tôi không uống loại nào ở trên'}, np.nan],
+    'S6_Merge|9': ['S6. Merge', 'MA', {'1': 'Bia lon/chai', '2': 'Cà phê hòa tan/ uống liền', '3': 'Nước ngọt có ga', '4': 'Nước uống đóng chai', '5': 'Nước tăng lực', '6': 'Tôi không uống loại nào ở trên'}, np.nan],
 }
 
 # Add new question to df_data & df_info
@@ -97,7 +99,11 @@ df_data, df_info = DataProcessing.add_qres(df_data, df_info, dict_add_new_qres)
 df_data['New_MA_2'] = 2
 df_data['New_MA_4'] = 4
 
-df_data = DataProcessing.align_ma_values_to_left(df_data=df_data, qre_name='New_MA|6')
+# df_data['S6a_2'] = 6
+
+df_data.loc[df_data.eval("index % 2 == 0"), 'S6a_1'] = 5
+
+df_data = DataProcessing.align_ma_values_to_left(df_data=df_data, qre_name=['New_MA|6', 'S6a|3'])
 
 df_data = pd.DataFrame(df_data)
 df_info = pd.DataFrame(df_info)
@@ -105,6 +111,21 @@ df_info = pd.DataFrame(df_info)
 
 df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
 df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
+
+# testing duplicate values
+df_data.loc[df_data.eval("ID == '715385_2406381'"), ['S6_4', 'S6_5']] = [1, 2]
+
+# test merge qre values
+lst_merge_col = ['S6_Merge_1', 'S6_Merge_2', 'S6_Merge_3', 'S6_Merge_4', 'S6_Merge_5', 'S6_Merge_6', 'S6_Merge_7', 'S6_Merge_8', 'S6_Merge_9']
+lst_to_merge_col = ['S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6', 'S6a_1', 'S6a_2', 'S6a_3']
+df_data = DataProcessing.merge_qres(df_data=df_data, lst_merge=lst_merge_col, lst_to_merge=lst_to_merge_col, dk_code=6)
+
+
+
+
+
+
+
 
 
 # Here: 16/05
@@ -116,7 +137,6 @@ df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
 # END Read concept files
 
 
-df_data.loc[df_data.eval("ID == '715385_2406381'"), ['S6_4', 'S6_5']] = [1, 2]
 
 
 # Just for checking
@@ -596,6 +616,8 @@ lst_side_scr_tagon = [
     {"qre_name": "S5"},
 
     {"qre_name": "$S6"},
+    {"qre_name": "$S6_Merge"},
+
 
     {"qre_name": "$S6", "qre_lbl": "S6. Test derefine without full cats", "cats": {
         'net_code': {

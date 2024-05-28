@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+from colorama import Fore
 
 
 class DataProcessing:
@@ -81,16 +81,48 @@ class DataProcessing:
 
 
 
-    def concept_evaluate(self, cpt_filename: str, ) -> (pd.DataFrame, dict):
+    @staticmethod
+    def merge_qres(*, df_data: pd.DataFrame, lst_merge: list, lst_to_merge: list, dk_code: int) -> pd.DataFrame:
+
+        if len(lst_merge) < len(lst_to_merge):
+            print(f"{Fore.RED}Merge_qres(error): Length of lst_merge should be greater than or equal length of lst_to_merge!!!\n"
+                  f"lst_merge = {lst_merge}\nlst_to_merge = {lst_to_merge}\nProcessing terminated!!!{Fore.RESET}")
+            exit()
+
+
+
+        def merge_row(sr_row: pd.Series, lst_col_name: list, dk: int) -> pd.Series:
+
+            lst_output = sr_row.reset_index(drop=True).drop_duplicates(keep='first').dropna().sort_values().values.tolist()
+            output_len = len(lst_col_name)
+
+            if len(lst_output) > 1 and dk in lst_output:
+                lst_output.remove(dk)
+
+            if len(lst_output) < output_len:
+                lst_output.extend([np.nan] * (output_len - len(lst_output)))
+
+            return pd.Series(data=lst_output, index=lst_col_name)
+
+        df_data[lst_merge] = df_data[lst_to_merge].apply(merge_row, lst_col_name=lst_merge, dk=dk_code, axis=1)
+
+        return df_data
+
+
+
+
+
+
+
+
+    @staticmethod
+    def concept_evaluate(cpt_filename: str, ) -> (pd.DataFrame, dict):
         # Here: May 16
         # 1. clean inputted concept
         # 2. create codeframe for each word for concept
         # 3. match verbatim to concept codeframe
         # 4. return dataframe with codes of the words in concept
 
-
-
-        
         return pd.DataFrame(), dict()  # dataframe & codelíst
 
 
