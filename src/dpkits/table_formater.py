@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 class TableFormatter:
 
     def __init__(self, xlsx_name):
-        self.xlsx_name = xlsx_name
+        self.xlsx_name = xlsx_name.rsplit('/', 1)[-1] if '/' in xlsx_name else xlsx_name
 
         self.thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
         self.dot_border = Border(left=Side(style='dotted'), right=Side(style='dotted'), top=Side(style='dotted'), bottom=Side(style='dotted'))

@@ -22,7 +22,7 @@ class DataTableGenerator:
         if is_md:
             self.convert_md_to_mc(df_data.copy(), df_info.copy())
 
-        self.file_name = xlsx_name
+        self.file_name = xlsx_name.rsplit('/', 1)[-1] if '/' in xlsx_name else xlsx_name
 
         self.dict_unnetted_qres = dict()
         for idx in self.df_info.index:

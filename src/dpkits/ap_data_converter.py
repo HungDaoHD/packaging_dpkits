@@ -120,18 +120,6 @@ class APDataConverter:
         # Input vars
         self.is_qme = is_qme
 
-        # if file_name:
-        #     try:
-        #         data_file = open(file_name, 'rb')
-        #         file = UploadFile(file=data_file, filename=file_name)
-        #         self.upload_files = [file]
-        #
-        #     except FileNotFoundError:
-        #         self.upload_files = None
-        #
-        # else:
-        #     self.upload_files = files
-
         if isinstance(file_name, str):
             try:
                 data_file = open(file_name, 'rb')
@@ -148,9 +136,11 @@ class APDataConverter:
         self.is_zip = True if '.zip' in file_name else False
 
         # Output vars
-        self.str_file_name = file_name
+        # self.str_file_name = file_name
+        self.str_file_name = file_name.rsplit('/', 1)[-1] if '/' in file_name else file_name
         self.zip_name = str()
         self.df_data_converted, self.df_info_converted = pd.DataFrame(), pd.DataFrame()
+
 
 
     def check_duplicate_variables(self) -> list:
@@ -163,6 +153,7 @@ class APDataConverter:
             print(Fore.RED, 'Please check duplicated variables:', ', '.join(lst_dup_vars))
 
         return lst_dup_vars
+
 
 
     def read_file_xlsx(self, file, is_qme: bool, is_zip: bool = False) -> (pd.DataFrame, pd.DataFrame):
@@ -303,6 +294,8 @@ class APDataConverter:
 
             self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
 
+        self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
+        self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
         print(f'Convert uploaded files "{self.str_file_name}" to dataframe')
 
         if self.check_duplicate_variables():
@@ -319,6 +312,7 @@ class APDataConverter:
             return cleantext
 
         return raw_html
+
 
 
     def convert_df_md(self) -> (pd.DataFrame, pd.DataFrame):
@@ -384,6 +378,7 @@ class APDataConverter:
             df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
 
         return df_data_output, df_info_output
+
 
 
     def convert_df_mc(self, lst_new_row: list = None) -> (pd.DataFrame, pd.DataFrame):
@@ -492,7 +487,7 @@ class APDataConverter:
 
                 for col_name in qre_info['MA_cols']:
                     maName, maCode = col_name.rsplit('_', 1)
-                    # dfMA[col_name].replace({1: int(maCode)}, inplace=True)
+                    dfMA[col_name] = dfMA[col_name].astype(float)
                     dfMA.replace({col_name: {1: int(maCode)}}, inplace=True)
 
 
@@ -526,6 +521,7 @@ class APDataConverter:
             df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
 
         return df_data_output, df_info_output
+
 
 
     @staticmethod
@@ -580,6 +576,7 @@ class APDataConverter:
             text_file.write(str_MRSet)
 
 
+
     @staticmethod
     def unnetted_qre_val(dict_netted) -> dict:
         dict_unnetted = dict()
@@ -605,6 +602,7 @@ class APDataConverter:
         return dict_unnetted
 
 
+
     def remove_net_code(self, df_info: pd.DataFrame) -> pd.DataFrame():
         df_info_without_net = df_info.copy()
 
@@ -617,12 +615,14 @@ class APDataConverter:
         return df_info_without_net
 
 
+
     @staticmethod
     def zipfiles(zip_name: str, lst_file_name: list):
         with zipfile.ZipFile(zip_name, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
             for f_name in lst_file_name:
                 zf.write(f_name)
                 os.remove(f_name)
+
 
 
     def generate_multiple_data_files(self, dict_dfs: dict, is_export_sav: bool = True, is_export_xlsx: bool = True, is_zip: bool = True):
@@ -693,7 +693,7 @@ class APDataConverter:
             str_zip_name = self.zip_name
 
             if not str_zip_name:
-                str_zip_name = f"{str_name}_Data.zip"
+                str_zip_name = f"{str_name.rsplit('/', 1)[-1]}_Data.zip" if '/' in str_name else str_name
 
             print(f'Create {str_zip_name} with files: {", ".join(lst_zip_file_name)}')
             self.zipfiles(str_zip_name, lst_zip_file_name)
@@ -727,6 +727,7 @@ class APDataConverter:
             print(Fore.LIGHTYELLOW_EX, f'Cannot convert from FT to NUM type:', ', '.join(lst_cannot_converted), Fore.RESET)
 
         return df_data, df_info
+
 
 
     @staticmethod
