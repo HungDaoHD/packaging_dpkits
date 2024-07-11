@@ -200,7 +200,21 @@ class APDataConverter:
                           pd.isnull(df_data_header[4])), :].copy()
 
             for idx in df_temp.index:
-                df_data_header.at[idx, 3] = f"{df_data_header.at[idx, 3]}_{df_data_header.at[idx, 4].rsplit('_', 1)[1]}"
+                str_prefix = df_data_header.at[idx, 3]
+                str_suffix = df_data_header.at[idx, 4]
+
+                if 'Reply' in str_suffix:
+                    df_data_header.at[idx, 3] = f"{str_prefix}_{str_suffix.replace(' - ', '_').replace(' ',  '_')}"
+                else:
+                    df_data_header.at[idx, 3] = f"{str_prefix}_{str_suffix.rsplit('_', 1)[1]}"
+
+
+            # # SKU TYPE
+            # df_sku = df_qres.loc[df_qres.eval("`Question type` == 'SKU'"), ['Name of items', 'Question type', 'Question(Matrix)', 'Question(Normal)']].copy()
+            #
+            # a = 1
+
+
 
             df_data_header.loc[pd.isnull(df_data_header[3]), 3] = df_data_header.loc[pd.isnull(df_data_header[3]), 5]
             dict_header = df_data_header[3].to_dict()
@@ -208,7 +222,6 @@ class APDataConverter:
             df_data.drop(list(range(6)), inplace=True)
             set_drop = set(dict_header.values()).intersection(set(self.lstDrop))
             df_data.drop(columns=list(set_drop), inplace=True, axis=1)
-
 
             df_qres.replace({np.nan: None}, inplace=True)
 
@@ -257,46 +270,53 @@ class APDataConverter:
         files = self.upload_files
         is_qme = self.is_qme
 
-        if len(files) == 1:
-            file = files[0]
-            self.str_file_name = file.filename
+        try:
 
-            if '.sav' in file.filename:
-                # this function is pending
-                self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
-                self.zip_name = file.filename.replace('.sav', '_Data.zip')
+            if len(files) == 1:
+                file = files[0]
+                self.str_file_name = file.filename
 
-            elif '.zip' in file.filename:
-                self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
-                self.zip_name = file.filename.replace('.zip', '_Data.zip')
+                if '.sav' in file.filename:
+                    # this function is pending
+                    self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
+                    self.zip_name = file.filename.replace('.sav', '_Data.zip')
+
+                elif '.zip' in file.filename:
+                    self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
+                    self.zip_name = file.filename.replace('.zip', '_Data.zip')
+
+                else:
+                    self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
+                    self.zip_name = file.filename.replace('.xlsx', '_Data.zip')
 
             else:
-                self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
-                self.zip_name = file.filename.replace('.xlsx', '_Data.zip')
+                self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
+                self.zip_name = self.str_file_name.replace('.xlsx', '_Data.zip')
 
-        else:
-            self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
-            self.zip_name = self.str_file_name.replace('.xlsx', '_Data.zip')
+                df_data_converted_merge = pd.DataFrame()
+                df_info_converted_merge = pd.DataFrame()
 
-            df_data_converted_merge = pd.DataFrame()
-            df_info_converted_merge = pd.DataFrame()
+                for i, file in enumerate(files):
+                    df_data_converted, df_info_converted = self.read_file_xlsx(file, is_qme)
 
-            for i, file in enumerate(files):
-                df_data_converted, df_info_converted = self.read_file_xlsx(file, is_qme)
+                    if not df_data_converted.empty:
+                        df_data_converted_merge = pd.concat([df_data_converted_merge, df_data_converted], axis=0)
 
-                if not df_data_converted.empty:
-                    df_data_converted_merge = pd.concat([df_data_converted_merge, df_data_converted], axis=0)
+                    if df_info_converted_merge.empty:
+                        df_info_converted_merge = df_info_converted
 
-                if df_info_converted_merge.empty:
-                    df_info_converted_merge = df_info_converted
+                df_data_converted_merge.reset_index(drop=True, inplace=True)
 
-            df_data_converted_merge.reset_index(drop=True, inplace=True)
+                self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
 
-            self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
+            self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
+            self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
+            print(f'Convert uploaded files "{self.str_file_name}" to dataframe')
 
-        self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
-        self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
-        print(f'Convert uploaded files "{self.str_file_name}" to dataframe')
+        except TypeError:
+            print(Fore.RED, "File not found!!!")
+            exit()
+
 
         if self.check_duplicate_variables():
             exit()
