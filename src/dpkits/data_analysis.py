@@ -1,12 +1,10 @@
 import pandas as pd
 import numpy as np
 import pingouin as pg
-
 from pptx import Presentation
 from pptx.chart.data import XyChartData
 from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION
 from pptx.util import Inches
-
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 

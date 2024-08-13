@@ -5,15 +5,18 @@ import numpy as np
 import zipfile
 import re
 import os
-from fastapi import UploadFile
+import time
+import datetime
+import functools
+# from fastapi import UploadFile
 from colorama import Fore
 
 
 
 class APDataConverter:
 
-    # def __init__(self, files: list[UploadFile] = None, file_name: str = '', is_qme: bool = True):
-    def __init__(self, file_name: str | list[UploadFile], is_qme: bool = True):
+    # def __init__(self, file_name: str | list[UploadFile], is_qme: bool = True):
+    def __init__(self, file_name: str | list[str], is_qme: bool = True):
 
         self.lstDrop = [
             'Approve',
@@ -114,33 +117,45 @@ class APDataConverter:
             'Invite',
             'Interviewer_Name',
             'Address',
+            'IP address (Public user)',
+            'Group 3',
+            'Personal information agreement',
         ]
-
 
         # Input vars
         self.is_qme = is_qme
 
-        if isinstance(file_name, str):
-            try:
-                data_file = open(file_name, 'rb')
-                file = UploadFile(file=data_file, filename=file_name)
-                self.upload_files = [file]
+        # if isinstance(file_name, str):
+        #     try:
+        #         data_file = open(file_name, 'rb')
+        #         file = UploadFile(file=data_file, filename=file_name)
+        #         self.upload_files = [file]
+        #
+        #     except FileNotFoundError:
+        #         self.upload_files = None
+        #
+        # else:
+        #     self.upload_files = files
 
-            except FileNotFoundError:
-                self.upload_files = None
-
-        else:
-            self.upload_files = files
-
-
+        self.lst_input_files = [file_name] if isinstance(file_name, str) else file_name
         self.is_zip = True if '.zip' in file_name else False
-
-        # Output vars
-        # self.str_file_name = file_name
         self.str_file_name = file_name.rsplit('/', 1)[-1] if '/' in file_name else file_name
         self.zip_name = str()
         self.df_data_converted, self.df_info_converted = pd.DataFrame(), pd.DataFrame()
 
+
+    @staticmethod
+    def time_it(func):
+
+        @functools.wraps(func)
+        def inner_time_it(*args, **kwargs):
+            st = time.time()
+            run_func = func(*args, **kwargs)
+            et = time.time()
+            print(f'{Fore.CYAN}>>> {func.__name__} in {datetime.timedelta(seconds=et - st)}{Fore.RESET}')
+            return run_func
+
+        return inner_time_it
 
 
     def check_duplicate_variables(self) -> list:
@@ -156,9 +171,9 @@ class APDataConverter:
 
 
 
-    def read_file_xlsx(self, file, is_qme: bool, is_zip: bool = False) -> (pd.DataFrame, pd.DataFrame):
+    def read_file_xlsx(self, file: str, is_qme: bool, is_zip: bool = False) -> (pd.DataFrame, pd.DataFrame):
 
-        print(f'Read file "{file.filename}"')
+        print(f'Read file "{file}"')
 
         if is_qme:
 
@@ -186,9 +201,9 @@ class APDataConverter:
                                 df_data = pd.read_csv(ff)
 
             else:
-                xlsx = io.BytesIO(file.file.read())
-                df_data = pd.read_excel(xlsx, sheet_name='Data')
-                df_qres = pd.read_excel(xlsx, sheet_name='Question')
+                # xlsx = io.BytesIO(file.file.read())
+                df_data = pd.read_excel(file, sheet_name='Data')
+                df_qres = pd.read_excel(file, sheet_name='Question')
 
 
             df_data_header = df_data.iloc[[3, 4, 5], :].copy().T
@@ -208,14 +223,6 @@ class APDataConverter:
                 else:
                     df_data_header.at[idx, 3] = f"{str_prefix}_{str_suffix.rsplit('_', 1)[1]}"
 
-
-            # # SKU TYPE
-            # df_sku = df_qres.loc[df_qres.eval("`Question type` == 'SKU'"), ['Name of items', 'Question type', 'Question(Matrix)', 'Question(Normal)']].copy()
-            #
-            # a = 1
-
-
-
             df_data_header.loc[pd.isnull(df_data_header[3]), 3] = df_data_header.loc[pd.isnull(df_data_header[3]), 5]
             dict_header = df_data_header[3].to_dict()
             df_data.rename(columns=dict_header, inplace=True)
@@ -226,9 +233,10 @@ class APDataConverter:
             df_qres.replace({np.nan: None}, inplace=True)
 
         else:
-            xlsx = io.BytesIO(file.file.read())
-            df_data = pd.read_excel(xlsx, sheet_name='Rawdata')
-            df_qres = pd.read_excel(xlsx, sheet_name='Datamap')
+            # xlsx = io.BytesIO(file.file.read())
+            df_data = pd.read_excel(file, sheet_name='Rawdata')
+            df_qres = pd.read_excel(file, sheet_name='Datamap')
+
 
         df_data.reset_index(drop=True, inplace=True)
         df_qres.reset_index(drop=True, inplace=True)
@@ -237,57 +245,59 @@ class APDataConverter:
 
 
     @staticmethod
-    def read_file_sav(file) -> (pd.DataFrame, pd.DataFrame):
+    def read_file_sav(file: str) -> (pd.DataFrame, pd.DataFrame):
 
         print('Read file sav')
 
-        # PENDING - NOT YET COMPLETED
+        # # PENDING - NOT YET COMPLETED
+        #
+        # file_location = f"{file}"
+        # with open(file_location, "wb+") as file_object:
+        #     file_object.write(file.file.read())
+        #
+        # df_data_output, meta = pyreadstat.read_sav(file.filename)
+        # os.remove(file.filename)
+        #
+        # # ['var_name', 'var_lbl', 'var_type', 'val_lbl']
+        # # arr = np.array(df_data_output.columns)
+        # # arr = arr.T
+        #
+        # df_info_output = pd.DataFrame(columns=['var_name'], data=np.array(df_data_output.columns))
+        # df_info_output.index = df_data_output.columns
+        #
+        # # column_names_to_labels
+        # # readstat_variable_types
+        # # variable_value_labels
+        # df_info_output = pd.concat([df_info_output, pd.DataFrame.from_dict(meta.column_names_to_labels, orient='index', columns=['var_lbl'])], axis=1)
+        #
+        # return df_data_output, df_info_output
+        return pd.DataFrame, pd.DataFrame
 
-        file_location = f"{file.filename}"
-        with open(file_location, "wb+") as file_object:
-            file_object.write(file.file.read())
-
-        df_data_output, meta = pyreadstat.read_sav(file.filename)
-        os.remove(file.filename)
-
-        # ['var_name', 'var_lbl', 'var_type', 'val_lbl']
-        # arr = np.array(df_data_output.columns)
-        # arr = arr.T
-
-        df_info_output = pd.DataFrame(columns=['var_name'], data=np.array(df_data_output.columns))
-        df_info_output.index = df_data_output.columns
-
-        # column_names_to_labels
-        # readstat_variable_types
-        # variable_value_labels
-        df_info_output = pd.concat([df_info_output, pd.DataFrame.from_dict(meta.column_names_to_labels, orient='index', columns=['var_lbl'])], axis=1)
-
-        return df_data_output, df_info_output
 
 
     def convert_upload_files_to_df_converted(self):
 
-        files = self.upload_files
+        files = self.lst_input_files
         is_qme = self.is_qme
 
         try:
 
             if len(files) == 1:
                 file = files[0]
-                self.str_file_name = file.filename
+                self.str_file_name = file
 
-                if '.sav' in file.filename:
+                if '.sav' in file:
                     # this function is pending
                     self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
-                    self.zip_name = file.filename.replace('.sav', '_Data.zip')
+                    self.zip_name = file.replace('.sav', '_Data.zip')
 
-                elif '.zip' in file.filename:
+                elif '.zip' in file:
                     self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
-                    self.zip_name = file.filename.replace('.zip', '_Data.zip')
+                    self.zip_name = file.replace('.zip', '_Data.zip')
 
                 else:
                     self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
-                    self.zip_name = file.filename.replace('.xlsx', '_Data.zip')
+                    self.zip_name = file.replace('.xlsx', '_Data.zip')
 
             else:
                 self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
@@ -314,7 +324,7 @@ class APDataConverter:
             print(f'Convert uploaded files "{self.str_file_name}" to dataframe')
 
         except TypeError:
-            print(Fore.RED, "File not found!!!")
+            print(Fore.RED, f"File not found: {self.str_file_name}", Fore.RESET)
             exit()
 
 
@@ -335,11 +345,10 @@ class APDataConverter:
 
 
 
+    @time_it
     def convert_df_md(self) -> (pd.DataFrame, pd.DataFrame):
 
         self.convert_upload_files_to_df_converted()
-
-        print('Convert to MD dataframe')
 
         df_data, df_info = self.df_data_converted, self.df_info_converted
 
@@ -401,146 +410,168 @@ class APDataConverter:
 
 
 
-    def convert_df_mc(self, lst_new_row: list = None) -> (pd.DataFrame, pd.DataFrame):
+    @time_it
+    # def convert_df_mc(self, lst_new_row: list = None) -> (pd.DataFrame, pd.DataFrame):
+    def convert_df_mc(self) -> (pd.DataFrame, pd.DataFrame):
         """
         Convert data with MA questions format by columns instead of code
         """
 
-        self.convert_upload_files_to_df_converted()
+        df_data, df_info = self.convert_df_md()
 
-        print('Convert to MC dataframe')
+        def recode_md_to_mc(row: pd.Series):
+            lst_re = [i + 1 for i, v in enumerate(row.values.tolist()) if v == 1]
+            return lst_re + ([np.nan] * (len(row.index) - len(lst_re)))
 
-        df_data, df_info = self.df_data_converted, self.df_info_converted
+        def create_info_mc(row: pd.Series):
+            lst_val = row.values.tolist()
+            dict_re = {str(i + 1): v['1'] for i, v in enumerate(lst_val)}
+            return [dict_re] * len(lst_val)
 
-        if lst_new_row:
-            df_info = pd.concat([df_info, pd.DataFrame(
-                columns=df_info.columns,
-                data=lst_new_row,
-            )], axis=0)
-            df_info.reset_index(drop=True, inplace=True)
+        for idx in df_info.query("var_type.isin(['MA', 'MA_mtr']) & var_name.str.contains(r'^\\w+\\d*_1$')").index:
+            qre = df_info.at[idx, 'var_name'].rsplit('_', 1)[0]
+            fil_idx = df_info.eval(f"var_name.str.contains('^{qre}_[0-9]+$')")
+            cols = df_info.loc[fil_idx, 'var_name'].values.tolist()
 
-        df_data.replace({None: np.nan}, inplace=True)
+            df_data[cols] = df_data[cols].apply(recode_md_to_mc, axis=1, result_type='expand')
+            df_info.loc[fil_idx, ['val_lbl']] = df_info.loc[fil_idx, ['val_lbl']].apply(create_info_mc, result_type='expand')
 
-        lstFullCodelist = list(df_info.columns)
-        lstFullCodelist.remove('Name of items')
-        lstFullCodelist.remove('Question type')
-        lstFullCodelist.remove('Question(Matrix)')
-        lstFullCodelist.remove('Question(Normal)')
-
-        dictQres = dict()
-        for idx in df_info.index:
-
-            strQreName = str(df_info.loc[idx, 'Name of items'])
-            strQreName = strQreName.replace('Rank_', 'Rank') if 'Rank_' in strQreName else strQreName
-            strQreType = df_info.loc[idx, 'Question type']
-            isMatrix = False if df_info.loc[idx, 'Question(Matrix)'] is None else True
-            strMatrix = '' if df_info.loc[idx, 'Question(Matrix)'] is None else self.cleanhtml(f"{df_info.loc[idx, 'Question(Matrix)']}")
-            strNormal = '' if df_info.loc[idx, 'Question(Normal)'] is None else self.cleanhtml(f"{df_info.loc[idx, 'Question(Normal)']}")
-
-            if strQreName not in dictQres.keys():
-
-                if strQreType == 'MA':
-
-                    if isMatrix:
-
-                        ser_codelist = df_info.loc[idx, lstFullCodelist]
-                        ser_codelist.dropna(inplace=True)
-                        dict_codelist = ser_codelist.to_dict()
-
-                        if not ser_codelist.empty:
-                            dictQres[strQreName] = {
-                                'type': strQreType,
-                                'label': f'{strMatrix}_{strNormal}' if isMatrix else strNormal,
-                                'isMatrix': isMatrix,
-                                'MA_Matrix_Header': strQreName,
-                                'MA_cols': [f'{strQreName}_{k}' for k in dict_codelist.keys()],
-                                'cats': {str(k): self.cleanhtml(v) for k, v in dict_codelist.items()},
-                            }
-                    else:
-
-                        maName, maCode = strQreName.rsplit('_', 1)
-                        maLbl = self.cleanhtml(df_info.at[idx, 1])
-
-                        if maName not in dictQres.keys():
-
-                            dictQres[maName] = {
-                                'type': strQreType,
-                                'label': strNormal,
-                                'isMatrix': isMatrix,
-                                'MA_cols': [strQreName],
-                                'cats': {str(maCode): maLbl}
-                            }
-
-                        else:
-
-                            dict_qre = dictQres[maName]
-                            dict_qre['MA_cols'].append(strQreName)
-                            dict_qre['cats'].update({str(maCode): maLbl})
+        return df_data, df_info
 
 
-                else:  # ['SA', 'RANKING', 'FT']
-
-                    dictQres[strQreName] = {
-                        'type': strQreType,
-                        'label': str(),
-                        'isMatrix': isMatrix,
-                        'cats': dict(),
-                    }
-
-                    dict_qre = dictQres[strQreName]
-                    dict_qre['label'] = f'{strMatrix}_{strNormal}' if isMatrix else strNormal
-
-                    if strQreType in ['SA', 'RANKING']:
-                        ser_codelist = df_info.loc[idx, lstFullCodelist]
-                        ser_codelist.dropna(inplace=True)
-                        dict_qre['cats'] = {str(k): self.cleanhtml(v) for k, v in ser_codelist.to_dict().items()}
-
-        df_data_output = df_data.loc[:, ['ID']].copy()
-
-        df_info_output = pd.DataFrame(data=[['ID', 'ID', 'FT', {}]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
-
-        for qre, qre_info in dictQres.items():
-
-            if qre_info['type'] == 'MA':
-
-                dfMA = df_data.loc[:, qre_info['MA_cols']]
-
-                for col_name in qre_info['MA_cols']:
-                    maName, maCode = col_name.rsplit('_', 1)
-                    dfMA[col_name] = dfMA[col_name].astype(float)
-                    dfMA.replace({col_name: {1: int(maCode)}}, inplace=True)
-
-
-                dfMA['combined'] = [[e for e in row if e == e] for row in dfMA[qre_info['MA_cols']].values.tolist()]
-                dfMA = pd.DataFrame(dfMA['combined'].tolist(), index=dfMA.index)
-
-                for i, col_name in enumerate(qre_info['MA_cols']):
-
-                    if i in list(dfMA.columns):
-                        dfColMA = dfMA[i].to_frame()
-                        dfColMA.rename(columns={i: col_name}, inplace=True)
-                    else:
-                        dfColMA = pd.DataFrame([np.nan] * dfMA.shape[0], columns=[col_name])
-
-                    df_data_output = pd.concat([df_data_output, dfColMA], axis=1)
-                    dfInfoRow = pd.DataFrame([[col_name, qre_info['label'], 'MA_mtr' if qre_info['isMatrix'] else 'MA', qre_info['cats']]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
-                    df_info_output = pd.concat([df_info_output, dfInfoRow], axis=0)
-
-            else:
-                if qre in df_data.columns:
-                    df_data_output = pd.concat([df_data_output, df_data[qre]], axis=1)
-                    dfInfoRow = pd.DataFrame([[qre, qre_info['label'], f"{qre_info['type']}_mtr" if qre_info['isMatrix'] else qre_info['type'], qre_info['cats']]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
-                    df_info_output = pd.concat([df_info_output, dfInfoRow], axis=0)
-
-        # dfQreInfo.set_index('var_name', inplace=True)
-        df_info_output.reset_index(drop=True, inplace=True)
-
-        df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
-
-        if self.is_zip:
-            df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
-
-        return df_data_output, df_info_output
+        # self.convert_upload_files_to_df_converted()
+        #
+        # df_data, df_info = self.df_data_converted, self.df_info_converted
+        #
+        # if lst_new_row:
+        #     df_info = pd.concat([df_info, pd.DataFrame(
+        #         columns=df_info.columns,
+        #         data=lst_new_row,
+        #     )], axis=0)
+        #     df_info.reset_index(drop=True, inplace=True)
+        #
+        # df_data.replace({None: np.nan}, inplace=True)
+        #
+        # lstFullCodelist = list(df_info.columns)
+        # lstFullCodelist.remove('Name of items')
+        # lstFullCodelist.remove('Question type')
+        # lstFullCodelist.remove('Question(Matrix)')
+        # lstFullCodelist.remove('Question(Normal)')
+        #
+        # dictQres = dict()
+        # for idx in df_info.index:
+        #
+        #     strQreName = str(df_info.loc[idx, 'Name of items'])
+        #     strQreName = strQreName.replace('Rank_', 'Rank') if 'Rank_' in strQreName else strQreName
+        #     strQreType = df_info.loc[idx, 'Question type']
+        #     isMatrix = False if df_info.loc[idx, 'Question(Matrix)'] is None else True
+        #     strMatrix = '' if df_info.loc[idx, 'Question(Matrix)'] is None else self.cleanhtml(f"{df_info.loc[idx, 'Question(Matrix)']}")
+        #     strNormal = '' if df_info.loc[idx, 'Question(Normal)'] is None else self.cleanhtml(f"{df_info.loc[idx, 'Question(Normal)']}")
+        #
+        #     if strQreName not in dictQres.keys():
+        #
+        #         if strQreType == 'MA':
+        #
+        #             if isMatrix:
+        #
+        #                 ser_codelist = df_info.loc[idx, lstFullCodelist]
+        #                 ser_codelist.dropna(inplace=True)
+        #                 dict_codelist = ser_codelist.to_dict()
+        #
+        #                 if not ser_codelist.empty:
+        #                     dictQres[strQreName] = {
+        #                         'type': strQreType,
+        #                         'label': f'{strMatrix}_{strNormal}' if isMatrix else strNormal,
+        #                         'isMatrix': isMatrix,
+        #                         'MA_Matrix_Header': strQreName,
+        #                         'MA_cols': [f'{strQreName}_{k}' for k in dict_codelist.keys()],
+        #                         'cats': {str(k): self.cleanhtml(v) for k, v in dict_codelist.items()},
+        #                     }
+        #             else:
+        #
+        #                 maName, maCode = strQreName.rsplit('_', 1)
+        #                 maLbl = self.cleanhtml(df_info.at[idx, 1])
+        #
+        #                 if maName not in dictQres.keys():
+        #
+        #                     dictQres[maName] = {
+        #                         'type': strQreType,
+        #                         'label': strNormal,
+        #                         'isMatrix': isMatrix,
+        #                         'MA_cols': [strQreName],
+        #                         'cats': {str(maCode): maLbl}
+        #                     }
+        #
+        #                 else:
+        #
+        #                     dict_qre = dictQres[maName]
+        #                     dict_qre['MA_cols'].append(strQreName)
+        #                     dict_qre['cats'].update({str(maCode): maLbl})
+        #
+        #
+        #         else:  # ['SA', 'RANKING', 'FT']
+        #
+        #             dictQres[strQreName] = {
+        #                 'type': strQreType,
+        #                 'label': str(),
+        #                 'isMatrix': isMatrix,
+        #                 'cats': dict(),
+        #             }
+        #
+        #             dict_qre = dictQres[strQreName]
+        #             dict_qre['label'] = f'{strMatrix}_{strNormal}' if isMatrix else strNormal
+        #
+        #             if strQreType in ['SA', 'RANKING']:
+        #                 ser_codelist = df_info.loc[idx, lstFullCodelist]
+        #                 ser_codelist.dropna(inplace=True)
+        #                 dict_qre['cats'] = {str(k): self.cleanhtml(v) for k, v in ser_codelist.to_dict().items()}
+        #
+        # df_data_output = df_data.loc[:, ['ID']].copy()
+        #
+        # df_info_output = pd.DataFrame(data=[['ID', 'ID', 'FT', {}]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
+        #
+        # for qre, qre_info in dictQres.items():
+        #
+        #     if qre_info['type'] == 'MA':
+        #
+        #         dfMA = df_data.loc[:, qre_info['MA_cols']]
+        #
+        #         for col_name in qre_info['MA_cols']:
+        #             maName, maCode = col_name.rsplit('_', 1)
+        #             dfMA[col_name] = dfMA[col_name].astype(float)
+        #             dfMA.replace({col_name: {1: int(maCode)}}, inplace=True)
+        #
+        #
+        #         dfMA['combined'] = [[e for e in row if e == e] for row in dfMA[qre_info['MA_cols']].values.tolist()]
+        #         dfMA = pd.DataFrame(dfMA['combined'].tolist(), index=dfMA.index)
+        #
+        #         for i, col_name in enumerate(qre_info['MA_cols']):
+        #
+        #             if i in list(dfMA.columns):
+        #                 dfColMA = dfMA[i].to_frame()
+        #                 dfColMA.rename(columns={i: col_name}, inplace=True)
+        #             else:
+        #                 dfColMA = pd.DataFrame([np.nan] * dfMA.shape[0], columns=[col_name])
+        #
+        #             df_data_output = pd.concat([df_data_output, dfColMA], axis=1)
+        #             dfInfoRow = pd.DataFrame([[col_name, qre_info['label'], 'MA_mtr' if qre_info['isMatrix'] else 'MA', qre_info['cats']]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
+        #             df_info_output = pd.concat([df_info_output, dfInfoRow], axis=0)
+        #
+        #     else:
+        #         if qre in df_data.columns:
+        #             df_data_output = pd.concat([df_data_output, df_data[qre]], axis=1)
+        #             dfInfoRow = pd.DataFrame([[qre, qre_info['label'], f"{qre_info['type']}_mtr" if qre_info['isMatrix'] else qre_info['type'], qre_info['cats']]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
+        #             df_info_output = pd.concat([df_info_output, dfInfoRow], axis=0)
+        #
+        # # dfQreInfo.set_index('var_name', inplace=True)
+        # df_info_output.reset_index(drop=True, inplace=True)
+        #
+        # df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
+        #
+        # if self.is_zip:
+        #     df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
+        #
+        # return df_data_output, df_info_output
 
 
 
@@ -649,7 +680,8 @@ class APDataConverter:
 
         lst_zip_file_name = list()
 
-        str_name = self.str_file_name.replace('.xlsx', '')
+        # str_name = self.str_file_name.replace('.xlsx', '').replace('.zip', '')
+        str_name = re.sub(r'\.zip|\.xlsx',  '', self.str_file_name)
 
         xlsx_name = f"{str_name}_Rawdata.xlsx"
 
@@ -760,8 +792,9 @@ class APDataConverter:
 
         lst_converted = list()
         lst_cannot_converted = list()
+        lst_var_name = df_info_fil['var_name'].values.tolist()
 
-        for col_name in df_info_fil['var_name'].values.tolist():
+        for i, col_name in enumerate(lst_var_name):
             try:
                 df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='integer')
                 lst_converted.append(col_name)
@@ -769,11 +802,8 @@ class APDataConverter:
                 lst_cannot_converted.append(col_name)
                 continue
 
-        if lst_converted:
-            print(Fore.LIGHTYELLOW_EX, f'Converted values to INT:', ', '.join(lst_converted), Fore.RESET)
-
         if lst_cannot_converted:
-            print(Fore.LIGHTYELLOW_EX, f'Cannot convert values to INT:', ', '.join(lst_cannot_converted), Fore.RESET)
+            print(Fore.LIGHTYELLOW_EX, f'Cannot convert values to INT:', '\n- '.join(lst_cannot_converted), Fore.RESET)
 
         return df_data, df_info
 

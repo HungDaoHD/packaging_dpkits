@@ -5,8 +5,7 @@ from colorama import Fore
 
 class DataProcessing:
 
-    def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame):
-
+    def __init__(self, *, df_data: pd.DataFrame, df_info: pd.DataFrame):
         self.df_data: pd.DataFrame = df_data
         self.df_info: pd.DataFrame = df_info
 
@@ -25,7 +24,12 @@ class DataProcessing:
 
         info_col_name = ['var_name', 'var_lbl', 'var_type', 'val_lbl']
         lst_keys = list(dict_add_new_qres.keys())
-        
+
+        lst_data_addin = list()
+        lst_info_addin = list()
+        lst_colname = list()
+        int_max_row = self.df_data.shape[0]
+
         for key, val in dict_add_new_qres.items():
 
             print(f'\rAdd new variables to df_data & df_info: {key}', end="" if key != lst_keys[-1] else "\n")
@@ -34,22 +38,31 @@ class DataProcessing:
                 qre_ma_name, max_col = str(key).rsplit('|', 1)
 
                 for i in range(1, int(max_col) + 1):
-                    self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=[[f'{qre_ma_name}_{i}', val[0], val[1], val[2]]])], axis=0, ignore_index=True)
+
+                    lst_info_addin.append([f'{qre_ma_name}_{i}', val[0], val[1], val[2]])
 
                     if '_OE' not in key or is_add_oe_col is True:
-                        self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=[f'{qre_ma_name}_{i}'], data=[val[-1]] * self.df_data.shape[0])], axis=1)
+                        lst_colname.append(f'{qre_ma_name}_{i}')
+                        lst_data_addin.append([val[-1]] * int_max_row)
 
             else:
-                self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=[[key, val[0], val[1], val[2]]])], axis=0, ignore_index=True)
+
+                lst_info_addin.append([key, val[0], val[1], val[2]])
 
                 if '_OE' not in key or is_add_oe_col is True:
-                    self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=[key], data=[val[-1]] * self.df_data.shape[0])], axis=1)
+                    lst_colname.append(key)
+                    lst_data_addin.append([val[-1]] * int_max_row)
 
+
+        self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=lst_info_addin)], axis=0, ignore_index=True)
+        self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=lst_colname, data=np.array(lst_data_addin).transpose())], axis=1)
 
         self.df_data.reset_index(drop=True, inplace=True)
         self.df_info.reset_index(drop=True, inplace=True)
 
         return self.df_data, self.df_info
+
+
 
 
 
@@ -79,7 +92,6 @@ class DataProcessing:
                 self.df_data.loc[self.df_data.eval(f"{qre}_1.isnull()"), f'{qre}_1'] = fillna_val
 
         return self.df_data
-
 
 
 
@@ -171,6 +183,7 @@ class DataProcessing:
         return self.df_data, self.df_info
 
 
+
     @staticmethod
     def convert_ma_pattern(str_ma: str) -> list:
         ma_prefix, ma_suffix = str_ma.rsplit('|', 1)
@@ -227,6 +240,7 @@ class DataProcessing:
                 if len(lst_qre_update) != len(lst_val_update):
                     print(Fore.RED, "Length of update columns must equal update values!!!!", Fore.RESET)
                     return pd.DataFrame()
+
                 else:
                     self.df_data.loc[self.df_data.eval(query_fil), lst_qre_update] = lst_val_update
 
@@ -236,7 +250,169 @@ class DataProcessing:
 
         return self.df_data
 
-    
+
+
+
+    def create_count_ma_ranking(self, *, act: str, lst_qre: list) -> (dict, dict):
+
+        dict_add_new_qres = dict()
+        dict_data_new_qres = dict()
+
+        def re_ranking(row, ranking_range: int):
+
+            lst_result = [np.nan] * ranking_range
+
+            df = row.to_frame(name='val')
+            df['score'] = list(range(1, df.shape[0] + 1)[::-1])
+
+            for k, v in df.set_index('val', drop=True).to_dict()['score'].items():
+                lst_result[k - 1] = v
+
+            return lst_result
+
+
+        for qre in lst_qre:
+
+            match act.upper():
+
+                case 'MA':
+                    lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_[\\d]{{1,2}}$') & var_type.isin(['MA', 'MA_mtr'])"), 'var_name'].values.tolist()
+
+                    if not len(lst_col_qre):
+                        print(f"{Fore.RED}{qre} is not {act.upper()} questions!!!{Fore.RESET}")
+                        continue
+
+                    new_num_qre = f'{qre}_Count'
+                    dict_add_new_qres.update({new_num_qre: [new_num_qre, 'NUM', {}, np.nan]})
+                    dict_data_new_qres.update({new_num_qre: self.df_data[lst_col_qre].count(axis=1).values.tolist()})
+
+                case 'RANKING':
+                    lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_Rank[\\d]{{1,2}}$') & var_type.isin(['RANKING'])"), 'var_name'].values.tolist()
+
+                    if not len(lst_col_qre):
+                        print(f"{Fore.RED}{qre} is not {act.upper()} questions!!!{Fore.RESET}")
+                        continue
+
+                    dict_codelist = self.df_info.loc[self.df_info.eval("var_name == @lst_col_qre[0]"), 'val_lbl'].values[0]
+                    new_num_qre = f'{qre}_ScoreOfAtt'
+                    dict_add_new_qres.update(
+                        {f"{new_num_qre}_{k}": [f"{k}. {v}", 'NUM', {}, np.nan] for k, v in dict_codelist.items()}
+                    )
+
+                    df_ranking: pd.DataFrame = self.df_data[lst_col_qre].apply(re_ranking, ranking_range=len(list(dict_add_new_qres.keys())), axis=1, result_type='expand')
+                    df_ranking.columns = list(dict_add_new_qres.keys())
+                    dict_data_new_qres = {k: list(v.values()) for k, v in df_ranking.to_dict().items()}
+
+
+                    here = 1
+
+                case _:
+                    print(f"{Fore.RED}{act} is not in [MA, RANKING]!!!{Fore.RESET}")
+                    continue
+
+
+        return dict_add_new_qres, dict_data_new_qres
+
+
+
+    def count_ma_choice(self, *, lst_ma_qre: list, dict_replace: dict = None) -> (pd.DataFrame, pd.DataFrame):
+
+        # dict_add_new_qres = dict()
+        # dict_data_new_qres = dict()
+        #
+        # for qre in lst_ma_qre:
+        #     lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_[\\d]{{1,2}}$') & var_type.isin(['MA', 'MA_mtr'])"), 'var_name'].values.tolist()
+        #
+        #     if not len(lst_col_qre):
+        #         print(f"{Fore.RED}{qre} is not MA questions!!!{Fore.RESET}")
+        #         continue
+        #
+        #     new_num_qre = f'{qre}_Count'
+        #     dict_add_new_qres.update({new_num_qre: [new_num_qre, 'NUM', {}, np.nan]})
+        #     dict_data_new_qres.update({new_num_qre: self.df_data[lst_col_qre].count(axis=1).values.tolist()})
+
+
+        dict_add_new_qres, dict_data_new_qres = self.create_count_ma_ranking(act='MA', lst_qre=lst_ma_qre)
+
+        self.add_qres(dict_add_new_qres)
+        self.df_data[list(dict_data_new_qres.keys())] = pd.DataFrame.from_dict(dict_data_new_qres).replace(dict_replace) if dict_replace else pd.DataFrame.from_dict(dict_data_new_qres)
+
+        return self.df_data, self.df_info
+
+
+
+    def calculate_ranking_score(self, *, lst_ranking_qre: list) -> (pd.DataFrame, pd.DataFrame):
+
+        dict_add_new_qres, dict_data_new_qres = self.create_count_ma_ranking(act='RANKING', lst_qre=lst_ranking_qre)
+
+        self.add_qres(dict_add_new_qres)
+        self.df_data[list(dict_data_new_qres.keys())] = pd.DataFrame.from_dict(dict_data_new_qres)
+
+        return self.df_data, self.df_info
+
+
+
+
+
+
+
+
+        # keys = ques_ma
+        # values = ques_ranking
+        # if len(keys) != len(values):
+        #     print(Fore.RED + "\n Number of Question MA not match Number of Question Ranking !!!")
+        #     exit()
+        #
+        # result_dict = {}
+        # for i in range(len(keys)):
+        #     result_dict[keys[i]] = values[i]
+        # for key, val in result_dict.items():
+        #     regex_ma = f"^{key}_[\\d]{{1,2}}$"
+        #     regex_rank = f"^{val}_Rank[\\d]{{1,2}}$"
+        #     list_ma = df_data.filter(regex=regex_ma).columns.tolist()
+        #     list_rank = df_data.filter(regex=regex_rank).columns.tolist()
+        #     print(list_ma)
+        #     print(list_rank)
+        #     if len(list_ma) == 0:
+        #         print(Fore.RED + f"\n The Question {key} MA Not Found in data")
+        #         exit()
+        #     if len(list_rank) == 0:
+        #         print(Fore.RED + f"\n The Question {val} ranking Not Found in data")
+        #         exit()
+        #     dict_add_new_qres = {}
+        #     for i in list_ma:
+        #         dict_add = {f'Point_{i}': [f'Point - {i} - Att', 'NUM', {}, 0.0], }
+        #         dict_add_new_qres.update(dict_add)
+        #     dp = DataProcessing(df_data, df_info)
+        #     df_data, df_info = dp.add_qres(dict_add_new_qres)
+        #     list_att_rank = list_ma
+        #     list_var_rank = list_rank
+        #     max_point = 0
+        #     for n in range(1, len(list_var_rank) + 1):
+        #         max_point += n
+        #     for i in range(1, len(list_att_rank) + 1):
+        #         j = len(list_var_rank)
+        #         for var in list_var_rank:
+        #             for inx in range(0, len(df_data)):
+        #                 if df_data.loc[inx, var] == i:
+        #                     df_data.loc[inx, f'Point_{list_ma[i - 1]}'] = j / max_point
+        #             j -= 1
+        #         df_data.loc[df_data[list_rank[0]].isnull(), f'Point_{list_ma[i - 1]}'] = np.nan
+        #
+        # return self.df_data, self.df_info
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # @staticmethod
     # def concept_evaluate(cpt_filename: str, ) -> (pd.DataFrame, dict):

@@ -3,11 +3,13 @@ import pandas as pd
 import numpy as np
 import time
 import json
-from scipy import stats
-from datetime import datetime, timedelta
 import sys
 import math
+import functools
 from colorama import Fore
+from scipy import stats
+from datetime import datetime, timedelta
+from .table_formater import TableFormatter
 
 
 
@@ -25,10 +27,11 @@ class DataTableGenerator:
         self.file_name = xlsx_name.rsplit('/', 1)[-1] if '/' in xlsx_name else xlsx_name
 
         self.dict_unnetted_qres = dict()
-        for idx in self.df_info.index:
-            if 'net_code' in self.df_info.at[idx, 'val_lbl'].keys():
-                self.dict_unnetted_qres.update({self.df_info.at[idx, 'var_name']: self.unnetted_qre_val(self.df_info.at[idx, 'val_lbl'])})
 
+        df_info['val_lbl2'] = df_info['val_lbl'].astype(str)
+
+        for idx in df_info.query("val_lbl2.str.contains('net_code')").index:
+            self.dict_unnetted_qres.update({df_info.at[idx, 'var_name']: self.unnetted_qre_val(df_info.at[idx, 'val_lbl'])})
 
         # Check matching of data và defines
         self.check_value_df_data_vs_df_info()
@@ -52,10 +55,12 @@ class DataTableGenerator:
         df_data, df_info = self.df_data.copy(), self.df_info.copy()
         df_info.set_index('var_name', inplace=True)
 
-        df_info = df_info.loc[df_info.eval("~var_type.isin(['FT', 'FT_mtr', 'NUM'])"), :].copy()
-        df_info.drop(columns=['var_lbl', 'var_type'], inplace=True)
+        df_info = df_info.loc[df_info.eval("~var_type.isin(['FT', 'FT_mtr', 'NUM']) | var_name == 'ID'"), :].drop(columns=['var_lbl', 'var_type'])
 
         for idx in df_info.index:
+
+            if idx == 'ID':
+                continue
 
             if idx in self.dict_unnetted_qres.keys():
                 old_dict = self.dict_unnetted_qres.get(idx)
@@ -66,17 +71,12 @@ class DataTableGenerator:
 
         dict_replace = df_info.to_dict()['val_lbl']
 
-        df_data = df_data.loc[:, df_info.index].copy()
-        df_data.replace(dict_replace, inplace=True)
-
-        df_data.dropna(how='all', inplace=True)
-        df_data.dropna(axis=1, how='all', inplace=True)
+        df_data = df_data.loc[:, df_info.index].replace(dict_replace).dropna(how='all').dropna(axis=1, how='all')
         df_data = pd.DataFrame(df_data)
 
         if not df_data.empty:
-            df_data.reset_index(drop=False, inplace=True)
-            df_data = pd.melt(df_data, id_vars=df_data.columns[0], value_vars=df_data.columns[1:])
-            df_data.dropna(inplace=True)
+            df_data.reset_index(drop=True if 'ID' in df_data.columns else False, inplace=True)
+            df_data = pd.melt(df_data, id_vars=df_data.columns[0], value_vars=df_data.columns[1:]).dropna()
 
             print('\x1b[31;20m\nPlease check values not in codelist:\n', df_data)
             exit()
@@ -102,12 +102,6 @@ class DataTableGenerator:
 
 
             self.df_data.loc[:, list(df_data_qre_ma.index)] = df_data_qre_ma.T
-
-
-
-
-
-
 
 
 
@@ -555,7 +549,7 @@ class DataTableGenerator:
         df_tbl.reset_index(drop=True, inplace=True)
 
         # df_tbl.to_excel('zzz_df_tbl.xlsx', encoding='utf-8-sig')
-        
+
         return df_tbl
 
 
@@ -686,7 +680,7 @@ class DataTableGenerator:
 
                     df_qre.loc[df_qre['cat_val'] == cat, [val_col_name, sig_col_name]] = [num_val, np.nan]
 
-                
+
 
 
             if sig_type and lst_sig_lvl and not weight_var:
@@ -1586,163 +1580,10 @@ class DataTableGenerator:
             # END SORTING-----------------------------------------------------------------------------------------------
 
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
-            
+
             print(f'\t- Create table for {qre_name}[{qre_type}]: Done')
-        
-        return df_tbl
-
-
-
-
-
-    def populate_data_by_header(self, df_data: pd.DataFrame, df_info: pd.DataFrame, tbl_info_sig: dict) -> pd.DataFrame:
-
-        is_count = tbl_info_sig['is_count']
-        val_pct = 1 if tbl_info_sig['is_pct_sign'] else 100
-
-        sig_type = tbl_info_sig['sig_test_info']['sig_type']
-
-        lst_sig_lvl_pct = tbl_info_sig['sig_test_info']['lst_sig_lvl']
-        lst_sig_lvl = [(100 - a) / 100 for a in lst_sig_lvl_pct]
-        lst_sig_lvl.reverse()
-
-        dict_grp_header = tbl_info_sig['dict_grp_header']
-
-        dict_char_sig = {
-            0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H', 8: 'I', 9: 'J', 10: 'K',
-            11: 'L', 12: 'M', 13: 'N', 14: 'O', 15: 'P', 16: 'Q', 17: 'R', 18: 'S', 19: 'T', 20: 'U',
-            21: 'V', 22: 'W', 23: 'X', 24: 'Y'
-        }
-
-        dict_tbl_data = {
-            'qre_name': list(),
-            'qre_lbl': list(),
-            'qre_type': list(),
-            'cat_val': list(),
-            'cat_lbl': list(),
-        }
-
-        dict_header_col_name_origin = dict()
-        # df_data_query = pd.DataFrame()
-
-        for hd_k, hd_v in dict_grp_header.items():
-            str_hd_val = f"{hd_v['query']}@{hd_v['lbl']}@val@{dict_char_sig[hd_k]}"
-            str_hd_sig = f"{hd_v['query']}@{hd_v['lbl']}@sig@{dict_char_sig[hd_k]}"
-
-            dict_tbl_data.update({
-                str_hd_val: str_hd_val.split('@'),
-                str_hd_sig: str_hd_sig.split('@'),
-            })
-
-            try:
-                df_data_query = df_data.query(hd_v['query']).copy()
-            except ValueError:
-                print(Fore.RED, f"\tValueError, Cannot process: {hd_v}", Fore.RESET)
-                exit()
-            except pd.errors.UndefinedVariableError:
-                print(Fore.RED, f"\tpandas.errors.UndefinedVariableError, Cannot process: {hd_v}", Fore.RESET)
-                exit()
-
-            dict_header_col_name_origin.update({
-                dict_char_sig[hd_k]: {
-                    'val_col': str_hd_val,
-                    'sig_col': str_hd_sig,
-                    'df_data': df_data_query,
-                }
-            })
-
-            if len(dict_tbl_data['qre_name']) == 0:
-                arr_nan = [np.nan] * len(str_hd_val.split('@'))
-                dict_tbl_data.update({
-                    'qre_name': arr_nan,
-                    'qre_lbl': arr_nan,
-                    'qre_type': arr_nan,
-                    'cat_val': arr_nan,
-                    'cat_lbl': arr_nan,
-                })
-
-        if sig_type in ["ind", "rel"]:
-
-            if tbl_info_sig['sig_test_info']['sig_cols']:
-                lst_sig_pair = tbl_info_sig['sig_test_info']['sig_cols']
-            else:
-                lst_sig_char = list(dict_header_col_name_origin.keys())
-                lst_sig_pair = list()
-                for i in range(len(lst_sig_char) - 1):
-                    for j in range(i + 1, len(lst_sig_char)):
-                        lst_sig_pair.append([lst_sig_char[i], lst_sig_char[j]])
-
-        else:
-            lst_sig_char = list(dict_header_col_name_origin.keys())
-            lst_sig_pair = list()
-
-            for i in lst_sig_char:
-                lst_sig_pair.append([i])
-
-        df_tbl = pd.DataFrame.from_dict(dict_tbl_data)
-
-        df_tbl['qre_lbl'] = df_tbl['qre_lbl'].astype('object')
-
-        lst_tbl_info = [
-            f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}"]
-
-        if not is_count and sig_type != '':
-            lst_tbl_info.extend([
-                f"{'Dependent' if sig_type == 'rel' else 'Independent'} Pair T-test at level {' & '.join([f'{i}%' for i in lst_sig_lvl_pct])}",
-                f"Columns Tested: {', '.join(['/'.join(i) for i in lst_sig_pair])}",
-                f"Uppercase for {lst_sig_lvl_pct[-1]}%, lowercase for {lst_sig_lvl_pct[0]}%" if len(
-                    lst_sig_lvl_pct) > 1 else np.nan
-            ])
-
-        if tbl_info_sig['weight_var']:
-            lst_tbl_info.extend([f"Weighted with: {tbl_info_sig['weight_var']}"])
-
-        df_tbl.loc[1:len(lst_tbl_info), ['qre_lbl']] = lst_tbl_info
-
-        for idx in df_info.index:
-
-            qre_name = df_info.at[idx, 'var_name']
-            qre_lbl = df_info.at[idx, 'var_lbl']
-            qre_type = df_info.at[idx, 'var_type']
-            qre_val = eval(df_info.at[idx, 'val_lbl']) if isinstance(df_info.at[idx, 'val_lbl'], str) else df_info.at[
-                idx, 'val_lbl']
-            qre_fil = df_info.at[idx, 'qre_fil']
-            lst_qre_col = df_info.at[idx, 'lst_qre_col']
-            weight_var = df_info.at[idx, 'weight_var']
-
-            print(f'\t- Create table for {qre_name}[{qre_type}]: Processing', end='\r')
-
-            dict_header_col_name = dict()
-            for key, val in dict_header_col_name_origin.items():
-                dict_header_col_name[key] = val.copy()
-
-                if qre_fil:
-                    dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'].query(qre_fil)
-
-                dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'][lst_qre_col]
-
-            qre_info = {
-                'qre_name': qre_name,
-                'qre_lbl': qre_lbl,
-                'qre_type': qre_type,
-                'qre_val': qre_val,
-                'is_count': is_count,
-                'val_pct': val_pct,
-                'lst_qre_col': lst_qre_col,
-            }
-
-            df_qre = pd.DataFrame(columns=df_tbl.columns, data=[])
-
-            # qre_type in ['FT', 'FT_mtr']:
-            # qre_type in ['SA', 'SA_mtr', 'RANKING']
-            # qre_type in ['NUM']
-            # qre_type in ['MA', 'MA_mtr', 'MA_comb', 'MA_Rank']
-
-
-            # BASE------------------------------------------------------------------------------------------------------
-            df_qre = self.add_base_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, weight_var)
-            # END BASE--------------------------------------------------------------------------------------------------
-
-
 
         return df_tbl
+
+
+    

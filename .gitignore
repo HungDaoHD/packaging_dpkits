@@ -6,3 +6,4 @@ dist
 *.rar
 .pypirc
 Old
+dpkits-env
