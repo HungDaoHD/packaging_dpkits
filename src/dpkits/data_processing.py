@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
-from colorama import Fore
+from .logging import Logging
 
 
-class DataProcessing:
+class DataProcessing(Logging):
 
     def __init__(self, *, df_data: pd.DataFrame, df_info: pd.DataFrame):
+        super().__init__()
         self.df_data: pd.DataFrame = df_data
         self.df_info: pd.DataFrame = df_info
 
@@ -31,8 +32,7 @@ class DataProcessing:
         int_max_row = self.df_data.shape[0]
 
         for key, val in dict_add_new_qres.items():
-
-            print(f'\rAdd new variables to df_data & df_info: {key}', end="" if key != lst_keys[-1] else "\n")
+            self.print(f'Add new variables to df_data & df_info: {key}', end="" if key != lst_keys[-1] else "\n")
 
             if val[1] in ['MA']:
                 qre_ma_name, max_col = str(key).rsplit('|', 1)
@@ -61,8 +61,6 @@ class DataProcessing:
         self.df_info.reset_index(drop=True, inplace=True)
 
         return self.df_data, self.df_info
-
-
 
 
 
@@ -121,8 +119,7 @@ class DataProcessing:
         codelist = self.df_info.loc[self.df_info.eval("var_name == @lst_merge[0]"), 'val_lbl'].values.tolist()[0]
 
         if len(lst_merge) < len(codelist.keys()):
-            print(f"{Fore.RED}Merge_qres(error): Length of lst_merge should be greater than or equal length of codelist!!!\n"
-                  f"lst_merge = {lst_merge}\ncodelist = {codelist}\nProcessing terminated!!!{Fore.RESET}")
+            self.print(f"Merge_qres(error): Length of lst_merge should be greater than or equal length of codelist!!!\nlst_merge = {lst_merge}\ncodelist = {codelist}\nProcessing terminated!!!", self.err)
             exit()
 
 
@@ -156,7 +153,7 @@ class DataProcessing:
         df_check_sum = self.df_data['ID']
 
         for qre in lst_qres:
-            print(f"Convert percentage: {qre}")
+            self.print(f"Convert percentage: {qre}")
             lst_qre = self.convert_ma_pattern(qre) if '|' in qre else [qre]
 
             self.df_info.loc[self.df_info.eval("var_name.isin(@lst_qre)"), 'var_type'] = 'NUM'
@@ -175,10 +172,7 @@ class DataProcessing:
 
             if not df_check_sum.empty:
                 df_check_sum.to_csv('df_check_sum.csv')
-                print(Fore.RED, f"Please check the percentage of ID: \n{df_check_sum} \n saved with 'df_check_sum.csv'", Fore.RESET)
-
-
-
+                self.print(f"Please check the percentage of ID: \n{df_check_sum} \n saved with 'df_check_sum.csv'", self.clr_err)
 
         return self.df_data, self.df_info
 
@@ -218,7 +212,6 @@ class DataProcessing:
 
 
 
-
     def update_qres_data(self, *, query_fil: str, qre_name: str, lst_val_update: list[int | float], method: str) -> pd.DataFrame:
         """
         :param query_fil:
@@ -238,18 +231,17 @@ class DataProcessing:
             case 'o':
 
                 if len(lst_qre_update) != len(lst_val_update):
-                    print(Fore.RED, "Length of update columns must equal update values!!!!", Fore.RESET)
+                    self.print("Length of update columns must equal update values!!!!", self.clr_err)
                     return pd.DataFrame()
 
                 else:
                     self.df_data.loc[self.df_data.eval(query_fil), lst_qre_update] = lst_val_update
 
             case _:
-                print(Fore.RED, f'Please check param method - {method}', Fore.RESET)
+                self.print(f'Please check param method - {method}', self.clr_err)
                 return pd.DataFrame()
 
         return self.df_data
-
 
 
 
@@ -279,7 +271,7 @@ class DataProcessing:
                     lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_[\\d]{{1,2}}$') & var_type.isin(['MA', 'MA_mtr'])"), 'var_name'].values.tolist()
 
                     if not len(lst_col_qre):
-                        print(f"{Fore.RED}{qre} is not {act.upper()} questions!!!{Fore.RESET}")
+                        self.print(f"{qre} is not {act.upper()} questions!!!", self.clr_err)
                         continue
 
                     new_num_qre = f'{qre}_Count'
@@ -290,7 +282,7 @@ class DataProcessing:
                     lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_Rank[\\d]{{1,2}}$') & var_type.isin(['RANKING'])"), 'var_name'].values.tolist()
 
                     if not len(lst_col_qre):
-                        print(f"{Fore.RED}{qre} is not {act.upper()} questions!!!{Fore.RESET}")
+                        self.print(f"{qre} is not {act.upper()} questions!!!", self.clr_err)
                         continue
 
                     dict_codelist = self.df_info.loc[self.df_info.eval("var_name == @lst_col_qre[0]"), 'val_lbl'].values[0]
@@ -303,11 +295,8 @@ class DataProcessing:
                     df_ranking.columns = list(dict_add_new_qres.keys())
                     dict_data_new_qres = {k: list(v.values()) for k, v in df_ranking.to_dict().items()}
 
-
-                    here = 1
-
                 case _:
-                    print(f"{Fore.RED}{act} is not in [MA, RANKING]!!!{Fore.RESET}")
+                    self.print(f"{act} is not in [MA, RANKING]!!!", self.clr_err)
                     continue
 
 
@@ -316,21 +305,6 @@ class DataProcessing:
 
 
     def count_ma_choice(self, *, lst_ma_qre: list, dict_replace: dict = None) -> (pd.DataFrame, pd.DataFrame):
-
-        # dict_add_new_qres = dict()
-        # dict_data_new_qres = dict()
-        #
-        # for qre in lst_ma_qre:
-        #     lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_[\\d]{{1,2}}$') & var_type.isin(['MA', 'MA_mtr'])"), 'var_name'].values.tolist()
-        #
-        #     if not len(lst_col_qre):
-        #         print(f"{Fore.RED}{qre} is not MA questions!!!{Fore.RESET}")
-        #         continue
-        #
-        #     new_num_qre = f'{qre}_Count'
-        #     dict_add_new_qres.update({new_num_qre: [new_num_qre, 'NUM', {}, np.nan]})
-        #     dict_data_new_qres.update({new_num_qre: self.df_data[lst_col_qre].count(axis=1).values.tolist()})
-
 
         dict_add_new_qres, dict_data_new_qres = self.create_count_ma_ranking(act='MA', lst_qre=lst_ma_qre)
 
@@ -349,69 +323,6 @@ class DataProcessing:
         self.df_data[list(dict_data_new_qres.keys())] = pd.DataFrame.from_dict(dict_data_new_qres)
 
         return self.df_data, self.df_info
-
-
-
-
-
-
-
-
-        # keys = ques_ma
-        # values = ques_ranking
-        # if len(keys) != len(values):
-        #     print(Fore.RED + "\n Number of Question MA not match Number of Question Ranking !!!")
-        #     exit()
-        #
-        # result_dict = {}
-        # for i in range(len(keys)):
-        #     result_dict[keys[i]] = values[i]
-        # for key, val in result_dict.items():
-        #     regex_ma = f"^{key}_[\\d]{{1,2}}$"
-        #     regex_rank = f"^{val}_Rank[\\d]{{1,2}}$"
-        #     list_ma = df_data.filter(regex=regex_ma).columns.tolist()
-        #     list_rank = df_data.filter(regex=regex_rank).columns.tolist()
-        #     print(list_ma)
-        #     print(list_rank)
-        #     if len(list_ma) == 0:
-        #         print(Fore.RED + f"\n The Question {key} MA Not Found in data")
-        #         exit()
-        #     if len(list_rank) == 0:
-        #         print(Fore.RED + f"\n The Question {val} ranking Not Found in data")
-        #         exit()
-        #     dict_add_new_qres = {}
-        #     for i in list_ma:
-        #         dict_add = {f'Point_{i}': [f'Point - {i} - Att', 'NUM', {}, 0.0], }
-        #         dict_add_new_qres.update(dict_add)
-        #     dp = DataProcessing(df_data, df_info)
-        #     df_data, df_info = dp.add_qres(dict_add_new_qres)
-        #     list_att_rank = list_ma
-        #     list_var_rank = list_rank
-        #     max_point = 0
-        #     for n in range(1, len(list_var_rank) + 1):
-        #         max_point += n
-        #     for i in range(1, len(list_att_rank) + 1):
-        #         j = len(list_var_rank)
-        #         for var in list_var_rank:
-        #             for inx in range(0, len(df_data)):
-        #                 if df_data.loc[inx, var] == i:
-        #                     df_data.loc[inx, f'Point_{list_ma[i - 1]}'] = j / max_point
-        #             j -= 1
-        #         df_data.loc[df_data[list_rank[0]].isnull(), f'Point_{list_ma[i - 1]}'] = np.nan
-        #
-        # return self.df_data, self.df_info
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     # @staticmethod

@@ -8,15 +8,15 @@ import os
 import time
 import datetime
 import functools
-# from fastapi import UploadFile
-from colorama import Fore
+from .logging import Logging
 
 
 
-class APDataConverter:
+class APDataConverter(Logging):
 
-    # def __init__(self, file_name: str | list[UploadFile], is_qme: bool = True):
     def __init__(self, file_name: str | list[str], is_qme: bool = True):
+
+        super().__init__()
 
         self.lstDrop = [
             'Approve',
@@ -120,22 +120,11 @@ class APDataConverter:
             'IP address (Public user)',
             'Group 3',
             'Personal information agreement',
+            'Photo',
+            'Reward',
         ]
 
-        # Input vars
         self.is_qme = is_qme
-
-        # if isinstance(file_name, str):
-        #     try:
-        #         data_file = open(file_name, 'rb')
-        #         file = UploadFile(file=data_file, filename=file_name)
-        #         self.upload_files = [file]
-        #
-        #     except FileNotFoundError:
-        #         self.upload_files = None
-        #
-        # else:
-        #     self.upload_files = files
 
         self.lst_input_files = [file_name] if isinstance(file_name, str) else file_name
         self.is_zip = True if '.zip' in file_name else False
@@ -144,18 +133,21 @@ class APDataConverter:
         self.df_data_converted, self.df_info_converted = pd.DataFrame(), pd.DataFrame()
 
 
+
+
     @staticmethod
     def time_it(func):
 
         @functools.wraps(func)
-        def inner_time_it(*args, **kwargs):
+        def inner_func(*args, **kwargs):
             st = time.time()
             run_func = func(*args, **kwargs)
             et = time.time()
-            print(f'{Fore.CYAN}>>> {func.__name__} in {datetime.timedelta(seconds=et - st)}{Fore.RESET}')
+            args[0].print(f'>>> {func.__name__} in {datetime.timedelta(seconds=et - st)}', args[0].clr_cyan)
+
             return run_func
 
-        return inner_time_it
+        return inner_func
 
 
     def check_duplicate_variables(self) -> list:
@@ -165,7 +157,7 @@ class APDataConverter:
         lst_dup_vars = list()
         if dup_vars.any():
             lst_dup_vars = self.df_info_converted.loc[dup_vars, 'Name of items'].values.tolist()
-            print(Fore.RED, 'Please check duplicated variables:', ', '.join(lst_dup_vars))
+            self.print(f"Please check duplicated variables: {', '.join(lst_dup_vars)}", self.err)
 
         return lst_dup_vars
 
@@ -173,7 +165,7 @@ class APDataConverter:
 
     def read_file_xlsx(self, file: str, is_qme: bool, is_zip: bool = False) -> (pd.DataFrame, pd.DataFrame):
 
-        print(f'Read file "{file}"')
+        self.print(f'Read file "{file}"')
 
         if is_qme:
 
@@ -182,7 +174,8 @@ class APDataConverter:
                 df_data = pd.DataFrame()
                 df_qres = pd.DataFrame()
 
-                with zipfile.ZipFile(io.BytesIO(file.file.read())) as z:
+                # with zipfile.ZipFile(io.BytesIO(file.file.read())) as z:
+                with zipfile.ZipFile(file) as z:
                     for f in z.filelist:
                         with z.open(f.filename) as ff:
                             if 'Questions' in f.filename:
@@ -198,7 +191,7 @@ class APDataConverter:
                                 df_qres.rename(columns=dict_col_converted, inplace=True)
 
                             else:
-                                df_data = pd.read_csv(ff)
+                                df_data = pd.read_csv(ff, low_memory=False)
 
             else:
                 # xlsx = io.BytesIO(file.file.read())
@@ -244,10 +237,10 @@ class APDataConverter:
         return df_data, df_qres
 
 
-    @staticmethod
-    def read_file_sav(file: str) -> (pd.DataFrame, pd.DataFrame):
 
-        print('Read file sav')
+    def read_file_sav(self, file: str) -> (pd.DataFrame, pd.DataFrame):
+
+        self.print('Read file sav', self.MAGENTA)
 
         # # PENDING - NOT YET COMPLETED
         #
@@ -321,10 +314,11 @@ class APDataConverter:
 
             self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
             self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
-            print(f'Convert uploaded files "{self.str_file_name}" to dataframe')
+
+            self.print(f'Convert data file "{self.str_file_name}" to dataframe')
 
         except TypeError:
-            print(Fore.RED, f"File not found: {self.str_file_name}", Fore.RESET)
+            self.print(f"File not found: {self.str_file_name}", self.err)
             exit()
 
 
@@ -423,10 +417,12 @@ class APDataConverter:
             lst_re = [i + 1 for i, v in enumerate(row.values.tolist()) if v == 1]
             return lst_re + ([np.nan] * (len(row.index) - len(lst_re)))
 
+
         def create_info_mc(row: pd.Series):
             lst_val = row.values.tolist()
             dict_re = {str(i + 1): v['1'] for i, v in enumerate(lst_val)}
             return [dict_re] * len(lst_val)
+
 
         for idx in df_info.query("var_type.isin(['MA', 'MA_mtr']) & var_name.str.contains(r'^\\w+\\d*_1$')").index:
             qre = df_info.at[idx, 'var_name'].rsplit('_', 1)[0]
@@ -692,14 +688,14 @@ class APDataConverter:
 
             df_data = val['data']
             df_info = val['info']
+            self.print('Remove netted codes in df_info')
 
-            print('Remove netted codes in df_info')
             df_info = self.remove_net_code(df_info)
 
             is_recode_to_lbl = val['is_recode_to_lbl']
 
             if is_export_sav:
-                print(f'Create {str_sav_name}')
+                self.print(f'Create {str_sav_name}')
                 dict_val_lbl = {a: {int(k): str(v) for k, v in b.items()} for a, b in zip(df_info['var_name'], df_info['val_lbl'])}
                 dict_measure = {a: 'nominal' for a in df_info['var_name']}
                 pyreadstat.write_sav(df_data, str_sav_name, column_labels=df_info['var_lbl'].values.tolist(), variable_value_labels=dict_val_lbl, variable_measure=dict_measure)
@@ -717,7 +713,7 @@ class APDataConverter:
                     dict_recode = df_info_recode.loc[:, 'val_lbl'].to_dict()
                     df_data_xlsx.replace(dict_recode, inplace=True)
 
-                print(f"Create {xlsx_name} - sheet {val['sheet_name']}")
+                self.print(f"Create {xlsx_name} - sheet {val['sheet_name']}")
 
                 with pd.ExcelWriter(xlsx_name, engine="openpyxl", mode="a" if os.path.isfile(xlsx_name) else "w") as writer:
 
@@ -726,15 +722,15 @@ class APDataConverter:
                     ws_info_name = f"{val['sheet_name']}_Datamap" if val['sheet_name'] else "Datamap"
 
                     try:
-                        print(f'Check sheets existing and remove - {ws_data_name} & {ws_info_name}')
+                        self.print(f'Check sheets existing and remove - {ws_data_name} & {ws_info_name}')
                         wb.remove(wb[ws_data_name])
                         wb.remove(wb[ws_info_name])
 
                     except Exception:
-                        print('There is no sheet existing')
+                        self.print('There is no sheet existing')
 
                     finally:
-                        print(f'Create sheets - {ws_data_name} & {ws_info_name}')
+                        self.print(f'Create sheets - {ws_data_name} & {ws_info_name}')
                         df_data_xlsx.to_excel(writer, sheet_name=ws_data_name, index=False)
                         df_info.to_excel(writer, sheet_name=ws_info_name, index=False)
 
@@ -747,13 +743,12 @@ class APDataConverter:
             if not str_zip_name:
                 str_zip_name = f"{str_name.rsplit('/', 1)[-1]}_Data.zip" if '/' in str_name else str_name
 
-            print(f'Create {str_zip_name} with files: {", ".join(lst_zip_file_name)}')
+            self.print(f'Create {str_zip_name} with files: {", ".join(lst_zip_file_name)}')
             self.zipfiles(str_zip_name, lst_zip_file_name)
 
 
 
-    @staticmethod
-    def auto_convert_ft_to_float(df_data: pd.DataFrame, df_info: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
+    def auto_convert_ft_to_float(self, df_data: pd.DataFrame, df_info: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
         df_info_fil = df_info.query("var_type == 'FT' & var_name != 'ID' & not var_name.str.contains('_o')")
 
@@ -773,17 +768,16 @@ class APDataConverter:
                 continue
 
         if lst_converted:
-            print(Fore.LIGHTYELLOW_EX, f'Converted from FT to NUM type:', ', '.join(lst_converted), Fore.RESET)
+            self.print(f"Converted from FT to NUM type: {', '.join(lst_converted)}", self.clr_warn)
 
         if lst_cannot_converted:
-            print(Fore.LIGHTYELLOW_EX, f'Cannot convert from FT to NUM type:', ', '.join(lst_cannot_converted), Fore.RESET)
+            self.print(f"Cannot convert from FT to NUM type: {', '.join(lst_cannot_converted)}", self.clr_warn)
 
         return df_data, df_info
 
 
 
-    @staticmethod
-    def auto_convert_sa_ma_to_int(df_data: pd.DataFrame, df_info: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
+    def auto_convert_sa_ma_to_int(self, df_data: pd.DataFrame, df_info: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
         df_info_fil = df_info.query("var_type.isin(['SA', 'MA', 'SA_mtr', 'MA_mtr', 'RANKING'])")
 
@@ -803,7 +797,7 @@ class APDataConverter:
                 continue
 
         if lst_cannot_converted:
-            print(Fore.LIGHTYELLOW_EX, f'Cannot convert values to INT:', '\n- '.join(lst_cannot_converted), Fore.RESET)
+            self.print(f"Cannot convert values to INT: {'\n- '.join(lst_cannot_converted)}", self.warn)
 
         return df_data, df_info
 

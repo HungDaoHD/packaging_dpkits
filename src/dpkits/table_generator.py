@@ -6,16 +6,18 @@ import json
 import sys
 import math
 import functools
-from colorama import Fore
 from scipy import stats
 from datetime import datetime, timedelta
 from .table_formater import TableFormatter
+from .logging import Logging
 
 
 
-class DataTableGenerator:
+class DataTableGenerator(Logging):
 
     def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, is_md: bool = False):
+
+        super().__init__()
 
         self.df_data = df_data.copy()
         self.df_info = df_info.copy()
@@ -30,20 +32,24 @@ class DataTableGenerator:
 
         df_info['val_lbl2'] = df_info['val_lbl'].astype(str)
 
+        self.print('Unnetted value label')
         for idx in df_info.query("val_lbl2.str.contains('net_code')").index:
             self.dict_unnetted_qres.update({df_info.at[idx, 'var_name']: self.unnetted_qre_val(df_info.at[idx, 'val_lbl'])})
 
         # Check matching of data và defines
+        self.print('Check matching of data và defines')
         self.check_value_df_data_vs_df_info()
 
         # Check duplicate value of MA qres
+        self.print('Check duplicate value of MA qres')
         self.check_duplicate_value_ma_vars()
 
         try:
             check_perm = open(xlsx_name)
             check_perm.close()
+
         except PermissionError:
-            print(f'\x1b[31;20mPermission Error when access file: {xlsx_name}', 'Processing terminated.')
+            self.print(f'Permission Error when access file: {xlsx_name}, Processing terminated.', self.clr_err)
             exit()
         except FileNotFoundError:
             pass
@@ -74,14 +80,16 @@ class DataTableGenerator:
         df_data = df_data.loc[:, df_info.index].replace(dict_replace).dropna(how='all').dropna(axis=1, how='all')
         df_data = pd.DataFrame(df_data)
 
-        if not df_data.empty:
-            df_data.reset_index(drop=True if 'ID' in df_data.columns else False, inplace=True)
-            df_data = pd.melt(df_data, id_vars=df_data.columns[0], value_vars=df_data.columns[1:]).dropna()
 
-            print('\x1b[31;20m\nPlease check values not in codelist:\n', df_data)
+        df_data.reset_index(drop=True if 'ID' in df_data.columns else False, inplace=True)
+        df_data = pd.melt(df_data, id_vars=df_data.columns[0], value_vars=df_data.columns[1:]).dropna()
+
+        if not df_data.empty:
+
+            self.print(f'Please check values not in codelist:\n{df_data.to_string()}', self.clr_err)
             exit()
 
-        print("Check value - df_data & df_info - Done")
+        self.print("Check value - df_data & df_info - Done")
 
 
 
@@ -180,23 +188,23 @@ class DataTableGenerator:
 
         for tbl_key, tbl_val in dict_tables.items():
             if tbl_val.get('weight_var') and tbl_val.get('sig_test_info').get('sig_type'):
-                print(f'\x1b[31;20m\nCannot run table "{tbl_key}" with significant test and weighting at the same time. Processing terminated!!!')
+                self.print(f'Cannot run table "{tbl_key}" with significant test and weighting at the same time. Processing terminated!!!', self.clr_err)
                 exit()
 
 
         for tbl_key, tbl_val in dict_tables.items():
             start_time = time.time()
 
-            print(Fore.GREEN, f"Run table: {tbl_val['tbl_name']}", Fore.RESET)
+            self.print(f"Run table: {tbl_val['tbl_name']}", self.clr_succ)
 
             df_tbl = getattr(self, item['func_name'])(tbl_val)
 
-            print(Fore.GREEN, f"Create sheet: {tbl_val['tbl_name']}", Fore.RESET)
+            self.print(f"Create sheet: {tbl_val['tbl_name']}", self.clr_succ)
 
             with pd.ExcelWriter(self.file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
                 df_tbl.to_excel(writer, sheet_name=tbl_val['tbl_name'], index=False)  # encoding='utf-8-sig'
 
-            print(Fore.GREEN, f"Create sheet: {tbl_val['tbl_name']} Duration: ", timedelta(seconds=time.time() - start_time), Fore.RESET)
+            self.print(f"Create sheet: {tbl_val['tbl_name']} Duration: {timedelta(seconds=time.time() - start_time)}", self.clr_succ)
 
 
 
@@ -376,8 +384,7 @@ class DataTableGenerator:
 
 
 
-    @staticmethod
-    def unnetted_qre_val(dict_netted) -> dict:
+    def unnetted_qre_val(self, dict_netted) -> dict:
         dict_unnetted = dict()
 
         if 'net_code' not in dict_netted.keys():
@@ -393,7 +400,7 @@ class DataTableGenerator:
                     if isinstance(net_val, str):
                         dict_unnetted.update({str(net_key): net_val})
                     else:
-                        print(Fore.MAGENTA, f"Unnetted {net_key}", Fore.RESET)
+                        self.print(f"Unnetted {net_key}", self.clr_magenta)
                         dict_unnetted.update(net_val)
 
             else:
@@ -435,7 +442,7 @@ class DataTableGenerator:
             df_qre_info.reset_index(drop=True, inplace=True)
 
             if df_qre_info.empty:
-                print(Fore.RED, f"\n\tQuestion(s) is not found: {qre['qre_name']}\n\tProcess terminated.", Fore.RESET)
+                self.print(f"\n\tQuestion(s) is not found: {qre['qre_name']}\n\tProcess terminated.", self.clr_err)
                 exit()
 
             dict_row = {
@@ -470,7 +477,7 @@ class DataTableGenerator:
                     lvl_hd = len(val_hd)
                 else:
                     if lvl_hd != len(val_hd):
-                        print("\x1b[31;20mHeader don't have the same level:", tbl['dict_header_qres'])
+                        self.print(f"Header don't have the same level: {tbl['dict_header_qres']}", self.clr_err)
                         exit()
 
                 # Maximum 5 levels for each header
@@ -480,10 +487,10 @@ class DataTableGenerator:
 
         for grp_hd in lst_group_header:
 
-            print(Fore.LIGHTCYAN_EX, f"Run table: {tbl['tbl_name']} -> group header:", Fore.RESET)
+            self.print(f"Run table: {tbl['tbl_name']} -> group header:", self.clr_cyan)
 
             for i in grp_hd.values():
-                print(Fore.LIGHTGREEN_EX, f"\t{i['lbl']}", Fore.RESET)
+                self.print(f"\t{i['lbl']}", self.clr_succ)
 
             tbl_info_sig = {
                 'tbl_name': tbl['tbl_name'],
@@ -1309,10 +1316,10 @@ class DataTableGenerator:
             try:
                 df_data_query = df_data.query(hd_v['query']).copy()
             except ValueError:
-                print(Fore.RED, f"\tValueError, Cannot process: {hd_v}", Fore.RESET)
+                self.print(f"\tValueError, Cannot process: {hd_v}", self.clr_err)
                 exit()
             except pd.errors.UndefinedVariableError:
-                print(Fore.RED, f"\tpandas.errors.UndefinedVariableError, Cannot process: {hd_v}", Fore.RESET)
+                self.print(f"\tpandas.errors.UndefinedVariableError, Cannot process: {hd_v}", self.clr_err)
                 exit()
 
             dict_header_col_name_origin.update({
@@ -1389,7 +1396,7 @@ class DataTableGenerator:
             lst_qre_col = df_info.at[idx, 'lst_qre_col']
             weight_var = df_info.at[idx, 'weight_var']
 
-            print(f'\t- Create table for {qre_name}[{qre_type}]: Processing', end='\r')
+            self.print(f'\t- Create table for {qre_name}[{qre_type}]: Processing', end='\r')
 
             dict_header_col_name = dict()
             for key, val in dict_header_col_name_origin.items():
@@ -1418,7 +1425,7 @@ class DataTableGenerator:
 
             if qre_type in ['FT', 'FT_mtr']:
                 # Not run free text questions
-                print(Fore.YELLOW, 'Cannot create table for free text questions', qre_name, qre_type, Fore.RESET)
+                self.print(f'Cannot create table for free text questions: {qre_name}|{qre_type}', self.clr_warn)
                 pass
 
             elif qre_type in ['SA', 'SA_mtr', 'RANKING']:
@@ -1581,7 +1588,7 @@ class DataTableGenerator:
 
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
 
-            print(f'\t- Create table for {qre_name}[{qre_type}]: Done')
+            self.print(f'\t- Create table for {qre_name}[{qre_type}]: Done')
 
         return df_tbl
 

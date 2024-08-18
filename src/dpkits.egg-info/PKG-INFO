@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: dpkits
-Version: 1.3.0
+Version: 1.3.5
 Summary: A small package for data processing
 Author-email: Hung Dao <hung.daotuan.1991@gmail.com>
 Project-URL: Homepage, https://github.com/HungDaoHD/packaging_dpkits
@@ -11,6 +11,39 @@ Classifier: Operating System :: OS Independent
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: colorama
+Requires-Dist: contourpy
+Requires-Dist: cycler
+Requires-Dist: et-xmlfile
+Requires-Dist: fonttools
+Requires-Dist: joblib
+Requires-Dist: kiwisolver
+Requires-Dist: lxml
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: openpyxl
+Requires-Dist: packaging
+Requires-Dist: pandas
+Requires-Dist: pandas-flavor
+Requires-Dist: patsy
+Requires-Dist: pillow
+Requires-Dist: pingouin
+Requires-Dist: pyparsing
+Requires-Dist: pyreadstat
+Requires-Dist: python-dateutil
+Requires-Dist: python-pptx
+Requires-Dist: pytz
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
+Requires-Dist: seaborn
+Requires-Dist: six
+Requires-Dist: statsmodels
+Requires-Dist: tabulate
+Requires-Dist: threadpoolctl
+Requires-Dist: typing_extensions
+Requires-Dist: tzdata
+Requires-Dist: xarray
+Requires-Dist: XlsxWriter
 
 # Data processing Package
 

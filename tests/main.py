@@ -4,16 +4,17 @@ import numpy as np
 import time
 import datetime
 
+
 # from dpkits import (
 #     APDataConverter,
 #     DataProcessing,
 #     DataTranspose,
 #     DataTableGenerator,
+#     DataTables,
 #     TableFormatter,
 #     CodeframeReader,
 #     LSMCalculation,
 # )
-
 
 
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
@@ -45,61 +46,16 @@ str_tbl_file_name = f'{str_file_name} - Topline.xlsx'
 converter = APDataConverter(file_name=f'{str_file_name}.xlsx')
 
 df_data, df_info = converter.convert_df_mc()
-# df_data, df_info = converter.convert_df_md()
-df_data = pd.DataFrame(df_data)
-df_info = pd.DataFrame(df_info)
+df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
 
-# df_data.to_csv('df_data.csv')
-# df_info.to_csv('df_info.csv')
-
-# df_data = pd.read_csv('df_data.csv', index_col=0, low_memory=False)
-# df_info = pd.read_csv('df_info.csv', index_col=0)
 
 # df_data.loc[:, 'S1'] = 999
 # df_data.loc[[11, 13, 17, 19, 23], 'S2'] = 888
-# df_info.loc[df_info.eval("var_name == 'S1'"), ['val_lbl']] = [{'net_code': {'9000001|net|AAAA': {'1': 'Male', '2': 'Female'}}}]
+df_info.loc[df_info.eval("var_name == 'S1'"), ['val_lbl']] = [{'net_code': {'9000001|net|AAAA': {'1': 'Male', '2': 'Female'}}}]
 
 dp = DataProcessing(df_data=df_data, df_info=df_info)
 dp.count_ma_choice(lst_ma_qre=['A1', 'A2', 'A3'], dict_replace={0: np.nan})
-dp.calculate_ranking_score(lst_ranking_qre=['A8_Important_ranking'])
-
-
-
-
-df_data, df_info = dp.df_data, dp.df_info
-
-
-
-
-a = 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+df_data, df_info = dp.calculate_ranking_score(lst_ranking_qre=['A8_Important_ranking'])
 
 
 
@@ -357,28 +313,28 @@ lst_tbl_info = [
         ],
         'tables_format': {
             'Tbl_count': {
-                "tbl_name": "Tbl_count",
-                "tbl_filter": "",
-                "is_count": 1,
-                "is_pct_sign": 0,
-                "is_hide_oe_zero_cats": 1,
-                "is_hide_zero_cols": 0,
-                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
-                "dict_header_qres": dict_header,
-                "lst_side_qres": lst_side,
-                "weight_var": '',
+                'tbl_name': "Tbl_count",
+                'tbl_filter': "",
+                'is_count': 1,
+                'is_pct_sign': 0,
+                'is_hide_oe_zero_cats': 0,
+                'is_hide_zero_cols': 0,
+                'sig_test_info': {'sig_type': "", 'sig_cols': [], 'lst_sig_lvl': []},
+                'dict_header_qres': dict_header,
+                'lst_side_qres': lst_side,
+                'weight_var': '',
             },
             'Tbl_pct': {
-                "tbl_name": "Tbl_pct",
-                "tbl_filter": "",
-                "is_count": 0,
-                "is_pct_sign": 1,
-                "is_hide_oe_zero_cats": 1,
-                "is_hide_zero_cols": 0,
-                "sig_test_info": {"sig_type": "", "sig_cols": [], "lst_sig_lvl": []},
-                "dict_header_qres": dict_header,
-                "lst_side_qres": lst_side,
-                "weight_var": '',
+                'tbl_name': "Tbl_pct",
+                'tbl_filter': "",
+                'is_count': 0,
+                'is_pct_sign': 1,
+                'is_hide_oe_zero_cats': 0,
+                'is_hide_zero_cols': 0,
+                'sig_test_info': {'sig_type': "", 'sig_cols': [], 'lst_sig_lvl': []},
+                'dict_header_qres': dict_header,
+                'lst_side_qres': lst_side,
+                'weight_var': '',
             },
         },
     },
@@ -393,30 +349,27 @@ dtbl.generate_data_tables(dict_tbl_info=lst_tbl_info[0])
 
 
 
-
-
-
 here = 1
 
 
 # # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
 # codelist_cs2_cs3 = {'1': 'Vina Securities Joint Stock Company (VNSC)', '2': 'VNSC by Finhay', '3': 'VPS Securities Company (VPS)', '4': 'VNDIRECT Securities Corporation', '5': 'SSI Securities Corporation (SSI)', '6': 'Hồ Chí Minh Securities Corporation (HSC)', '7': 'BIDV Securities Company (BSC)', '8': 'Vietcap Securities Company (VCSC)', '9': 'Mirae Asset Securities Vietnam', '10': 'Techcom Securities (TCBS)', '11': 'Vietcombank Securities (VCBS)', '12': 'MB Securities (MBS)', '13': 'PINE TREE', '14': 'Đại Nam Securities (DNSE)', '15': 'KB Securities', '16': 'Prudential', '17': 'Manulife', '18': 'Dai-ichi Life', '19': 'Generali', '20': 'Others, please clarify', '21': 'I do not know any securities brand/ company', '22': 'I do not invest in stock market now'}
-# 
+#
 # st_add_qre = time.time()
-# 
+#
 # dict_add_new_qres = {
 #     'Resp': ['Resp', 'SA', {'1': 'Ever used', '2': 'Using', '3': 'Intender'}, np.nan],
 #     'A4': ['What method do you use to invest in stocks?', 'SA', {'1': 'Self-investment', '2': 'Through a stockbroker'}, np.nan],
-# 
+#
 #     'CS1|21': ['The securities brokerage brands/companies that you have used for investment up to now. Multiple answers are possible', 'MA', {'1': 'Vina Securities Joint Stock Company (VNSC)', '2': 'VNSC by Finhay', '3': 'VPS Securities Company (VPS)', '4': 'VNDIRECT Securities Corporation', '5': 'SSI Securities Corporation (SSI)', '6': 'Hồ Chí Minh Securities Corporation (HSC)', '7': 'BIDV Securities Company (BSC)', '8': 'Vietcap Securities Company (VCSC)', '9': 'Mirae Asset Securities Vietnam', '10': 'Techcom Securities (TCBS)', '11': 'Vietcombank Securities (VCBS)', '12': 'MB Securities (MBS)', '13': 'PINE TREE', '14': 'Đại Nam Securities (DNSE)', '15': 'KB Securities', '16': 'Prudential', '17': 'Manulife', '18': 'Dai-ichi Life', '19': 'Generali', '20': 'Others, please clarify', '21': 'I do not know any securities brand/ company'}, np.nan],
 #     'CS2|22': ['The financial/investment brands/companies you are currently using. Multiple answers are possible.', 'MA', codelist_cs2_cs3, np.nan],
-# 
+#
 #     'CS3_01|22': ['Which securities brokerage firms are you investing in these products with? Multiple answers are possible_Stock', 'MA', codelist_cs2_cs3, np.nan],
 #     'CS3_02|22': ['Which securities brokerage firms are you investing in these products with? Multiple answers are possible_Bonds', 'MA', codelist_cs2_cs3, np.nan],
 #     'CS3_03|22': ['Which securities brokerage firms are you investing in these products with? Multiple answers are possible_Mutual funds', 'MA', codelist_cs2_cs3, np.nan],
 #     'CS3_04|22': ['Which securities brokerage firms are you investing in these products with? Multiple answers are possible_ETF', 'MA', codelist_cs2_cs3, np.nan],
 #     'CS3_05|22': ['Which securities brokerage firms are you investing in these products with? Multiple answers are possible_Derivatives', 'MA', codelist_cs2_cs3, np.nan],
-# 
+#
 #     'CS_motive_01|24': ['The motivations driving you to use these securities brokerage brands/companies for investment:_Vina Securities Joint Stock Company (VNSC)', 'MA', {'1': 'Allows investing with small capital', '2': 'Application with intuitive/clean interface and user-friendly design', '3': 'Easy-to-use application, doesn’t require much time to learn', '4': 'Diverse investment products (stocks, mutual funds, gold, etc.)', '5': 'Saves transaction time', '6': 'Provides timely and continuous market updates', '7': 'Transparent and clear transaction information', '8': 'Managed by reputable organizations in the market', '9': 'Good brand reputation, widely used by many people', '10': 'Ability to place/match orders quickly', '11': 'High stability, smooth experience', '12': 'Low transaction fees', '13': 'Safe and secure personal information', '14': 'Applying many smart features helps make investing convenient', '15': 'Modern technical charts and comprehensive advanced features', '16': 'Provides in-depth analysis to support investment decisions', '17': 'Dedicated customer service staff', '18': 'Regularly improve, update utilities and new features', '19': 'Recommendations from friends and family', '20': 'Simple, fast account opening procedures', '21': 'Many free knowledge training programs', '22': 'Phí giao dịch cao', '23': 'Ứng dụng khó sử dụng', '24': 'Others, please clarify'}, np.nan],
 #     'CS_motive_02|24': ['The motivations driving you to use these securities brokerage brands/companies for investment:_VNSC by Finhay', 'MA', {'1': 'Allows investing with small capital', '2': 'Application with intuitive/clean interface and user-friendly design', '3': 'Easy-to-use application, doesn’t require much time to learn', '4': 'Diverse investment products (stocks, mutual funds, gold, etc.)', '5': 'Saves transaction time', '6': 'Provides timely and continuous market updates', '7': 'Transparent and clear transaction information', '8': 'Managed by reputable organizations in the market', '9': 'Good brand reputation, widely used by many people', '10': 'Ability to place/match orders quickly', '11': 'High stability, smooth experience', '12': 'Low transaction fees', '13': 'Safe and secure personal information', '14': 'Applying many smart features helps make investing convenient', '15': 'Modern technical charts and comprehensive advanced features', '16': 'Provides in-depth analysis to support investment decisions', '17': 'Dedicated customer service staff', '18': 'Regularly improve, update utilities and new features', '19': 'Recommendations from friends and family', '20': 'Simple, fast account opening procedures', '21': 'Many free knowledge training programs', '22': 'Phí giao dịch cao', '23': 'Ứng dụng khó sử dụng', '24': 'Others, please clarify'}, np.nan],
 #     'CS_motive_03|24': ['The motivations driving you to use these securities brokerage brands/companies for investment:_VPS Securities Company (VPS)', 'MA', {'1': 'Allows investing with small capital', '2': 'Application with intuitive/clean interface and user-friendly design', '3': 'Easy-to-use application, doesn’t require much time to learn', '4': 'Diverse investment products (stocks, mutual funds, gold, etc.)', '5': 'Saves transaction time', '6': 'Provides timely and continuous market updates', '7': 'Transparent and clear transaction information', '8': 'Managed by reputable organizations in the market', '9': 'Good brand reputation, widely used by many people', '10': 'Ability to place/match orders quickly', '11': 'High stability, smooth experience', '12': 'Low transaction fees', '13': 'Safe and secure personal information', '14': 'Applying many smart features helps make investing convenient', '15': 'Modern technical charts and comprehensive advanced features', '16': 'Provides in-depth analysis to support investment decisions', '17': 'Dedicated customer service staff', '18': 'Regularly improve, update utilities and new features', '19': 'Recommendations from friends and family', '20': 'Simple, fast account opening procedures', '21': 'Many free knowledge training programs', '22': 'Phí giao dịch cao', '23': 'Ứng dụng khó sử dụng', '24': 'Others, please clarify'}, np.nan],
@@ -437,7 +390,7 @@ here = 1
 #     'CS_motive_18|24': ['The motivations driving you to use these securities brokerage brands/companies for investment:_Dai-ichi Life', 'MA', {'1': 'Allows investing with small capital', '2': 'Application with intuitive/clean interface and user-friendly design', '3': 'Easy-to-use application, doesn’t require much time to learn', '4': 'Diverse investment products (stocks, mutual funds, gold, etc.)', '5': 'Saves transaction time', '6': 'Provides timely and continuous market updates', '7': 'Transparent and clear transaction information', '8': 'Managed by reputable organizations in the market', '9': 'Good brand reputation, widely used by many people', '10': 'Ability to place/match orders quickly', '11': 'High stability, smooth experience', '12': 'Low transaction fees', '13': 'Safe and secure personal information', '14': 'Applying many smart features helps make investing convenient', '15': 'Modern technical charts and comprehensive advanced features', '16': 'Provides in-depth analysis to support investment decisions', '17': 'Dedicated customer service staff', '18': 'Regularly improve, update utilities and new features', '19': 'Recommendations from friends and family', '20': 'Simple, fast account opening procedures', '21': 'Many free knowledge training programs', '22': 'Phí giao dịch cao', '23': 'Ứng dụng khó sử dụng', '24': 'Others, please clarify'}, np.nan],
 #     'CS_motive_19|24': ['The motivations driving you to use these securities brokerage brands/companies for investment:_Generali', 'MA', {'1': 'Allows investing with small capital', '2': 'Application with intuitive/clean interface and user-friendly design', '3': 'Easy-to-use application, doesn’t require much time to learn', '4': 'Diverse investment products (stocks, mutual funds, gold, etc.)', '5': 'Saves transaction time', '6': 'Provides timely and continuous market updates', '7': 'Transparent and clear transaction information', '8': 'Managed by reputable organizations in the market', '9': 'Good brand reputation, widely used by many people', '10': 'Ability to place/match orders quickly', '11': 'High stability, smooth experience', '12': 'Low transaction fees', '13': 'Safe and secure personal information', '14': 'Applying many smart features helps make investing convenient', '15': 'Modern technical charts and comprehensive advanced features', '16': 'Provides in-depth analysis to support investment decisions', '17': 'Dedicated customer service staff', '18': 'Regularly improve, update utilities and new features', '19': 'Recommendations from friends and family', '20': 'Simple, fast account opening procedures', '21': 'Many free knowledge training programs', '22': 'Phí giao dịch cao', '23': 'Ứng dụng khó sử dụng', '24': 'Others, please clarify'}, np.nan],
 #     'CS_motive_20|24': ['The motivations driving you to use these securities brokerage brands/companies for investment:_Others, please clarify', 'MA', {'1': 'Allows investing with small capital', '2': 'Application with intuitive/clean interface and user-friendly design', '3': 'Easy-to-use application, doesn’t require much time to learn', '4': 'Diverse investment products (stocks, mutual funds, gold, etc.)', '5': 'Saves transaction time', '6': 'Provides timely and continuous market updates', '7': 'Transparent and clear transaction information', '8': 'Managed by reputable organizations in the market', '9': 'Good brand reputation, widely used by many people', '10': 'Ability to place/match orders quickly', '11': 'High stability, smooth experience', '12': 'Low transaction fees', '13': 'Safe and secure personal information', '14': 'Applying many smart features helps make investing convenient', '15': 'Modern technical charts and comprehensive advanced features', '16': 'Provides in-depth analysis to support investment decisions', '17': 'Dedicated customer service staff', '18': 'Regularly improve, update utilities and new features', '19': 'Recommendations from friends and family', '20': 'Simple, fast account opening procedures', '21': 'Many free knowledge training programs', '22': 'Phí giao dịch cao', '23': 'Ứng dụng khó sử dụng', '24': 'Others, please clarify'}, np.nan],
-# 
+#
 #     'CS_abandon_01|16': ['Why did you use to invest in the  brand that you no longer use? Multiple answers are possible._Vina Securities Joint Stock Company (VNSC)', 'MA', {'1': 'High transaction fees', '2': 'Difficult-to-use interface', '3': 'Limited investment options', '4': 'Lack of trust in security measures', '5': 'Slow and incomplete market information updates', '6': 'Slow transaction process', '7': 'Unclear and non-transparent transaction information', '8': 'Lack of trust in management organizations', '9': 'Low stability', '10': 'Inadequate transaction information from exchanges and investment channels', '11': 'Limited in-depth analysis to support investment', '12': 'Unrealistic profit commitment', '13': 'Inefficient and indifferent issue resolution support', '14': 'Reducing the number of platforms/apps used for easier asset management', '15': 'Few features/utilities for convenient investment', '16': 'Other, please specify'}, np.nan],
 #     'CS_abandon_02|16': ['Why did you use to invest in the  brand that you no longer use? Multiple answers are possible._VNSC by Finhay', 'MA', {'1': 'High transaction fees', '2': 'Difficult-to-use interface', '3': 'Limited investment options', '4': 'Lack of trust in security measures', '5': 'Slow and incomplete market information updates', '6': 'Slow transaction process', '7': 'Unclear and non-transparent transaction information', '8': 'Lack of trust in management organizations', '9': 'Low stability', '10': 'Inadequate transaction information from exchanges and investment channels', '11': 'Limited in-depth analysis to support investment', '12': 'Unrealistic profit commitment', '13': 'Inefficient and indifferent issue resolution support', '14': 'Reducing the number of platforms/apps used for easier asset management', '15': 'Few features/utilities for convenient investment', '16': 'Other, please specify'}, np.nan],
 #     'CS_abandon_03|16': ['Why did you use to invest in the  brand that you no longer use? Multiple answers are possible._VPS Securities Company (VPS)', 'MA', {'1': 'High transaction fees', '2': 'Difficult-to-use interface', '3': 'Limited investment options', '4': 'Lack of trust in security measures', '5': 'Slow and incomplete market information updates', '6': 'Slow transaction process', '7': 'Unclear and non-transparent transaction information', '8': 'Lack of trust in management organizations', '9': 'Low stability', '10': 'Inadequate transaction information from exchanges and investment channels', '11': 'Limited in-depth analysis to support investment', '12': 'Unrealistic profit commitment', '13': 'Inefficient and indifferent issue resolution support', '14': 'Reducing the number of platforms/apps used for easier asset management', '15': 'Few features/utilities for convenient investment', '16': 'Other, please specify'}, np.nan],
@@ -458,7 +411,7 @@ here = 1
 #     'CS_abandon_18|16': ['Why did you use to invest in the  brand that you no longer use? Multiple answers are possible._Dai-ichi Life', 'MA', {'1': 'High transaction fees', '2': 'Difficult-to-use interface', '3': 'Limited investment options', '4': 'Lack of trust in security measures', '5': 'Slow and incomplete market information updates', '6': 'Slow transaction process', '7': 'Unclear and non-transparent transaction information', '8': 'Lack of trust in management organizations', '9': 'Low stability', '10': 'Inadequate transaction information from exchanges and investment channels', '11': 'Limited in-depth analysis to support investment', '12': 'Unrealistic profit commitment', '13': 'Inefficient and indifferent issue resolution support', '14': 'Reducing the number of platforms/apps used for easier asset management', '15': 'Few features/utilities for convenient investment', '16': 'Other, please specify'}, np.nan],
 #     'CS_abandon_19|16': ['Why did you use to invest in the  brand that you no longer use? Multiple answers are possible._Generali', 'MA', {'1': 'High transaction fees', '2': 'Difficult-to-use interface', '3': 'Limited investment options', '4': 'Lack of trust in security measures', '5': 'Slow and incomplete market information updates', '6': 'Slow transaction process', '7': 'Unclear and non-transparent transaction information', '8': 'Lack of trust in management organizations', '9': 'Low stability', '10': 'Inadequate transaction information from exchanges and investment channels', '11': 'Limited in-depth analysis to support investment', '12': 'Unrealistic profit commitment', '13': 'Inefficient and indifferent issue resolution support', '14': 'Reducing the number of platforms/apps used for easier asset management', '15': 'Few features/utilities for convenient investment', '16': 'Other, please specify'}, np.nan],
 #     'CS_abandon_20|16': ['Why did you use to invest in the  brand that you no longer use? Multiple answers are possible._Others, please clarify', 'MA', {'1': 'High transaction fees', '2': 'Difficult-to-use interface', '3': 'Limited investment options', '4': 'Lack of trust in security measures', '5': 'Slow and incomplete market information updates', '6': 'Slow transaction process', '7': 'Unclear and non-transparent transaction information', '8': 'Lack of trust in management organizations', '9': 'Low stability', '10': 'Inadequate transaction information from exchanges and investment channels', '11': 'Limited in-depth analysis to support investment', '12': 'Unrealistic profit commitment', '13': 'Inefficient and indifferent issue resolution support', '14': 'Reducing the number of platforms/apps used for easier asset management', '15': 'Few features/utilities for convenient investment', '16': 'Other, please specify'}, np.nan],
-# 
+#
 #     'CS4_01': ['Please rate your satisfaction level with the brands you are currently using._Vina Securities Joint Stock Company (VNSC)', 'SA', {'1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied'}, np.nan],
 #     'CS4_02': ['Please rate your satisfaction level with the brands you are currently using._VNSC by Finhay', 'SA', {'1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied'}, np.nan],
 #     'CS4_03': ['Please rate your satisfaction level with the brands you are currently using._VPS Securities Company (VPS)', 'SA', {'1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied'}, np.nan],
@@ -479,7 +432,7 @@ here = 1
 #     'CS4_18': ['Please rate your satisfaction level with the brands you are currently using._Dai-ichi Life', 'SA', {'1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied'}, np.nan],
 #     'CS4_19': ['Please rate your satisfaction level with the brands you are currently using._Generali', 'SA', {'1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied'}, np.nan],
 #     'CS4_20': ['Please rate your satisfaction level with the brands you are currently using._Others, please clarify', 'SA', {'1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied'}, np.nan],
-# 
+#
 #     'CS_rec_01': ['Please select the willingness level to recommend this securities brokerage brand/company to friends and family based on the scoring from 0->10, with 0 is definitely will not recommend and 10 is definitely will recommend_Vina Securities Joint Stock Company (VNSC)', 'SA', {'1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '10': 9, '11': '10- Definitely will recommend'}, np.nan],
 #     'CS_rec_02': ['Please select the willingness level to recommend this securities brokerage brand/company to friends and family based on the scoring from 0->10, with 0 is definitely will not recommend and 10 is definitely will recommend_VNSC by Finhay', 'SA', {'1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '10': 9, '11': '10- Definitely will recommend'}, np.nan],
 #     'CS_rec_03': ['Please select the willingness level to recommend this securities brokerage brand/company to friends and family based on the scoring from 0->10, with 0 is definitely will not recommend and 10 is definitely will recommend_VPS Securities Company (VPS)', 'SA', {'1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '10': 9, '11': '10- Definitely will recommend'}, np.nan],
@@ -500,80 +453,80 @@ here = 1
 #     'CS_rec_18': ['Please select the willingness level to recommend this securities brokerage brand/company to friends and family based on the scoring from 0->10, with 0 is definitely will not recommend and 10 is definitely will recommend_Dai-ichi Life', 'SA', {'1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '10': 9, '11': '10- Definitely will recommend'}, np.nan],
 #     'CS_rec_19': ['Please select the willingness level to recommend this securities brokerage brand/company to friends and family based on the scoring from 0->10, with 0 is definitely will not recommend and 10 is definitely will recommend_Generali', 'SA', {'1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '10': 9, '11': '10- Definitely will recommend'}, np.nan],
 #     'CS_rec_20': ['Please select the willingness level to recommend this securities brokerage brand/company to friends and family based on the scoring from 0->10, with 0 is definitely will not recommend and 10 is definitely will recommend_Others, please clarify', 'SA', {'1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '10': 9, '11': '10- Definitely will recommend'}, np.nan],
-# 
+#
 #     'ADD_ab': ['Which securities brokerage brand/company are you considering/ most desiring to use for stock investment?', 'SA', {'1': 'Vina Securities Joint Stock Company (VNSC)', '2': 'VNSC by Finhay', '3': 'VPS Securities Company (VPS)', '4': 'VNDIRECT Securities Corporation', '5': 'SSI Securities Corporation (SSI)', '6': 'Hồ Chí Minh Securities Corporation (HSC)', '7': 'BIDV Securities Company (BSC)', '8': 'Vietcap Securities Company (VCSC)', '9': 'Mirae Asset Securities Vietnam', '10': 'Techcom Securities (TCBS)', '11': 'Vietcombank Securities (VCBS)', '12': 'MB Securities (MBS)', '13': 'PINE TREE', '14': 'Đại Nam Securities (DNSE)', '15': 'KB Securities', '16': 'Prudential', '17': 'Manulife', '18': 'Dai-ichi Life', '19': 'Generali', '20': 'Others, please clarify', '21': 'I do not know any securities brand/ company', '22': 'I do not have an intention to change'}, np.nan],
 # }
-# 
-# 
-# dp = DataProcessing(df_data, df_info)
+#
+#
+# dp = DataProcessing(df_data=df_data, df_info=df_info)
 # dp.add_qres(dict_add_new_qres)
-# 
-# 
+#
+#
 # df_data, df_info = dp.df_data, dp.df_info
-# 
+#
 # # Resp
 # df_data.loc[df_data.eval("((A2_1 == 2 | A2_2 == 2) & (A3_1 != 3 & A3_2 != 3 & A3_3 != 3))"), 'Resp'] = 1
 # df_data.loc[df_data.eval("A3_1 == 3 | A3_2 == 3 | A3_3 == 3"), 'Resp'] = 2
 # df_data.loc[df_data.eval("((A3_intend_1 == 2 | A3_intend_2 == 2) & (A7 == 1))"), 'Resp'] = 3
-# 
+#
 # # A4
 # df_data.loc[df_data.eval("A4_user == 1 | A4_intender == 1"), 'A4'] = 1
 # df_data.loc[df_data.eval("A4_user == 2 | A4_intender == 2"), 'A4'] = 2
-# 
+#
 # dp.merge_qres(
 #     lst_merge=[f'CS1_{i}' for i in range(1, 22)],
 #     lst_to_merge=[f'CS1_a_{i}' for i in range(1, 22)] + [f'CS1_b_{i}' for i in range(1, 22)],
 #     dk_code=21
 # )
-# 
+#
 # dp.merge_qres(
 #     lst_merge=[f'CS2_{i}' for i in range(1, 23)],
 #     lst_to_merge=[f'CS2_a_{i}' for i in range(1, 23)] + [f'CS2_b_{i}' for i in range(1, 23)],
 #     dk_code=22
 # )
-# 
-# 
+#
+#
 # for att in range(1, 6):
 #     dp.merge_qres(
 #         lst_merge=[f'CS3_0{att}_{i}' for i in range(1, 23)],
 #         lst_to_merge=[f'CS3_a_0{att}_{i}' for i in range(1, 23)] + [f'CS3_b_0{att}_{i}' for i in range(1, 23)],
 #         dk_code=22
 #     )
-# 
-# 
+#
+#
 # for att in range(1, 21):
 #     att = f'0{att}' if att < 10 else att
-# 
+#
 #     dp.merge_qres(
 #         lst_merge=[f'CS_motive_{att}_{i}' for i in range(1, 25)],
 #         lst_to_merge=[f'CS_motive_a_{att}_{i}' for i in range(1, 25)] + [f'CS_motive_b_{att}_{i}' for i in range(1, 25)],
 #         dk_code=999
 #     )
-# 
+#
 #     dp.merge_qres(
 #         lst_merge=[f'CS_abandon_{att}_{i}' for i in range(1, 17)],
 #         lst_to_merge=[f'CS_abandon_a_{att}_{i}' for i in range(1, 17)] + [f'CS_abandon_b_{att}_{i}' for i in range(1, 17)],
 #         dk_code=999
 #     )
-# 
+#
 #     df_data[f'CS4_{att}'] = df_data[[f'CS4_a_{att}', f'CS4_b_{att}']].sum(axis=1, numeric_only=True, min_count=1)
 #     df_data[f'CS_rec_{att}'] = df_data[[f'CS_rec_a_{att}', f'CS_rec_b_{att}']].sum(axis=1, numeric_only=True, min_count=1)
-# 
-# 
-# 
-# 
+#
+#
+#
+#
 # df_data[f'ADD_ab'] = df_data[[f'ADD_a', f'ADD_b']].sum(axis=1, numeric_only=True, min_count=1)
-# 
+#
 # str_path = f'{str_file_name.rsplit('/', 1)[-1]}_preview - original.xlsx'
-# 
+#
 # df_data, df_info = pd.read_excel(str_path, sheet_name='df_data', index_col=0), pd.read_excel(str_path, sheet_name='df_info', index_col=0)
-# 
-# 
+#
+#
 # for idx in df_info.index:
 #     df_info.at[idx, 'val_lbl'] = eval(df_info.at[idx, 'val_lbl'])
-# 
-# dp = DataProcessing(df_data, df_info)
-# 
+#
+# dp = DataProcessing(df_data=df_data, df_info=df_info)
+#
 # # query_fil:  điều kiện filter df_data để update
 # # qre_name: câu hỏi cần update, nếu là câu MA thì input 'tên câu hỏi|số column'
 # # lst_val_update: list giá trị cần update.
@@ -581,25 +534,25 @@ here = 1
 # #   - o (overlay): update giá trị mới lên toàn bộ giá trị cũ. Độ dài của 'lst_val_update' PHẢI bằng với độ dài của câu cần update.
 # #   - a (append): insert thêm giá trị mới vào câu cần update.
 # #   - r (remove): xóa giá trị trong 'lst_val_update' của câu cần update
-# 
+#
 # dp.update_qres_data(query_fil="S4 == 2", qre_name='A1|12', lst_val_update=[4, 5] + [np.nan] * 10, method='o')
 # dp.update_qres_data(query_fil="S4 == 3", qre_name='A1|12', lst_val_update=[10, 11], method='a')
 # dp.update_qres_data(query_fil="S4 == 4", qre_name='A1|12', lst_val_update=[2, 3], method='r')
-# 
+#
 # df_data = pd.DataFrame(dp.df_data)
-# 
-# 
-# 
-# 
-# 
-# 
+#
+#
+#
+#
+#
+#
 # # Just for checking
 # with pd.ExcelWriter(f'{str_file_name.rsplit('/', 1)[-1]}_preview.xlsx', engine="openpyxl") as writer:
 #     df_data.to_excel(writer, sheet_name='df_data')
 #     df_info.to_excel(writer, sheet_name='df_info')
-# 
-# 
-# 
+#
+#
+#
 # # # ----------------------------------------------------------------------------------------------------------------------
 # # # OE RUNNING------------------------------------------------------------------------------------------------------------
 # # # ----------------------------------------------------------------------------------------------------------------------
@@ -643,7 +596,7 @@ here = 1
 # # #     df_info.to_excel(writer, sheet_name='df_info')
 # # #
 # # #
-# 
+#
 # # dict_dfs = {
 # #     1: {
 # #         'data': df_data,
@@ -655,13 +608,13 @@ here = 1
 # # }
 # #
 # # converter.generate_multiple_data_files(dict_dfs=dict_dfs)
-# 
-# 
+#
+#
 # dict_header = {
 #     # Group header 1st
 #     'lst_1': [
 #         [
-# 
+#
 #             {
 #                 "qre_name": "S2",
 #                 "qre_lbl": "City",
@@ -863,7 +816,7 @@ here = 1
 #             },
 #         ],
 #     ],
-# 
+#
 #     # # Group header 2nd
 #     # 'lst_2': [
 #     #     [
@@ -871,12 +824,12 @@ here = 1
 #     #     ],
 #     #
 #     # ],
-# 
+#
 # }
-# 
+#
 # lst_header_qres_extra = [
 #     [
-# 
+#
 #         {
 #             "qre_name": "$CS1",
 #             "qre_lbl": "CS1_Combine",
@@ -904,12 +857,12 @@ here = 1
 #                 '21': 'I do not know any securities brand/ company'
 #             }
 #         },
-# 
-# 
+#
+#
 #     ]
-# 
+#
 # ]
-# 
+#
 # # SIDE AXIS-------------------------------------------------------------------------------------------------------------
 # lst_side_axis = [
 #     {"qre_name": "S1"},
@@ -1034,7 +987,7 @@ here = 1
 #     {"qre_name": "$CS_abandon_18"},
 #     {"qre_name": "$CS_abandon_19"},
 #     {"qre_name": "$CS_abandon_20"},
-# 
+#
 #     {"qre_name": "CS4_01", "cats": {
 #         '1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied',
 #         'net_code': {
@@ -1187,7 +1140,7 @@ here = 1
 #             '900003|combine|B2B': {'4': '4', '5': '5'},
 #         }
 #     }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
-# 
+#
 #     {"qre_name": "CS4_20", "cats": {
 #         '1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied',
 #         'net_code': {
@@ -1196,7 +1149,7 @@ here = 1
 #             '900003|combine|B2B': {'4': '4', '5': '5'},
 #         }
 #     }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
-# 
+#
 #     {
 #         "qre_name": "CS_rec_01",
 #         "cats": {
@@ -1209,7 +1162,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_02",
 #         "cats": {
@@ -1222,7 +1175,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_03",
 #         "cats": {
@@ -1235,7 +1188,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_04",
 #         "cats": {
@@ -1248,7 +1201,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_05",
 #         "cats": {
@@ -1261,7 +1214,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_06",
 #         "cats": {
@@ -1274,7 +1227,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_07",
 #         "cats": {
@@ -1288,7 +1241,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_08",
 #         "cats": {
@@ -1302,7 +1255,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_09",
 #         "cats": {
@@ -1316,7 +1269,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_10",
 #         "cats": {
@@ -1330,7 +1283,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_11",
 #         "cats": {
@@ -1344,7 +1297,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_12",
 #         "cats": {
@@ -1358,7 +1311,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_13",
 #         "cats": {
@@ -1372,7 +1325,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_14",
 #         "cats": {
@@ -1386,7 +1339,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_15",
 #         "cats": {
@@ -1400,7 +1353,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_16",
 #         "cats": {
@@ -1414,7 +1367,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_17",
 #         "cats": {
@@ -1428,7 +1381,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_18",
 #         "cats": {
@@ -1442,7 +1395,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_19",
 #         "cats": {
@@ -1456,7 +1409,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_20",
 #         "cats": {
@@ -1470,7 +1423,7 @@ here = 1
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
 #         "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {"qre_name": "$CS_rec1_VNSC"},
 #     {"qre_name": "$CS_rec1_Finhay"},
 #     {"qre_name": "$CS_rec1_VPS"},
@@ -1513,7 +1466,7 @@ here = 1
 #     {"qre_name": "$BA_aided1_fintech"},
 #     {"qre_name": "$BA_aided2_fintech"},
 #     {"qre_name": "$D2a"},
-# 
+#
 #     {"qre_name": "D2", "cats": {
 #         '1': 'Very positive', '2': 'Positive', '3': 'No change', '4': 'Negative', '5': 'Very negative',
 #         'net_code': {
@@ -1522,7 +1475,7 @@ here = 1
 #             '900003|combine|B2B': {'4': '4', '5': '5'},
 #         }
 #     }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
-# 
+#
 #     {"qre_name": "$BI_Change"},
 #     {"qre_name": "$BI_Change1"},
 #     {"qre_name": "CS_intention", "cats": {
@@ -1535,7 +1488,7 @@ here = 1
 #     }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
 #     {"qre_name": "$CS_Cons"},
 #     {"qre_name": "$CS_Not_Cons"},
-# 
+#
 #     # {"qre_name": "Q19_01", "cats": {
 #     #     'net_code': {
 #     #         '900001|combine|Detractors': {'1': '0', '2': '1', '3': '2', '4': '3', '5': '4', '6': '5', '7': '6'},
@@ -1544,8 +1497,8 @@ here = 1
 #     #     }
 #     # }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}},
 # ]
-# 
-# 
+#
+#
 # lst_side_axis_extra = [
 #     {"qre_name": "$CS1"},
 #     {"qre_name": "$CS2"},
@@ -1594,7 +1547,7 @@ here = 1
 #     {"qre_name": "$CS_abandon_18"},
 #     {"qre_name": "$CS_abandon_19"},
 #     {"qre_name": "$CS_abandon_20"},
-# 
+#
 #     {"qre_name": "CS4_01", "cats": {
 #         '1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied',
 #         'net_code': {
@@ -1755,7 +1708,7 @@ here = 1
 #             '900003|combine|B2B': {'4': '4', '5': '5'},
 #         }
 #     }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
-# 
+#
 #     {
 #         "qre_name": "CS_rec_01",
 #         "cats": {
@@ -1767,7 +1720,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_02",
 #         "cats": {
@@ -1779,7 +1732,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_03",
 #         "cats": {
@@ -1791,7 +1744,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_04",
 #         "cats": {
@@ -1803,7 +1756,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_05",
 #         "cats": {
@@ -1815,7 +1768,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_06",
 #         "cats": {
@@ -1827,7 +1780,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_07",
 #         "cats": {
@@ -1839,7 +1792,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_08",
 #         "cats": {
@@ -1851,7 +1804,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_09",
 #         "cats": {
@@ -1863,7 +1816,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_10",
 #         "cats": {
@@ -1875,7 +1828,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_11",
 #         "cats": {
@@ -1887,7 +1840,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_12",
 #         "cats": {
@@ -1899,7 +1852,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_13",
 #         "cats": {
@@ -1911,7 +1864,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_14",
 #         "cats": {
@@ -1923,7 +1876,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_15",
 #         "cats": {
@@ -1935,7 +1888,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_16",
 #         "cats": {
@@ -1947,7 +1900,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_17",
 #         "cats": {
@@ -1959,7 +1912,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_18",
 #         "cats": {
@@ -1971,7 +1924,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_19",
 #         "cats": {
@@ -1983,7 +1936,7 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {
 #         "qre_name": "CS_rec_20",
 #         "cats": {
@@ -1995,13 +1948,13 @@ here = 1
 #             }
 #         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
 #     },
-# 
+#
 #     {"qre_name": "ADD_ab"},
-# 
+#
 # ]
-# 
-# 
-# 
+#
+#
+#
 # lst_func_to_run = [
 #     {
 #         'func_name': 'run_standard_table_sig',
@@ -2051,16 +2004,16 @@ here = 1
 #         },
 #     },
 # ]
-# 
 #
-# # dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
-# # dtg.run_tables_by_js_files(lst_func_to_run)
-# # dtf = TableFormatter(xlsx_name=str_tbl_file_name)
-# # dtf.format_sig_table()
-# 
 #
-# 
-# 
+# dtg = DataTableGenerator(df_data=df_data, df_info=df_info, xlsx_name=str_tbl_file_name)
+# dtg.run_tables_by_js_files(lst_func_to_run)
+# dtf = TableFormatter(xlsx_name=str_tbl_file_name)
+# dtf.format_sig_table()
+#
+#
+#
+#
 # # FORMAT TABLES---------------------------------------------------------------------------------------------------------
 
 
