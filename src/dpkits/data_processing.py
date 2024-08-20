@@ -55,7 +55,9 @@ class DataProcessing(Logging):
 
 
         self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=lst_info_addin)], axis=0, ignore_index=True)
-        self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=lst_colname, data=np.array(lst_data_addin).transpose())], axis=1)
+
+        if len(lst_colname) > 0:
+            self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=lst_colname, data=np.array(lst_data_addin).transpose())], axis=1)
 
         self.df_data.reset_index(drop=True, inplace=True)
         self.df_info.reset_index(drop=True, inplace=True)

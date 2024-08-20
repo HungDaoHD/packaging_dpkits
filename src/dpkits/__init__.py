@@ -2,7 +2,7 @@ from .ap_data_converter import APDataConverter
 from .data_processing import DataProcessing
 from .data_transpose import DataTranspose
 from .table_generator import DataTableGenerator
-from .data_tables import DataTables
+from .tabulation import Tabulation
 from .table_formater import TableFormatter
 from .codeframe_reader import CodeframeReader
 from .calculate_lsm import LSMCalculation
@@ -13,7 +13,7 @@ __all__ = [
     'DataProcessing',
     'DataTranspose',
     'DataTableGenerator',
-    'DataTables',
+    'Tabulation',
     'TableFormatter',
     'CodeframeReader',
     'LSMCalculation',

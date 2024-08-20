@@ -10,7 +10,7 @@ import datetime
 #     DataProcessing,
 #     DataTranspose,
 #     DataTableGenerator,
-#     DataTables,
+#     Tabulation,
 #     TableFormatter,
 #     CodeframeReader,
 #     LSMCalculation,
@@ -26,7 +26,7 @@ from src.dpkits import (
     DataProcessing,
     DataTranspose,
     DataTableGenerator,
-    DataTables,
+    Tabulation,
     TableFormatter,
     CodeframeReader,
     LSMCalculation,
@@ -300,8 +300,8 @@ lst_side = [
 
 ]
 
-lst_tbl_info = [
-    {
+dict_tbl_info = {
+    'group_tbl_1': {
         'data_to_run': {
             'is_md': False,
             'df_data': df_data,
@@ -339,12 +339,11 @@ lst_tbl_info = [
         },
     },
 
+}
 
-]
 
-
-dtbl = DataTables(tbl_file_name=str_tbl_file_name)
-dtbl.generate_data_tables(dict_tbl_info=lst_tbl_info[0])
+dtbl = Tabulation(tbl_file_name=str_tbl_file_name, dict_tbl_info=dict_tbl_info)
+dtbl.tabulate(['group_tbl_1'])
 
 
 

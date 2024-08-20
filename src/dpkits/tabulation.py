@@ -7,17 +7,21 @@ from scipy import stats
 from datetime import datetime, timedelta
 from .table_formater import TableFormatter
 from .logging import Logging
+from .tabulation_horizontal import TabulationHorizontal
 
 
 
-class DataTables(Logging, TableFormatter):
+class Tabulation(Logging, TabulationHorizontal, TableFormatter):
 
-    def __init__(self, *, tbl_file_name: str):
+    def __init__(self, *, tbl_file_name: str, dict_tbl_info: dict[dict]):
         """
         :param tbl_file_name: output xlsx file name
+        :param lst_tbl_info: all tables information for processing
         """
 
         self.tbl_file_name = tbl_file_name.rsplit('/', 1)[-1] if '/' in tbl_file_name else tbl_file_name
+        self.dict_tbl_info = dict_tbl_info
+        self.dict_all_tables = {'Content': pd.DataFrame(columns=['#', 'Content'], data=[])}
 
         Logging.__init__(self)
         TableFormatter.__init__(self, self.tbl_file_name)
@@ -31,7 +35,17 @@ class DataTables(Logging, TableFormatter):
         except FileNotFoundError:
             pass
 
-        self.dict_all_tables = {'Content': pd.DataFrame(columns=['#', 'Content'], data=[])}
+
+        
+
+
+
+
+
+
+
+
+
 
 
 
@@ -210,9 +224,9 @@ class DataTables(Logging, TableFormatter):
     @deco_preprocess_inputted_dataframes
     @deco_valcheck_outstanding_values
     @deco_remove_duplicate_ma_values
-    def generate_data_tables(self, *, dict_tbl_info: dict):
+    def tabulate(self, *, dict_tbl_info: dict):
         """
-        :param dict_tbl_info: tables information
+        :param dict_tbl_info: tables information - dict like
             Example:
                 {
                     'data_to_run': {
@@ -255,35 +269,26 @@ class DataTables(Logging, TableFormatter):
         :return: none
         """
 
-        # NOTE:
-        # should run and add to 'self.dict_all_tables'
-        # filter tables need to run
-        # need to revise 'run_tables_by_item' and 'run_standard_table_sig'
+        pass
 
-
-        lst_tbl_to_run = dict_tbl_info['tables_to_run']
-
-        for tbl_info in lst_tbl_to_run:
-            # self.generate_data_table(
-            #     tbl_info=dict_tbl_info['tables_format'][tbl],
-            #     df_data=dict_tbl_info['data_to_run']['df_data'],
-            #     df_info=dict_tbl_info['data_to_run']['df_info'],
-            # )
-            pass
-
-
-
-
-
-        # try:
-        #     # Here
-        #     self.dict_all_tables.update({tbl_info['tbl_name']: pd.DataFrame})
+        # Here
+        # lst_tbl_to_run = dict_tbl_info['tables_to_run']
         #
-        # except Exception:
+        # for tbl_info in lst_tbl_to_run:
+        #
+        #
+        #
+        #
+        #
+        #     # self.generate_data_table(
+        #     #     tbl_info=dict_tbl_info['tables_format'][tbl],
+        #     #     df_data=dict_tbl_info['data_to_run']['df_data'],
+        #     #     df_info=dict_tbl_info['data_to_run']['df_info'],
+        #     # )
         #     pass
 
+        
 
-
-        # Note:
-        #     - fix sig test, do not sig total with other code
-        #     - fix sort method
+    # Note:
+    #     - fix sig test, do not sig total with other code
+    #     - fix sort method

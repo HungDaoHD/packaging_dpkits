@@ -1395,6 +1395,8 @@ class DataTableGenerator(Logging):
             qre_fil = df_info.at[idx, 'qre_fil']
             lst_qre_col = df_info.at[idx, 'lst_qre_col']
             weight_var = df_info.at[idx, 'weight_var']
+            lst_qre_col_weight_var = lst_qre_col if len(weight_var) == 0 else lst_qre_col + [weight_var]
+
 
             self.print(f'\t- Create table for {qre_name}[{qre_type}]: Processing', end='\r')
 
@@ -1405,7 +1407,7 @@ class DataTableGenerator(Logging):
                 if qre_fil:
                     dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'].query(qre_fil)
 
-                dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'][lst_qre_col]
+                dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'][lst_qre_col_weight_var]
 
             qre_info = {
                 'qre_name': qre_name,
