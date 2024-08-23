@@ -16,36 +16,37 @@ class Tabulation(Logging, TabulationHorizontal, TableFormatter):
     def __init__(self, *, tbl_file_name: str, dict_tbl_info: dict[dict]):
         """
         :param tbl_file_name: output xlsx file name
-        :param lst_tbl_info: all tables information for processing
+        :param dict_tbl_info: all tables information for processing
         """
 
         self.tbl_file_name = tbl_file_name.rsplit('/', 1)[-1] if '/' in tbl_file_name else tbl_file_name
-        self.dict_tbl_info = dict_tbl_info
-        self.dict_all_tables = {'Content': pd.DataFrame(columns=['#', 'Content'], data=[])}
 
         Logging.__init__(self)
         TableFormatter.__init__(self, self.tbl_file_name)
+        TabulationHorizontal.__init__(self, dict_tbl_info)
 
-        try:
-            with open(self.tbl_file_name):
+
+
+    @staticmethod
+    def deco_tbl_file_name_permission(func):
+
+        @functools.wraps(func)
+        def inner_func(*args, **kwargs):
+
+            try:
+                with open(args[0].tbl_file_name):
+                    args[0].print(f'File: "{args[0].tbl_file_name}" is accessed >>> Completed', args[0].clr_magenta)
+
+            except PermissionError:
+                args[0].print(f'Permission Error when access file: "{args[0].tbl_file_name}" Processing terminated.', args[0].clr_err)
+                exit()
+
+            except FileNotFoundError:
                 pass
-        except PermissionError:
-            self.print(f'Permission Error when access file: {self.tbl_file_name} Processing terminated.', self.clr_err)
-            exit()
-        except FileNotFoundError:
-            pass
 
+            return func(*args, **kwargs)
 
-        
-
-
-
-
-
-
-
-
-
+        return inner_func
 
 
 
@@ -221,73 +222,20 @@ class Tabulation(Logging, TabulationHorizontal, TableFormatter):
 
 
 
+    @deco_tbl_file_name_permission
     @deco_preprocess_inputted_dataframes
-    @deco_valcheck_outstanding_values
-    @deco_remove_duplicate_ma_values
-    def tabulate(self, *, dict_tbl_info: dict):
-        """
-        :param dict_tbl_info: tables information - dict like
-            Example:
-                {
-                    'data_to_run': {
-                        'is_md': False,
-                        'df_data': df_data,
-                        'df_info': df_info,
-                    },
-                    'tables_to_run': [
-                        'Tbl_count',
-                        'Tbl_pct',
-                    ],
-                    'tables_format': {
-                        'Tbl_count': {
-                            'tbl_name': "Tbl_count",
-                            'tbl_filter': "",
-                            'is_count': 1,
-                            'is_pct_sign': 0,
-                            'is_hide_oe_zero_cats': 0,
-                            'is_hide_zero_cols': 0,
-                            'sig_test_info': {'sig_type': '', 'sig_cols': [], 'lst_sig_lvl': []},
-                            'dict_header_qres': dict_header,
-                            'lst_side_qres': lst_side,
-                            'weight_var': '',
-                        },
-                        'Tbl_pct': {
-                            'tbl_name': "Tbl_pct",
-                            'tbl_filter': "",
-                            'is_count': 0,
-                            'is_pct_sign': 1,
-                            'is_hide_oe_zero_cats': 0,
-                            'is_hide_zero_cols': 0,
-                            'sig_test_info': {'sig_type': '', 'sig_cols': [], 'lst_sig_lvl': []},
-                            'dict_header_qres': dict_header,
-                            'lst_side_qres': lst_side,
-                            'weight_var': '',
-                        },
-                    },
-                },
+    # @deco_valcheck_outstanding_values
+    # @deco_remove_duplicate_ma_values
+    def tabulate(self, *, lst_tbl_running: list):
 
-        :return: none
-        """
+
+        self.print(f"run: {lst_tbl_running}", self.clr_succ)
+
+
+
 
         pass
 
-        # Here
-        # lst_tbl_to_run = dict_tbl_info['tables_to_run']
-        #
-        # for tbl_info in lst_tbl_to_run:
-        #
-        #
-        #
-        #
-        #
-        #     # self.generate_data_table(
-        #     #     tbl_info=dict_tbl_info['tables_format'][tbl],
-        #     #     df_data=dict_tbl_info['data_to_run']['df_data'],
-        #     #     df_info=dict_tbl_info['data_to_run']['df_info'],
-        #     # )
-        #     pass
-
-        
 
     # Note:
     #     - fix sig test, do not sig total with other code

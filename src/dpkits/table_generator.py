@@ -574,10 +574,14 @@ class DataTableGenerator(Logging):
                 if item in lst_ignore_col:
                     continue
 
-                # lst_qre_col = qre_info['lst_qre_col']
                 df_filter = dict_header_col_name[item]['df_data'].copy()
-                # df_fil_base = df_filter[lst_qre_col].dropna(how='all')
-                df_fil_base = df_filter.dropna(how='all')
+
+                if len(weight_var) > 0:
+                    lst_qre_col = qre_info['lst_qre_col']
+                    df_fil_base = df_filter[lst_qre_col].dropna(how='all')
+                else:
+                    df_fil_base = df_filter.dropna(how='all')
+
                 df_filter = df_filter.loc[df_fil_base.index, :]
 
                 if df_filter.empty:
@@ -1167,10 +1171,13 @@ class DataTableGenerator(Logging):
 
                 df_filter.replace(dict_re_qre_val, inplace=True)
 
-                # df_fil_base = df_filter[lst_qre_col].dropna(how='all')
-                df_fil_base = df_filter.dropna(how='all')
+                if weight_var:
+                    df_fil_base = df_filter[lst_qre_col].dropna(how='all')
 
-                df_filter.loc[df_fil_base.index, 'ma_val_sum'] = df_filter.loc[df_fil_base.index, :].sum(axis='columns')
+                else:
+                    df_fil_base = df_filter.dropna(how='all')
+
+                df_filter.loc[df_fil_base.index, 'ma_val_sum'] = df_filter.loc[df_fil_base.index, lst_qre_col].sum(axis='columns')
 
                 if lst_sub_cat or qre_type == 'MA_comb':
                     df_filter.loc[df_filter['ma_val_sum'] > 1, 'ma_val_sum'] = 1
