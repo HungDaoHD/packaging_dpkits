@@ -26,13 +26,15 @@ from src.dpkits import (
     DataProcessing,
     DataTranspose,
     DataTableGenerator,
-    Tabulation,
     TableFormatter,
     CodeframeReader,
     LSMCalculation,
-    DataAnalysis
+    DataAnalysis,
+    Tabulation
 )
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -45,310 +47,451 @@ str_tbl_file_name = f'{str_file_name} - Topline.xlsx'
 # Call Class APDataConverter with file_name
 converter = APDataConverter(file_name=f'{str_file_name}.xlsx')
 
-df_data, df_info = converter.convert_df_mc()
-df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
+# df_data, df_info = converter.convert_df_mc()
+# df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
 
 
-# # df_data.loc[:, 'S1'] = 999
-# # df_data.loc[[11, 13, 17, 19, 23], 'S2'] = 888
+df_data = pd.read_csv('df_data.csv', index_col=False, low_memory=False)
+df_info = pd.read_csv('df_info.csv', index_col=False)
+
+
+
+# df_data.loc[:, 'S1'] = 999
+# df_data.loc[[11, 13, 17, 19, 23], 'S2'] = 888
 # df_info.loc[df_info.eval("var_name == 'S1'"), ['val_lbl']] = [{'net_code': {'9000001|net|AAAA': {'1': 'Male', '2': 'Female'}}}]
-#
+
 # dp = DataProcessing(df_data=df_data, df_info=df_info)
 # dp.count_ma_choice(lst_ma_qre=['A1', 'A2', 'A3'], dict_replace={0: np.nan})
 # df_data, df_info = dp.calculate_ranking_score(lst_ranking_qre=['A8_Important_ranking'])
+
+
+# # CHECK POPULATE
+# # SA
+# df_data.loc[[0, 3, 5, 7], 'S8'] = np.nan
+# a0 = eval(df_info.loc[df_info.eval("var_name == 'S8'"), 'val_lbl'].values[0])
+# df_a = pd.DataFrame(columns=['code', 'label'], data=[['-1', 'Base']] + [[k, v] for k, v in a0.items()])
 #
+# a1 = df_data['S8'].value_counts()
+# a1[-1] = df_data['S8'].count()
+# a1 = a1.sort_index()
 #
+# a1 = pd.DataFrame(columns=['count'], data=a1)
+# a1['code'] = a1.index.astype(int).astype(str)
+# df_a = df_a.merge(a1, how='left', on='code')
+# df_a.to_csv('df_a.csv')
+# # MA
+# a2 = df_data[[
+#     'A1_1',
+#     'A1_2',
+#     'A1_3',
+#     'A1_4',
+#     'A1_5',
+#     'A1_6',
+#     'A1_7',
+#     'A1_8',
+#     'A1_9',
+#     'A1_10',
+#     'A1_11',
+#     'A1_12',
+# ]].melt().dropna()
 #
-# dict_header = {
-#     # Group header 1st
-#     'lst_1': [
-#         [
-#             {
-#                 "qre_name": "S2",
-#                 "qre_lbl": "City",
-#                 "cats": {
-#                     "Total": 'Total',
-#                     "1": "Hanoi",
-#                     "2": "HCMC",
-#                 }
-#             },
-#             {
-#                 "qre_name": "S1",
-#                 "qre_lbl": "Gender",
-#                 "cats": {}
-#             },
-#             {
-#                 "qre_name": "S4",
-#                 "qre_lbl": "Age",
-#                 "cats": {
-#                     "2": "22 - 29",
-#                     "3": "30 - 39",
-#                     "4": "40 - 45",
-#                 }
-#             },
-#             {
-#                 "qre_name": "@Resp",
-#                 "qre_lbl": "Resp",
-#                 "cats": {
-#                     "(Resp == 1 | Resp == 2)": "User",
-#                     "(Resp == 1)": "Ever used",
-#                     "(Resp == 2)": "Using",
-#                     "(Resp == 3)": "Intender",
-#                 }
-#             },
-#             {
-#                 "qre_name": "A4",
-#                 "qre_lbl": "A4",
-#                 "cats": {
-#                 }
-#             },
-#             {
-#                 "qre_name": "S8",
-#                 "qre_lbl": "MII",
-#                 "cats": {
-#                 }
-#             },
-#             {
-#                 "qre_name": "@S8_2",
-#                 "qre_lbl": "MII _ 2 ",
-#                 "cats": {
-#                     'S8.isin([1,2,3])': '< 20tr ',
-#                     'S8.isin([4,5])': '20 - 39 ',
-#                     'S8.isin([6,7])': ' > 40 ',
-#                 }
-#             },
-#             {
-#                 "qre_name": "$A3",
-#                 "qre_lbl": "What financial product channels are you currently investing in?",
-#                 "cats": {
-#                     '1': 'Saving',
-#                     '2': 'Crypto',
-#                     '3': 'Stock',
-#                     '4': 'Bonds',
-#                     '5': 'Gold',
-#                     '6': 'Real estate',
-#                     '7': 'Mutual funds',
-#                     '8': 'ETF',
-#                     '9': 'Foreign exchange (Forex)',
-#                     '10': 'Derivatives',
-#                     '11': 'Others, please specify',
-#                     '12': 'I have not invested in any product before',
-#                     '13': 'I have not invested in any product in the past 3 years',
-#                     '14': 'I’m not investing in finance'
-#                 }
-#             },
-#             {
-#                 "qre_name": "$A3_intend",
-#                 "qre_lbl": "What financial product channels do you intend to invest in the next 6 months",
-#                 "cats": {
-#                     '1': 'Saving',
-#                     '2': 'Stock',
-#                     '3': 'Bonds',
-#                     '4': 'Gold',
-#                     '5': 'Real estate',
-#                     '6': 'Mutual funds',
-#                     '7': 'ETF',
-#                     '8': 'Foreign exchange (Forex)',
-#                     '9': 'Derivatives',
-#                     '10': 'Crypto',
-#                     '11': 'I do not intend to invest in finance',
-#                     '12': 'Khác (ghi rõ)'
-#                 }
-#             },
-#             {
-#                 "qre_name": "$BA_aided_stock",
-#                 "qre_lbl": "Among the options below, which are the securities brokerage firms that you are familiar with, have seen, or heard of",
-#                 "cats": {
-#                     '1': 'Vina Securities Joint Stock Company (VNSC)',
-#                     '2': 'VNSC by Finhay',
-#                     '3': 'VPS Securities Company (VPS)',
-#                     '4': 'VNDIRECT Securities Corporation',
-#                     '5': 'SSI Securities Corporation (SSI)',
-#                     '6': 'Hồ Chí Minh Securities Corporation (HSC)',
-#                     '7': 'BIDV Securities Company (BSC)',
-#                     '8': 'Vietcap Securities Company (VCSC)',
-#                     '9': 'Mirae Asset Securities Vietnam',
-#                     '10': 'Techcom Securities (TCBS)',
-#                     '11': 'Vietcombank Securities (VCBS)',
-#                     '12': 'MB Securities (MBS)',
-#                     '13': 'PINE TREE',
-#                     '14': 'Đại Nam Securities (DNSE)',
-#                     '15': 'KB Securities',
-#                     '16': 'Prudential',
-#                     '17': 'Manulife',
-#                     '18': 'Dai-ichi Life',
-#                     '19': 'Generali',
-#                     '20': 'I do not know any securities brand/ company',
-#                     '21': 'Others, please clarify'
-#                 }
-#             },
-#             {
-#                 "qre_name": "$BA_aided1_fintech",
-#                 "qre_lbl": "Among the following financial technology (fintech) applications, which ones have you ever seen, heard of, or come across?",
-#                 "cats": {
-#                     '1': 'Momo',
-#                     '2': 'ViettelPay',
-#                     '3': 'ZaloPay',
-#                     '4': 'VNPAY',
-#                     '5': 'Money Lover',
-#                     '6': 'Tikop',
-#                     '7': 'Cake by VP Bank',
-#                     '8': 'Finhay',
-#                     '9': 'I have never seen/known the above brands',
-#                     '10': 'Others, please clarify'
-#                 }
-#             },
-#             {
-#                 "qre_name": "@A6_03",
-#                 "qre_lbl": "How long have you been investing?_Stock",
-#                 "cats": {
-#                     "(A6_03.isin([1,2,3]))": "Dưới 1 năm",
-#                     "(A6_03 == 4)": "Từ 1 - 3 năm",
-#                     "(A6_03.isin([5,6]))": "Trên 3 năm"
-#                 }
-#             },
-#             {
-#                 "qre_name": "$CS1",
-#                 "qre_lbl": "CS1_Combine",
-#                 "cats": {
-#                     '1': 'Vina Securities Joint Stock Company (VNSC)',
-#                     '2': 'VNSC by Finhay',
-#                     '3': 'VPS Securities Company (VPS)',
-#                     '4': 'VNDIRECT Securities Corporation',
-#                     '5': 'SSI Securities Corporation (SSI)',
-#                     '6': 'Hồ Chí Minh Securities Corporation (HSC)',
-#                     '7': 'BIDV Securities Company (BSC)',
-#                     '8': 'Vietcap Securities Company (VCSC)',
-#                     '9': 'Mirae Asset Securities Vietnam',
-#                     '10': 'Techcom Securities (TCBS)',
-#                     '11': 'Vietcombank Securities (VCBS)',
-#                     '12': 'MB Securities (MBS)',
-#                     '13': 'PINE TREE',
-#                     '14': 'Đại Nam Securities (DNSE)',
-#                     '15': 'KB Securities',
-#                     '16': 'Prudential',
-#                     '17': 'Manulife',
-#                     '18': 'Dai-ichi Life',
-#                     '19': 'Generali',
-#                     '20': 'Others, please clarify',
-#                     '21': 'I do not know any securities brand/ company'
-#                 }
-#             },
-#             {
-#                 "qre_name": "$CS2",
-#                 "qre_lbl": "CS2_Combine",
-#                 "cats": {
-#                     '1': 'Vina Securities Joint Stock Company (VNSC)',
-#                     '2': 'VNSC by Finhay',
-#                     '3': 'VPS Securities Company (VPS)',
-#                     '4': 'VNDIRECT Securities Corporation',
-#                     '5': 'SSI Securities Corporation (SSI)',
-#                     '6': 'Hồ Chí Minh Securities Corporation (HSC)',
-#                     '7': 'BIDV Securities Company (BSC)',
-#                     '8': 'Vietcap Securities Company (VCSC)',
-#                     '9': 'Mirae Asset Securities Vietnam',
-#                     '10': 'Techcom Securities (TCBS)',
-#                     '11': 'Vietcombank Securities (VCBS)',
-#                     '12': 'MB Securities (MBS)',
-#                     '13': 'PINE TREE',
-#                     '14': 'Đại Nam Securities (DNSE)',
-#                     '15': 'KB Securities',
-#                     '16': 'Prudential',
-#                     '17': 'Manulife',
-#                     '18': 'Dai-ichi Life',
-#                     '19': 'Generali',
-#                     '20': 'Others, please clarify',
-#                     '21': 'I do not know any securities brand/ company',
-#                     '22': 'I do not invest in stock market now'
-#                 }
-#             },
-#         ],
-#     ],
-#
-#     # # Group header 2nd
-#     # 'lst_2': [
-#     #     [],
-#     # ],
-#
-# }
-#
-# lst_side = [
-#     {"qre_name": "S1"},
-#     {"qre_name": "$A1"},
-#
-#     {"qre_name": "CS4_20", "cats": {
-#         '1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied',
-#         'net_code': {
-#             '900001|combine|T2B': {'1': '1', '2': '2'},
-#             '900002|combine|Neutral': {'3': '3'},
-#             '900003|combine|B2B': {'4': '4', '5': '5'},
-#         }
-#     }, "mean": {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}},
-#
-#     {
-#         "qre_name": "CS_rec_01",
-#         "cats": {
-#             '1': '0 - Definitely will not recommend', '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7,
-#             '9': 8, '10': 9, '11': '10- Definitely will recommend',
-#             'net_code': {
-#                 '900001|combine|Detractors': {'1': '0', '2': '1', '3': '2', '4': '3', '5': '4', '6': '5', '7': '6'},
-#                 '900002|combine|Passives': {'8': '7', '9': '8'},
-#                 '900003|combine|Promoters': {'10': '9', '11': '10'},
-#             }
-#         }, "mean": {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10}, "calculate": {"NPS": "abs([Promoters] - [Detractors])"}
-#     },
-#
-# ]
-#
-# dict_tbl_info = {
-#     'group_tbl_1': {
-#         'data_to_run': {
-#             'is_md': False,
-#             'df_data': df_data,
-#             'df_info': df_info,
-#         },
-#         'tables_to_run': [
-#             'Tbl_count',
-#             'Tbl_pct',
-#         ],
-#         'tables_format': {
-#             'Tbl_count': {
-#                 'tbl_name': "Tbl_count",
-#                 'tbl_filter': "",
-#                 'is_count': 1,
-#                 'is_pct_sign': 0,
-#                 'is_hide_oe_zero_cats': 0,
-#                 'is_hide_zero_cols': 0,
-#                 'sig_test_info': {'sig_type': '', 'sig_cols': [], 'lst_sig_lvl': []},
-#                 'dict_header_qres': dict_header,
-#                 'lst_side_qres': lst_side,
-#                 'weight_var': '',
-#             },
-#             'Tbl_pct': {
-#                 'tbl_name': "Tbl_pct",
-#                 'tbl_filter': "",
-#                 'is_count': 0,
-#                 'is_pct_sign': 1,
-#                 'is_hide_oe_zero_cats': 0,
-#                 'is_hide_zero_cols': 0,
-#                 'sig_test_info': {'sig_type': '', 'sig_cols': [], 'lst_sig_lvl': []},
-#                 'dict_header_qres': dict_header,
-#                 'lst_side_qres': lst_side,
-#                 'weight_var': '',
-#             },
-#         },
-#     },
-#
-# }
-#
-#
-# # dtbl = Tabulation(tbl_file_name=str_tbl_file_name, dict_tbl_info=dict_tbl_info)
-# # dtbl.tabulate(lst_tbl_running=['group_tbl_1'])
-#
-#
-#
-#
-# here = 1
+# a2_count = a2['value'].value_counts().sort_index()
+
+
+dict_header = {
+    'lst_0': [
+        [
+            {
+                "qre_name": "S2",
+                "qre_lbl": "City",
+                "cats": {
+                    "-1": 'Total',
+                    "1": "Hanoi",
+                    "2": "HCMC",
+                }
+            },
+            {
+                "qre_name": "S1",
+                "qre_lbl": "Gender",
+                "cats": {}
+            },
+            {
+                "qre_name": "S4",
+                "qre_lbl": "Age",
+                "cats": {
+                    "2": "22 - 29",
+                    "3": "30 - 39",
+                    "4": "40 - 45",
+                }
+            },
+            {
+                "qre_name": "S8",
+                "qre_lbl": "MII",
+                "cats": {}
+            },
+        ],
+        [
+            {
+                "qre_name": "@Resp",
+                "qre_lbl": "Resp",
+                "cats": {
+                    "(Resp == 1 | Resp == 2)": "User",
+                    "(Resp == 1)": "Ever used",
+                    "(Resp == 2)": "Using",
+                    "(Resp == 3)": "Intender",
+                }
+            },
+
+            {
+                "qre_name": "$A3",
+                "qre_lbl": "What financial product channels are you currently investing in?",
+                "cats": {
+                    '1': 'Saving',
+                    '2': 'Crypto',
+                    '3': 'Stock',
+                    '4': 'Bonds',
+                    '5': 'Gold',
+                }
+            },
+
+        ],
+    ],
+
+    # Group header 1st
+    # 'lst_1': [
+    #     [
+    #         {
+    #             "qre_name": "S2",
+    #             "qre_lbl": "City",
+    #             "cats": {
+    #                 "-1": 'Total',
+    #                 "1": "Hanoi",
+    #                 "2": "HCMC",
+    #             }
+    #         },
+    #         {
+    #             "qre_name": "S1",
+    #             "qre_lbl": "Gender",
+    #             "cats": {}
+    #         },
+    #         {
+    #             "qre_name": "S4",
+    #             "qre_lbl": "Age",
+    #             "cats": {
+    #                 "2": "22 - 29",
+    #                 "3": "30 - 39",
+    #                 "4": "40 - 45",
+    #             }
+    #         },
+    #     ],
+    #     [
+    #         {
+    #             "qre_name": "@Resp",
+    #             "qre_lbl": "Resp",
+    #             "cats": {
+    #                 "(Resp == 1 | Resp == 2)": "User",
+    #                 "(Resp == 1)": "Ever used",
+    #                 "(Resp == 2)": "Using",
+    #                 "(Resp == 3)": "Intender",
+    #             }
+    #         },
+    #         {
+    #             "qre_name": "S8",
+    #             "qre_lbl": "MII",
+    #             "cats": {}
+    #         },
+    #     ],
+    #     [
+    #         {
+    #             "qre_name": "@S8_2",
+    #             "qre_lbl": "MII _ 2",
+    #             "cats": {
+    #                 'S8.isin([1,2,3])': '< 20tr',
+    #                 'S8.isin([4,5])': '20 - 39',
+    #                 'S8.isin([6,7])': '> 40',
+    #             }
+    #         },
+    #         {
+    #             "qre_name": "$A3",
+    #             "qre_lbl": "What financial product channels are you currently investing in?",
+    #             "cats": {
+    #                 '1': 'Saving',
+    #                 '2': 'Crypto',
+    #                 '3': 'Stock',
+    #                 '4': 'Bonds',
+    #                 '5': 'Gold',
+    #                 '6': 'Real estate',
+    #                 '7': 'Mutual funds',
+    #                 '8': 'ETF',
+    #                 '9': 'Foreign exchange (Forex)',
+    #                 '10': 'Derivatives',
+    #                 '11': 'Others, please specify',
+    #                 '12': 'I have not invested in any product before',
+    #                 '13': 'I have not invested in any product in the past 3 years',
+    #                 '14': 'I’m not investing in finance'
+    #             }
+    #         },
+    #     ],
+    # ],
+
+    # # Group header 2nd
+    # 'lst_2': [
+    #     [
+    #         {
+    #             "qre_name": "S2",
+    #             "qre_lbl": "City",
+    #             "cats": {
+    #                 "-1": 'Total',
+    #                 "1": "Hanoi",
+    #                 "2": "HCMC",
+    #             }
+    #         },
+    #
+    #     ],
+    #     [
+    #         {
+    #             "qre_name": "S4",
+    #             "qre_lbl": "Age",
+    #             "cats": {
+    #                 "2": "22 - 29",
+    #                 "3": "30 - 39",
+    #                 "4": "40 - 45",
+    #             }
+    #         },
+    #
+    #
+    #     ],
+    #     [
+    #         {
+    #             "qre_name": "S1",
+    #             "qre_lbl": "Gender",
+    #             "cats": {}
+    #         },
+    #         {
+    #             "qre_name": "@S8_2",
+    #             "qre_lbl": "MII _ 2",
+    #             "cats": {
+    #                 'S8.isin([1,2,3])': '< 20tr',
+    #                 'S8.isin([4,5])': '20 - 39',
+    #                 'S8.isin([6,7])': '> 40',
+    #             }
+    #         },
+    #     ]
+    # ],
+
+
+}
+
+lst_side = [
+    {'name': 'S1'},
+    {'name': '$A1', 'label': 'A1 (MA). Label', 'cats': {
+
+        '900001|net|Group1': {
+
+            '9000011|net|Group1.1': {
+                '1': 'Saving',
+                '2': 'Stock',
+
+
+                '90000111|net|Group1.1.1': {
+                    '3': 'Bonds',
+                    '4': 'Gold',
+                },
+
+            },
+
+            '9000012|net|Group1.2': {
+                '5': 'Real estate',
+                '6': 'Mutual funds',
+            },
+
+            '7': 'ETF',
+
+        },
+        '900002|combine|Group2': {
+            '8': 'Foreign exchange (Forex)',
+            '9': 'Derivatives',
+            '10': 'Crypto',
+        },
+
+        '11': 'I have not invested in any product before',
+        '12': 'Others, please specify'
+
+    }},
+
+    {
+        'name': 'CS4_a_10',
+        'label': '{lbl} - aaaaa 10000',
+        'cats': {
+            '1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied',
+            '900001|combine|T2B': {'1': '1', '2': '2'},
+            '900002|combine|Neutral': {'3': '3'},
+            '900003|combine|B2B': {'4': '4', '5': '5'},
+        },
+        'mean_factor': {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}
+    },
+
+    {
+        'name': 'CS4_a_20',
+        'label': '{lbl} - aaaaa',
+        'cats': {
+            '1': 'Completely satisfied', '2': 'Satisfied', '3': 'Neutral', '4': 'Dissatisfied', '5': 'Completely dissatisfied',
+            '900001|combine|T2B': {'1': '1', '2': '2'},
+            '900002|combine|Neutral': {'3': '3'},
+            '900003|combine|B2B': {'4': '4', '5': '5'},
+
+        },
+        'mean_factor': {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}
+    },
+
+    {
+        'name': 'CS_rec_a_02',
+        'cats': {
+            '1': '0 - Definitely will not recommend', '2': '1', '3': '2', '4': '3', '5': '4', '6': '5', '7': '6', '8': '7',
+            '9': '8', '10': '9', '11': '10- Definitely will recommend',
+            '900001|combine|Detractors': {'1': '0', '2': '1', '3': '2', '4': '3', '5': '4', '6': '5', '7': '6'},
+            '900002|combine|Passives': {'8': '7', '9': '8'},
+            '900003|combine|Promoters': {'10': '9', '11': '10'},
+
+        },
+        'mean_factor': {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10},
+        'calculation': {'NPS': 'abs([Promoters] - [Detractors])'},
+    },
+
+
+
+]
+
+grp_tbl_info = {
+    'group_tbl_1': {
+        'data_to_run': {
+            'is_md': False,
+            'df_data': df_data,
+            'df_info': df_info,
+        },
+        'tables_to_run': [
+            'Table_HN',
+            'Table_HCM',
+        ],
+        'tables_format': {
+            'Table_HN': {
+                'tbl_name': "Table_HN",
+                'tbl_filter': "S2 == 1",
+                'tbl_cell_content': ['c', 'p', '%'],
+                'tbl_header': dict_header,
+                'tbl_side': lst_side,
+                'sig_test': {'type': 'non', 'lvl': [], 'cols': []},
+                'is_hide_zero_cats': False,
+                'is_hide_zero_cols': False,
+                'weight_var': '',
+            },
+            'Table_HCM': {
+                'tbl_name': "Table_HCM",
+                'tbl_filter': "S2 == 2",
+                'tbl_cell_content': ['c', 'p', '%'],
+                'tbl_header': dict_header,
+                'tbl_side': lst_side,
+                'sig_test': {'type': 'non', 'lvl': [], 'cols': []},
+                'is_hide_zero_cats': False,
+                'is_hide_zero_cols': False,
+                'weight_var': '',
+            },
+        },
+    },
+
+    'group_tbl_2': {
+        'data_to_run': {
+            'is_md': False,
+            'df_data': df_data,
+            'df_info': df_info,
+        },
+        'tables_to_run': [
+            # 'Table_HN',
+            'Table_HCM',
+        ],
+        'tables_format': {
+            'Table_HN': {
+                'tbl_name': "Table_HN",
+                'tbl_filter': "S2 == 1",
+                'tbl_cell_content': ['c', 'p', '%'],
+                'tbl_header': dict_header,
+                'tbl_side': lst_side,
+                'sig_test': {'type': 'non', 'lvl': [], 'cols': []},
+                'is_hide_zero_cats': False,
+                'is_hide_zero_cols': False,
+                'weight_var': '',
+            },
+            'Table_HCM': {
+                'tbl_name': "Table_HCM",
+                'tbl_filter': "S2 == 2",
+                'tbl_cell_content': ['c', 'p', '%'],
+                'tbl_header': dict_header,
+                'tbl_side': lst_side,
+                'sig_test': {'type': 'non', 'lvl': [], 'cols': []},
+                'is_hide_zero_cats': False,
+                'is_hide_zero_cols': False,
+                'weight_var': '',
+            },
+        },
+    },
+
+
+    'group_tbl_3': {
+        'data_to_run': {
+            'is_md': False,
+            'df_data': df_data,
+            'df_info': df_info,
+        },
+        'tables_to_run': [
+            'Table_HN',
+            # 'Table_HCM',
+        ],
+        'tables_format': {
+            'Table_HN': {
+                'tbl_name': "Table_HN",
+                'tbl_filter': "S2 == 1",
+                'tbl_cell_content': ['c', 'p', '%'],
+                'tbl_header': dict_header,
+                'tbl_side': lst_side,
+                'sig_test': {'type': 'non', 'lvl': [], 'cols': []},
+                'is_hide_zero_cats': False,
+                'is_hide_zero_cols': False,
+                'weight_var': '',
+            },
+            'Table_HCM': {
+                'tbl_name': "Table_HCM",
+                'tbl_filter': "S2 == 2",
+                'tbl_cell_content': ['c', 'p', '%'],
+                'tbl_header': dict_header,
+                'tbl_side': lst_side,
+                'sig_test': {'type': 'non', 'lvl': [], 'cols': []},
+                'is_hide_zero_cats': False,
+                'is_hide_zero_cols': False,
+                'weight_var': '',
+            },
+        },
+    },
+
+
+}
+
+
+dtbl = Tabulation(tbl_file_name=str_tbl_file_name, grp_tbl_info=grp_tbl_info)
+dtbl.tabulate_tables(lst_running_tables_group=['group_tbl_1'])
+
+
+
+
+
+
+
+
+
+here = 1
+
+
+exit()
+
 
 
 # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
@@ -1956,13 +2099,9 @@ lst_func_to_run = [
     {
         'func_name': 'run_standard_table_sig',
         'tables_to_run': [
-
             'Total_C_W',
-
             'Total_C',
-
             'Total_P_W',
-
             # 'Total_P_sig',
 
         ],

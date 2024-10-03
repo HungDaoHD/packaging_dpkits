@@ -157,7 +157,7 @@ class APDataConverter(Logging):
         lst_dup_vars = list()
         if dup_vars.any():
             lst_dup_vars = self.df_info_converted.loc[dup_vars, 'Name of items'].values.tolist()
-            self.print(f"Please check duplicated variables: {', '.join(lst_dup_vars)}", self.err)
+            self.print(f"Please check duplicated variables: {', '.join(lst_dup_vars)}", self.clr_err)
 
         return lst_dup_vars
 
@@ -318,7 +318,7 @@ class APDataConverter(Logging):
             self.print(f'Convert data file "{self.str_file_name}" to dataframe')
 
         except TypeError:
-            self.print(f"File not found: {self.str_file_name}", self.err)
+            self.print(f"File not found: {self.str_file_name}", self.clr_err)
             exit()
 
 
@@ -367,9 +367,12 @@ class APDataConverter(Logging):
             lstHeaderCol.remove('Question(Matrix)')
             lstHeaderCol.remove('Question(Normal)')
 
+
+
             for col in lstHeaderCol:
                 if df_info.loc[idx, col] is not None and len(str(df_info.loc[idx, col])) > 0:
                     dictQres[strQreName]['cats'].update({str(col): self.cleanhtml(str(df_info.loc[idx, col]))})
+
 
         lstMatrixHeader = list()
         for k in dictQres.keys():
@@ -379,7 +382,7 @@ class APDataConverter(Logging):
         if len(lstMatrixHeader):
             for i in lstMatrixHeader:
                 for code in dictQres[i]['cats'].keys():
-                    lstLblMatrixMA = dictQres[f'{i}_{code}']['label'].split('_')
+                    lstLblMatrixMA = dictQres[f'{i}_{code}']['label'].rsplit('_', 1)
                     dictQres[f'{i}_{code}']['cats'].update({'1': self.cleanhtml(lstLblMatrixMA[1])})
                     dictQres[f'{i}_{code}']['label'] = f"{dictQres[i]['label']}_{lstLblMatrixMA[1]}"
 
@@ -413,16 +416,18 @@ class APDataConverter(Logging):
 
         df_data, df_info = self.convert_df_md()
 
+
         def recode_md_to_mc(row: pd.Series):
             lst_re = [i + 1 for i, v in enumerate(row.values.tolist()) if v == 1]
             return lst_re + ([np.nan] * (len(row.index) - len(lst_re)))
 
 
-        def create_info_mc(row: pd.Series):
+        def create_val_lbl_info_mc(row: pd.Series):
             lst_val = row.values.tolist()
             dict_re = {str(i + 1): v['1'] for i, v in enumerate(lst_val)}
             return [dict_re] * len(lst_val)
 
+        df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'] = df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'].str.rsplit("_", n=1, expand=True)[0]
 
         for idx in df_info.query("var_type.isin(['MA', 'MA_mtr']) & var_name.str.contains(r'^\\w+\\d*_1$')").index:
             qre = df_info.at[idx, 'var_name'].rsplit('_', 1)[0]
@@ -430,7 +435,8 @@ class APDataConverter(Logging):
             cols = df_info.loc[fil_idx, 'var_name'].values.tolist()
 
             df_data[cols] = df_data[cols].apply(recode_md_to_mc, axis=1, result_type='expand')
-            df_info.loc[fil_idx, ['val_lbl']] = df_info.loc[fil_idx, ['val_lbl']].apply(create_info_mc, result_type='expand')
+            df_info.loc[fil_idx, ['val_lbl']] = df_info.loc[fil_idx, ['val_lbl']].apply(create_val_lbl_info_mc, result_type='expand')
+
 
         return df_data, df_info
 
@@ -678,7 +684,6 @@ class APDataConverter(Logging):
 
         # str_name = self.str_file_name.replace('.xlsx', '').replace('.zip', '')
         str_name = re.sub(r'\.zip|\.xlsx',  '', self.str_file_name)
-
         xlsx_name = f"{str_name}_Rawdata.xlsx"
 
         for key, val in dict_dfs.items():
@@ -741,8 +746,9 @@ class APDataConverter(Logging):
             str_zip_name = self.zip_name
 
             if not str_zip_name:
-                str_zip_name = f"{str_name.rsplit('/', 1)[-1]}_Data.zip" if '/' in str_name else str_name
+                str_zip_name = f"{str_name.rsplit('/', 1)[-1]}.zip" if '/' in str_name else str_name
 
+            str_zip_name = f"{str_zip_name}.zip" if '.zip' not in str_zip_name else str_zip_name
             self.print(f'Create {str_zip_name} with files: {", ".join(lst_zip_file_name)}')
             self.zipfiles(str_zip_name, lst_zip_file_name)
 

@@ -10,6 +10,7 @@ class Logging:
 
     def __init__(self):
 
+        self.max_len = 63
 
         self.clr_err = Fore.RED
         self.clr_warn = Fore.LIGHTYELLOW_EX
@@ -18,6 +19,10 @@ class Logging:
         self.clr_blue = Fore.BLUE
         self.clr_cyan = Fore.CYAN
         self.clr_magenta = Fore.MAGENTA
+
+        self.clr_blue_light = Fore.LIGHTBLUE_EX
+        self.clr_cyan_light = Fore.LIGHTCYAN_EX
+        self.clr_magenta_light = Fore.LIGHTMAGENTA_EX
 
         self.clr_reset = Fore.RESET
 
@@ -36,7 +41,7 @@ class Logging:
 
 
         str_prefix = f"{Fore.LIGHTBLACK_EX}{now} {self.clr_blue}{filename}:{linenumber}{Fore.RESET}"
-        str_prefix += " " * (60 - len(str_prefix))
+        str_prefix += " " * (self.max_len - len(str_prefix))
         str_suffix = f"{fore_color if fore_color else ""}{txt}{Fore.RESET}"
         str_content = f"{'\r' if is_remove_prev else ''}{str_prefix} {str_suffix}"
 
