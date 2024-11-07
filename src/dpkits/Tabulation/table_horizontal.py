@@ -45,7 +45,7 @@ class TableHorizontal(Logging):
         obj_table.df_horizontal['idx_qre'] = obj_table.df_horizontal[f'qre_grp_lvl_{last_lvl}'] + lst_idx_qre
 
 
-        # Add sig test header dataframe
+        # Add sig test header dataframe (Not yet)
 
 
         return self.obj_table

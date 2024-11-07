@@ -4,13 +4,21 @@ from openpyxl.styles.borders import Border, Side
 from openpyxl.styles import Alignment, Font
 from openpyxl.styles.fills import PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl import workbook, worksheet
 from colorama import Fore
+from .logging import Logging
+import multiprocessing
+import xlwings as xw
+from xlwings import sheets
 
 
 
-class TableFormatter:
+
+class TableFormatter(Logging):
 
     def __init__(self, xlsx_name):
+
+        super().__init__()
         self.xlsx_name = xlsx_name.rsplit('/', 1)[-1] if '/' in xlsx_name else xlsx_name
 
         self.thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
@@ -24,6 +32,7 @@ class TableFormatter:
         self.medium_left_2_border = Border(left=Side(style='medium'), right=Side(style='dotted'), top=Side(style='dotted'), bottom=Side(style='thin'))
         self.medium_left_3_border = Border(left=Side(style='medium'), right=Side(style='dotted'), top=Side(style='thin'), bottom=Side(style='dotted'))
         self.medium_left_4_border = Border(left=Side(style='medium'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
 
 
     @staticmethod
@@ -218,10 +227,6 @@ class TableFormatter:
 
 
 
-
-
-
-
     def format_sig_table(self):
 
         wb = openpyxl.load_workbook(self.xlsx_name, data_only=True)
@@ -380,3 +385,91 @@ class TableFormatter:
         print(f"Save wb as {output_name}")
         wb.save(output_name)
         wb.close()
+
+
+
+    """
+    --------------------------------------------------------------------------------------------------------------------
+    ADD NEW-------------------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------------------------
+    """
+
+
+
+    def format_workbook(self):
+
+        wb = xw.Book(self.xlsx_name)
+
+        for ws in wb.sheets:
+            self.format_worksheet(ws=ws)
+
+        wb.save(self.xlsx_name.replace('.xlsx', '_Testing_Output.xlsx'))
+        wb.close()
+
+
+    def format_worksheet(self, ws: sheets):
+
+        if ws.name == 'Content':
+            self.format_ws_content(ws=ws)
+        else:
+            self.format_ws_table(ws=ws)
+
+
+
+
+    def format_ws_content(self, ws: sheets):
+        self.print(ws.name)
+
+        """
+        Script here
+        """
+
+        pass
+
+
+
+
+    def format_ws_table(self, ws: sheets):
+
+        self.print(ws.name)
+
+        first_row = ws.range('A1').end('down').row
+        first_column = ws.range('A2').end('right').column
+
+        last_cell = ws.used_range.last_cell
+        last_row = last_cell.row
+        last_column = last_cell.column
+
+        if ws.range('B4').value is None:
+            lst_col_remove = list(range(first_column + 1, last_column + 1, 2))
+            lst_col_remove.reverse()
+
+            for icol in lst_col_remove:
+                ws.range(f'{get_column_letter(icol)}:{get_column_letter(icol)}').api.Delete()
+
+            ws.range(f'{first_row - 2}:{first_row - 1}').api.Delete()
+
+            first_row = ws.range('A1').end('down').row
+            first_column = ws.range('A2').end('right').column
+
+            last_cell = ws.used_range.last_cell
+            last_row = last_cell.row
+            last_column = last_cell.column
+
+        first_column_letter = get_column_letter(first_column)
+        last_column_letter = get_column_letter(last_column)
+
+        cells_range = ws.range(f'{first_column_letter}{first_row}:{last_column_letter}{last_row}')
+        cells_range.api.Borders.Weight = 1  # dot
+
+
+        header_range = ws.range(f'{first_column_letter}3:{last_column_letter}{first_row - 1}')
+        header_range.api.Borders.Weight = 2  # thin line
+
+        side_range = ws.range(f'A{first_row}:{get_column_letter(first_column - 1)}{last_row}')
+        side_range.api.Borders.Weight = 2  # thin line
+
+
+        # for i in range(7, 11):
+        #     cells_range.api.Borders(i).Weight = 2
+

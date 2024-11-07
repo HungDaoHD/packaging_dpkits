@@ -5,20 +5,20 @@ from pptx import Presentation
 from pptx.chart.data import XyChartData
 from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION
 from pptx.util import Inches
-from sklearn.linear_model import LinearRegression, LogisticRegression
+# from sklearn.linear_model import LinearRegression, LogisticRegression
 
 
 
 
 class DataAnalysis:
-    def __init__(self, df_data: pd.DataFrame, df_info: pd.DataFrame):
+    def __init__(self, *, df_data: pd.DataFrame, df_info: pd.DataFrame):
 
         self.df_data = df_data
         self.df_info = df_info
 
 
 
-    def penalty_analysis(self, dict_define_pen: dict, output_name: str):
+    def penalty_analysis(self, *, dict_define_pen: dict, output_name: str):
 
         df_pen = pd.DataFrame(
             columns=['Section', 'Qre', 'Label', 'Ma_SP_Lbl', 'GroupCode', 'GroupCode_Pct', 'GroupCode_x_OL_Mean', 'JAR_x_OL_Mean', 'Penalty_Score', 'Pull_Down_Index'],
@@ -101,37 +101,100 @@ class DataAnalysis:
 
 
 
-    def linear_regression(self, dict_define_linear: dict, output_name: str):
+    def linear_regression(self, *, dict_define_linear: dict, output_name: str):
+        """
+        :param dict_define_linear: dict like
+        {
+            'lnr1': {
+                'str_query': '',
+                'dependent_vars': ['Q1'],
+                'explanatory_vars': ['Q4', 'Q5', 'Q9', 'Q6', 'Q10'],
+            },
+            'lnr2': {
+                'str_query': '',
+                'dependent_vars': ['Q1'],
+                'explanatory_vars': ['Q4', 'Q5', 'Q9', 'Q10'],
+            },
+        }
+        :param output_name: *.xlsx
+        :return: NONE
+        """
 
         # Single: y = b + a*x
         # Multiple: y = b + a1*x1 + a2*x2 + ... + an*xn
 
-        # HERE: Going to replace with sklearn func
+        # # HERE: Going to replace with sklearn func
+        # regr = LinearRegression()
+        #
+        # for k_lnr, v_lnr in dict_define_linear.items():
+        #     df_data = self.df_data.query(v_lnr['str_query']).copy() if v_lnr['str_query'] else self.df_data.copy()
+        #
+        #     x = df_data[v_lnr['dependent_vars']]
+        #     y = df_data[v_lnr['explanatory_vars']]
+        #
+        #     regr.fit(x, y)
+        #     print(regr.coef_)
 
-        with pd.ExcelWriter(f'{output_name}.xlsx', engine='openpyxl') as writer:
+        with pd.ExcelWriter(output_name, engine='openpyxl') as writer:
             for k_ln, v_ln in dict_define_linear.items():
                 print(f'Processing linear regression - {k_ln}')
-                df_data = self.df_data.query(str_query).copy() if v_ln['str_query'] else self.df_data.copy()
 
+                df_data = self.df_data.query(v_ln['str_query']).copy() if v_ln['str_query'] else self.df_data.copy()
+
+                # if have many dependent_vars, have to calculate mean of its
                 df_data.loc[:, 'dep_var'] = df_data.loc[:, v_ln['dependent_vars']].mean(axis=1)
 
                 ln_reg = pg.linear_regression(df_data.loc[:, v_ln['explanatory_vars']], df_data['dep_var'])
-
                 ln_reg.to_excel(writer, sheet_name=k_ln)
 
 
 
-    def logistic_regression(self, dict_define_logistic: dict, output_name: str):
-        
-        # add calculate function here
-        
+
+    def correlation(self, *, dict_define_corr: dict, output_name: str):
+        """
+        :param dict_define_corr:
+        :param output_name:
+        :return: NONE
+        """
+
+        with pd.ExcelWriter(f'{output_name}', engine='openpyxl') as writer:
+            for key, var in dict_define_corr.items():
+                print(f'Processing correlation - {key}')
+
+                df_data = self.df_data.query(var['str_query']).copy() if var['str_query'] else self.df_data.copy()
+
+                # if have many dependent_vars, have to calculate mean of its
+                df_data.loc[:, 'dep_var'] = df_data.loc[:, var['dependent_vars']].mean(axis=1)
+
+                x = df_data['dep_var']
+                df_corr = pd.DataFrame()
 
 
+                for i, v in enumerate(var['explanatory_vars']):
 
-        pass
+
+                    corr = pg.corr(x, df_data[v])
+
+                    corr['method'] = corr.index
+                    corr['x'] = '|'.join(var['dependent_vars'])
+                    corr['y'] = v
+                    corr.index = [f'correlation {i + 1}']
+                    corr = corr[['x', 'y'] + list(corr.columns)[:-2]]
+
+                    df_corr = pd.concat([df_corr, corr])
+
+                df_corr.to_excel(writer, sheet_name=key)
+
+
 
 
 
 
     # MORE ANALYSIS HERE
+
+
+
+
+
+
 

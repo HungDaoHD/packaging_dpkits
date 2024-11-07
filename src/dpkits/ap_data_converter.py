@@ -427,7 +427,11 @@ class APDataConverter(Logging):
             dict_re = {str(i + 1): v['1'] for i, v in enumerate(lst_val)}
             return [dict_re] * len(lst_val)
 
-        df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'] = df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'].str.rsplit("_", n=1, expand=True)[0]
+
+        if not df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'].empty:
+            df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'] = df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'].str.rsplit("_", n=1, expand=True)[0]
+
+
 
         for idx in df_info.query("var_type.isin(['MA', 'MA_mtr']) & var_name.str.contains(r'^\\w+\\d*_1$')").index:
             qre = df_info.at[idx, 'var_name'].rsplit('_', 1)[0]

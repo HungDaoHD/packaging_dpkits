@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-from .logging import Logging
-from .tabulation_model import TableFormat, SideQre, SideQres
-
+from ..logging import Logging
 
 
 
@@ -11,23 +9,33 @@ from .tabulation_model import TableFormat, SideQre, SideQres
 class TabulationVertical(Logging):
 
 
-
-    def generate_df_vertical(self, tbl_format: TableFormat, df_info: pd.DataFrame) -> pd.DataFrame:
-
-        side_qres = SideQres(qres=tbl_format.tbl_side, df_info=df_info)
-
-        for qre in side_qres.qres:
-            print(qre.name)
-
-        return pd.DataFrame()
+    def __init__(self, *, obj_table):
+        super().__init__()
+        self.obj_table = obj_table
 
 
 
+    def generate_df_vertical(self):
+
+        lst_col = ['name', 'label', 'type', 'cat_code', 'cat_label', 'cols', 'factor', 'filter', 'sort', 'calculation']
 
 
-    # dataframe of side qres
-    # Here
+        for item in self.obj_table.tbl_side:
 
+            print(item.name, item.label, item.type)
+
+
+
+        # here:
+
+
+
+        a = 1
+
+
+
+
+        return self.obj_table
 
 
 

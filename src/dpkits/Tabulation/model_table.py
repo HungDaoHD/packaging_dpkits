@@ -6,6 +6,7 @@ from enum import Enum
 from .model_data2run import Data2Run, log
 from .model_question import *
 from .table_horizontal import TableHorizontal
+from .table_vertical import TabulationVertical
 
 
 
@@ -184,7 +185,6 @@ class Table(BaseModel):
 
 
 
-
         # # # Generate df_horizontal------------------------------------------------------------------------------------
         tbl_hrz = TableHorizontal(obj_table=self)
         tbl_hrz.generate_df_horizontal()
@@ -192,16 +192,13 @@ class Table(BaseModel):
 
 
 
-
-
-
         # # # Generate df_vertical--------------------------------------------------------------------------------------
+        tbl_ver = TabulationVertical(obj_table=self)
+        tbl_ver.generate_df_vertical()
 
         here = 1
 
-
-
-
+        log.print(f"Table {self.tbl_name}'s df_vertical is generated successfully", log.clr_succ)
 
 
 

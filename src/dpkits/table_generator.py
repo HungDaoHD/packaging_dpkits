@@ -6,6 +6,7 @@ import json
 import sys
 import math
 import functools
+import multiprocessing
 from scipy import stats
 from datetime import datetime, timedelta
 from .table_formater import TableFormatter
@@ -53,6 +54,10 @@ class DataTableGenerator(Logging):
             exit()
         except FileNotFoundError:
             pass
+
+
+        self.dict_df_tables = dict()
+
 
 
 
@@ -155,12 +160,13 @@ class DataTableGenerator(Logging):
             if os.path.exists(file_name):
                 os.remove(file_name)
 
-            with pd.ExcelWriter(file_name) as writer:
+            with pd.ExcelWriter(file_name, engine="openpyxl") as writer:
                 df_content_null.to_excel(writer, sheet_name='Content', index=False)
 
 
         for item in lst_func_to_run:
             self.run_tables_by_item(item)
+
 
 
 
@@ -192,19 +198,38 @@ class DataTableGenerator(Logging):
                 exit()
 
 
-        for tbl_key, tbl_val in dict_tables.items():
-            start_time = time.time()
 
-            self.print(f"Run table: {tbl_val['tbl_name']}", self.clr_succ)
+        # MULTIPLE PROCESSING-------------------------------------------------------------------------------------------
 
-            df_tbl = getattr(self, item['func_name'])(tbl_val)
+        num_cores = multiprocessing.cpu_count()
+        self.print(f'Number of CPU cores: {num_cores}')
+        self.print(f'Number of CPU cores to be used for multiple processing: {num_cores - 1}', self.clr_warn)
 
-            self.print(f"Create sheet: {tbl_val['tbl_name']}", self.clr_succ)
+        pool = multiprocessing.Pool(processes=num_cores - 1)
 
-            with pd.ExcelWriter(self.file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-                df_tbl.to_excel(writer, sheet_name=tbl_val['tbl_name'], index=False)  # encoding='utf-8-sig'
+        # Map tasks to the worker function
+        results = pool.map(self.run_standard_table_sig, list(dict_tables.values()))
 
-            self.print(f"Create sheet: {tbl_val['tbl_name']} Duration: {timedelta(seconds=time.time() - start_time)}", self.clr_succ)
+        # Close and join the pool
+        pool.close()
+        pool.join()
+        # End MULTIPLE PROCESSING---------------------------------------------------------------------------------------
+
+        self.dict_df_tables = {arr[0]: arr[-1] for arr in results}
+
+        self.print("All processes have completed.", self.clr_succ)
+
+        self.dict_df_tables = dict(sorted(self.dict_df_tables.items(), key=lambda iitem: item['tables_to_run'].index(iitem[0])))
+
+        with pd.ExcelWriter(self.file_name, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+
+            for k, v in self.dict_df_tables.items():
+                self.print(f"Saving table {k}", self.clr_cyan, end='')
+                v.to_excel(writer, sheet_name=k, index=False)
+                self.print(f"Saved table {k}", self.clr_succ, end='\r')
+
+
+        self.print("All tables have saved.", self.clr_succ)
 
 
 
@@ -216,8 +241,6 @@ class DataTableGenerator(Logging):
 
 
     def group_sig_table_header(self, lst_header_qres: list) -> list:
-
-        df_info = self.df_info.copy()
 
         lst_group_header = list()
 
@@ -410,7 +433,8 @@ class DataTableGenerator(Logging):
 
 
 
-    def run_standard_table_sig(self, tbl: dict) -> pd.DataFrame:
+    # def run_standard_table_sig(self, tbl: dict, return_dict: dict):  # -> pd.DataFrame:
+    def run_standard_table_sig(self, tbl: dict):  # -> pd.DataFrame:
 
         df_tbl = pd.DataFrame()
 
@@ -484,13 +508,14 @@ class DataTableGenerator(Logging):
                 lst_group_header.extend(self.group_sig_table_header(val_hd))
 
 
+        # self.print(f'Processing {tbl['tbl_name']}', self.clr_cyan, end='')
+
 
         for grp_hd in lst_group_header:
 
-            self.print(f"Run table: {tbl['tbl_name']} -> group header:", self.clr_cyan)
-
-            for i in grp_hd.values():
-                self.print(f"\t{i['lbl']}", self.clr_succ)
+            # self.print(f"Run table: {tbl['tbl_name']} -> group header:", self.clr_cyan)
+            # for i in grp_hd.values():
+            #     self.print(f"\t{i['lbl']}", self.clr_succ)
 
             tbl_info_sig = {
                 'tbl_name': tbl['tbl_name'],
@@ -557,7 +582,11 @@ class DataTableGenerator(Logging):
 
         # df_tbl.to_excel('zzz_df_tbl.xlsx', encoding='utf-8-sig')
 
-        return df_tbl
+        # return_dict[tbl['tbl_name']] = df_tbl
+
+        return [tbl['tbl_name'], df_tbl]
+
+        # return df_tbl
 
 
 
@@ -1404,9 +1433,6 @@ class DataTableGenerator(Logging):
             weight_var = df_info.at[idx, 'weight_var']
             lst_qre_col_weight_var = lst_qre_col if len(weight_var) == 0 else lst_qre_col + [weight_var]
 
-
-            self.print(f'\t- Create table for {qre_name}[{qre_type}]: Processing', end='\r')
-
             dict_header_col_name = dict()
             for key, val in dict_header_col_name_origin.items():
                 dict_header_col_name[key] = val.copy()
@@ -1426,6 +1452,10 @@ class DataTableGenerator(Logging):
                 'lst_qre_col': lst_qre_col,
             }
 
+            str_print = f"{tbl_info_sig['tbl_name']} | {dict_grp_header[0]['lbl'].rsplit('@', 1)[0]} | {qre_name}[{qre_type}]"
+
+            self.print(f'{str_print} in Processing', end='')
+
             df_qre = pd.DataFrame(columns=df_tbl.columns, data=[])
 
             # BASE------------------------------------------------------------------------------------------------------
@@ -1434,6 +1464,7 @@ class DataTableGenerator(Logging):
 
             if qre_type in ['FT', 'FT_mtr']:
                 # Not run free text questions
+                print('')
                 self.print(f'Cannot create table for free text questions: {qre_name}|{qre_type}', self.clr_warn)
                 pass
 
@@ -1597,7 +1628,9 @@ class DataTableGenerator(Logging):
 
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
 
-            self.print(f'\t- Create table for {qre_name}[{qre_type}]: Done')
+            # self.print(f'\t- Create table for {qre_name}[{qre_type}]: Done', end='\r')
+
+            self.print(f'{str_print} Completed', end='\r')
 
         return df_tbl
 
