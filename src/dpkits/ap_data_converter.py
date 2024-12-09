@@ -807,7 +807,7 @@ class APDataConverter(Logging):
                 continue
 
         if lst_cannot_converted:
-            self.print(f"Cannot convert values to INT: {'\n- '.join(lst_cannot_converted)}", self.warn)
+            self.print(f"Cannot convert values to INT: {'\n- '.join(lst_cannot_converted)}", self.clr_warn)
 
         return df_data, df_info
 

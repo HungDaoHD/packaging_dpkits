@@ -871,8 +871,8 @@ with pd.ExcelWriter(f'{str_file_name}_preview.xlsx', engine="openpyxl") as write
 #
 # # FORMAT TABLES---------------------------------------------------------------------------------------------------------
 # dtf = TableFormatter(xlsx_name=str_tbl_file_name)
-# dtf.format_sig_table()
-#
+# dtf.format_sig_table()  # OLD
+# dtf.format_workbook()  # NEW
 #
 #
 # # PENALTY ANALYSIS------------------------------------------------------------------------------------------------------
