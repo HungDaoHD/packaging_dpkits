@@ -130,8 +130,10 @@ class APDataConverter(Logging):
         self.is_zip = True if '.zip' in file_name else False
         self.str_file_name = file_name.rsplit('/', 1)[-1] if '/' in file_name else file_name
         self.zip_name = str()
+
         self.df_data_converted, self.df_info_converted = pd.DataFrame(), pd.DataFrame()
 
+        pd.set_option('future.no_silent_downcasting', True)
 
 
 
@@ -165,7 +167,7 @@ class APDataConverter(Logging):
 
     def read_file_xlsx(self, file: str, is_qme: bool, is_zip: bool = False) -> (pd.DataFrame, pd.DataFrame):
 
-        self.print(f'Read file "{file}"')
+        self.print(['Read file', f'"{file}"'], [None, self.clr_blue], ': ')
 
         if is_qme:
 
@@ -184,11 +186,14 @@ class APDataConverter(Logging):
                                 dict_col_converted = dict()
                                 for i, col in enumerate(list(df_qres.columns)):
                                     try:
+
                                         dict_col_converted[col] = int(col)
-                                    except Exception:
+
+                                    except Exception as e:
+
                                         dict_col_converted[col] = col
 
-                                df_qres.rename(columns=dict_col_converted, inplace=True)
+                                df_qres = df_qres.rename(columns=dict_col_converted)
 
                             else:
                                 df_data = pd.read_csv(ff, low_memory=False)
@@ -203,9 +208,7 @@ class APDataConverter(Logging):
             df_data_header.loc[((pd.isnull(df_data_header[3])) & (df_data_header[5] == 'Images')), 3] = ['Images']
             df_data_header[3] = df_data_header[3].ffill()
 
-            df_temp = df_data_header.loc[
-                      (df_data_header[3].duplicated(keep=False)) & ~(pd.isnull(df_data_header[3])) & ~(
-                          pd.isnull(df_data_header[4])), :].copy()
+            df_temp = df_data_header.loc[(df_data_header[3].duplicated(keep=False)) & ~(pd.isnull(df_data_header[3])) & ~(pd.isnull(df_data_header[4])), :].copy()
 
             for idx in df_temp.index:
                 str_prefix = df_data_header.at[idx, 3]
@@ -218,12 +221,14 @@ class APDataConverter(Logging):
 
             df_data_header.loc[pd.isnull(df_data_header[3]), 3] = df_data_header.loc[pd.isnull(df_data_header[3]), 5]
             dict_header = df_data_header[3].to_dict()
-            df_data.rename(columns=dict_header, inplace=True)
-            df_data.drop(list(range(6)), inplace=True)
-            set_drop = set(dict_header.values()).intersection(set(self.lstDrop))
-            df_data.drop(columns=list(set_drop), inplace=True, axis=1)
 
-            df_qres.replace({np.nan: None}, inplace=True)
+            df_data = df_data.rename(columns=dict_header).drop(list(range(6)))
+
+            set_drop = set(dict_header.values()).intersection(set(self.lstDrop))
+
+            df_data = df_data.drop(columns=list(set_drop), axis=1)
+
+            df_qres = df_qres.replace({np.nan: None})
 
         else:
             # xlsx = io.BytesIO(file.file.read())
@@ -231,40 +236,10 @@ class APDataConverter(Logging):
             df_qres = pd.read_excel(file, sheet_name='Datamap')
 
 
-        df_data.reset_index(drop=True, inplace=True)
-        df_qres.reset_index(drop=True, inplace=True)
+        df_data = df_data.reset_index(drop=True)
+        df_qres = df_qres.reset_index(drop=True)
 
         return df_data, df_qres
-
-
-
-    def read_file_sav(self, file: str) -> (pd.DataFrame, pd.DataFrame):
-
-        self.print('Read file sav', self.MAGENTA)
-
-        # # PENDING - NOT YET COMPLETED
-        #
-        # file_location = f"{file}"
-        # with open(file_location, "wb+") as file_object:
-        #     file_object.write(file.file.read())
-        #
-        # df_data_output, meta = pyreadstat.read_sav(file.filename)
-        # os.remove(file.filename)
-        #
-        # # ['var_name', 'var_lbl', 'var_type', 'val_lbl']
-        # # arr = np.array(df_data_output.columns)
-        # # arr = arr.T
-        #
-        # df_info_output = pd.DataFrame(columns=['var_name'], data=np.array(df_data_output.columns))
-        # df_info_output.index = df_data_output.columns
-        #
-        # # column_names_to_labels
-        # # readstat_variable_types
-        # # variable_value_labels
-        # df_info_output = pd.concat([df_info_output, pd.DataFrame.from_dict(meta.column_names_to_labels, orient='index', columns=['var_lbl'])], axis=1)
-        #
-        # return df_data_output, df_info_output
-        return pd.DataFrame, pd.DataFrame
 
 
 
@@ -281,8 +256,9 @@ class APDataConverter(Logging):
 
                 if '.sav' in file:
                     # this function is pending
-                    self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
-                    self.zip_name = file.replace('.sav', '_Data.zip')
+                    # self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
+                    # self.zip_name = file.replace('.sav', '_Data.zip')
+                    pass
 
                 elif '.zip' in file:
                     self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
@@ -308,18 +284,17 @@ class APDataConverter(Logging):
                     if df_info_converted_merge.empty:
                         df_info_converted_merge = df_info_converted
 
-                df_data_converted_merge.reset_index(drop=True, inplace=True)
+                df_data_converted_merge = df_data_converted_merge.reset_index(drop=True)
 
                 self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
 
             self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
             self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
 
-            self.print(f'Convert data file "{self.str_file_name}" to dataframe')
+            self.print(['Convert data file', self.str_file_name, 'to dataframe'], [None, self.clr_blue, None], sep=' ')
 
-        except TypeError:
-            self.print(f"File not found: {self.str_file_name}", self.clr_err)
-            exit()
+        except Exception as err:
+            raise err
 
 
         if self.check_duplicate_variables():
@@ -395,13 +370,94 @@ class APDataConverter(Logging):
                 df_info_output = pd.concat([df_info_output, pd.DataFrame(data=[arr_row], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])])
 
 
-        df_data_output.replace({None: np.nan}, inplace=True)
-        df_info_output.reset_index(drop=True, inplace=True)
+        df_data_output = df_data_output.replace({None: np.nan})
+        df_info_output = df_info_output.reset_index(drop=True)
 
         df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
 
         if self.is_zip:
             df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
+
+
+        # ADD CITY 'value label'
+        if 'CITY' in df_data_output.columns:
+
+            val_lbl_city = df_info_output.loc[df_info_output.eval("var_name == 'CITY'"), 'val_lbl'].values[0]
+
+            if len(val_lbl_city) == 0:
+                dict_replace_city_values = {
+                    'Hà Nội': 1,
+                    'Hồ Chí Minh': 2,
+                    'Đà Nẵng': 3,
+                    'Cần Thơ': 4,
+                    'Hải Phòng': 5,
+                    'An Giang': 6,
+                    'Bà Rịa - Vũng Tàu': 7,
+                    'Bắc Giang': 8,
+                    'Bắc Kạn': 9,
+                    'Bạc Liêu': 10,
+                    'Bắc Ninh': 11,
+                    'Bến Tre': 12,
+                    'Bình Dương': 13,
+                    'Bình Định': 14,
+                    'Bình Phước': 15,
+                    'Bình Thuận': 16,
+                    'Cà Mau': 17,
+                    'Cao Bằng': 18,
+                    'Đắk Lắk': 19,
+                    'Đắk Nông': 20,
+                    'Điện Biên': 21,
+                    'Đồng Nai': 22,
+                    'Đồng Tháp': 23,
+                    'Gia Lai': 24,
+                    'Hà Giang': 25,
+                    'Hà Nam': 26,
+                    'Hà Tĩnh': 27,
+                    'Hải Dương': 28,
+                    'Hậu Giang': 29,
+                    'Hòa Bình': 30,
+                    'Hưng Yên': 31,
+                    'Khánh Hòa': 32,
+                    'Kiên Giang': 33,
+                    'Kon Tum': 34,
+                    'Lai Châu': 35,
+                    'Lâm Đồng': 36,
+                    'Lạng Sơn': 37,
+                    'Lào Cai': 38,
+                    'Long An': 39,
+                    'Nam Định': 40,
+                    'Nghệ An': 41,
+                    'Ninh Bình': 42,
+                    'Ninh Thuận': 43,
+                    'Phú Thọ': 44,
+                    'Phú Yên': 45,
+                    'Quảng Bình': 46,
+                    'Quảng Nam': 47,
+                    'Quảng Ngãi': 48,
+                    'Quảng Ninh': 49,
+                    'Quảng Trị': 50,
+                    'Sóc Trăng': 51,
+                    'Sơn La': 52,
+                    'Tây Ninh': 53,
+                    'Thái Bình': 54,
+                    'Thái Nguyên': 55,
+                    'Thanh Hóa': 56,
+                    'Thừa Thiên - Huế': 57,
+                    'Tiền Giang': 58,
+                    'Trà Vinh': 59,
+                    'Tuyên Quang': 60,
+                    'Vĩnh Long': 61,
+                    'Vĩnh Phúc': 62,
+                    'Yên Bái': 63,
+                }
+                df_data_city = df_data_output['CITY'].value_counts()
+
+                df_data_output = df_data_output.replace(dict_replace_city_values)
+
+                dict_city_value_label = {str(dict_replace_city_values[val]): val for val in df_data_city.index}
+                df_info_output.loc[df_info_output.eval("var_name == 'CITY'"), ['val_lbl']] = [dict_city_value_label]
+
+
 
         return df_data_output, df_info_output
 
@@ -424,8 +480,15 @@ class APDataConverter(Logging):
 
         def create_val_lbl_info_mc(row: pd.Series):
             lst_val = row.values.tolist()
-            dict_re = {str(i + 1): v['1'] for i, v in enumerate(lst_val)}
-            return [dict_re] * len(lst_val)
+            dict_replace = dict()
+            for i, v in enumerate(lst_val):
+                if v.get('1'):
+                    dict_replace.update({str(i + 1): v['1']})
+                else:
+                    self.print(f'Warning: codelist of {df_info.loc[row.index, 'var_name'].values.tolist()} contains None value', self.clr_warn)
+                    dict_replace.update({str(i + 1): 'NONE'})
+
+            return [dict_replace] * len(lst_val)
 
 
         if not df_info.loc[df_info.eval("var_type == 'MA_mtr'"), 'var_lbl'].empty:
@@ -444,140 +507,6 @@ class APDataConverter(Logging):
 
         return df_data, df_info
 
-
-        # self.convert_upload_files_to_df_converted()
-        #
-        # df_data, df_info = self.df_data_converted, self.df_info_converted
-        #
-        # if lst_new_row:
-        #     df_info = pd.concat([df_info, pd.DataFrame(
-        #         columns=df_info.columns,
-        #         data=lst_new_row,
-        #     )], axis=0)
-        #     df_info.reset_index(drop=True, inplace=True)
-        #
-        # df_data.replace({None: np.nan}, inplace=True)
-        #
-        # lstFullCodelist = list(df_info.columns)
-        # lstFullCodelist.remove('Name of items')
-        # lstFullCodelist.remove('Question type')
-        # lstFullCodelist.remove('Question(Matrix)')
-        # lstFullCodelist.remove('Question(Normal)')
-        #
-        # dictQres = dict()
-        # for idx in df_info.index:
-        #
-        #     strQreName = str(df_info.loc[idx, 'Name of items'])
-        #     strQreName = strQreName.replace('Rank_', 'Rank') if 'Rank_' in strQreName else strQreName
-        #     strQreType = df_info.loc[idx, 'Question type']
-        #     isMatrix = False if df_info.loc[idx, 'Question(Matrix)'] is None else True
-        #     strMatrix = '' if df_info.loc[idx, 'Question(Matrix)'] is None else self.cleanhtml(f"{df_info.loc[idx, 'Question(Matrix)']}")
-        #     strNormal = '' if df_info.loc[idx, 'Question(Normal)'] is None else self.cleanhtml(f"{df_info.loc[idx, 'Question(Normal)']}")
-        #
-        #     if strQreName not in dictQres.keys():
-        #
-        #         if strQreType == 'MA':
-        #
-        #             if isMatrix:
-        #
-        #                 ser_codelist = df_info.loc[idx, lstFullCodelist]
-        #                 ser_codelist.dropna(inplace=True)
-        #                 dict_codelist = ser_codelist.to_dict()
-        #
-        #                 if not ser_codelist.empty:
-        #                     dictQres[strQreName] = {
-        #                         'type': strQreType,
-        #                         'label': f'{strMatrix}_{strNormal}' if isMatrix else strNormal,
-        #                         'isMatrix': isMatrix,
-        #                         'MA_Matrix_Header': strQreName,
-        #                         'MA_cols': [f'{strQreName}_{k}' for k in dict_codelist.keys()],
-        #                         'cats': {str(k): self.cleanhtml(v) for k, v in dict_codelist.items()},
-        #                     }
-        #             else:
-        #
-        #                 maName, maCode = strQreName.rsplit('_', 1)
-        #                 maLbl = self.cleanhtml(df_info.at[idx, 1])
-        #
-        #                 if maName not in dictQres.keys():
-        #
-        #                     dictQres[maName] = {
-        #                         'type': strQreType,
-        #                         'label': strNormal,
-        #                         'isMatrix': isMatrix,
-        #                         'MA_cols': [strQreName],
-        #                         'cats': {str(maCode): maLbl}
-        #                     }
-        #
-        #                 else:
-        #
-        #                     dict_qre = dictQres[maName]
-        #                     dict_qre['MA_cols'].append(strQreName)
-        #                     dict_qre['cats'].update({str(maCode): maLbl})
-        #
-        #
-        #         else:  # ['SA', 'RANKING', 'FT']
-        #
-        #             dictQres[strQreName] = {
-        #                 'type': strQreType,
-        #                 'label': str(),
-        #                 'isMatrix': isMatrix,
-        #                 'cats': dict(),
-        #             }
-        #
-        #             dict_qre = dictQres[strQreName]
-        #             dict_qre['label'] = f'{strMatrix}_{strNormal}' if isMatrix else strNormal
-        #
-        #             if strQreType in ['SA', 'RANKING']:
-        #                 ser_codelist = df_info.loc[idx, lstFullCodelist]
-        #                 ser_codelist.dropna(inplace=True)
-        #                 dict_qre['cats'] = {str(k): self.cleanhtml(v) for k, v in ser_codelist.to_dict().items()}
-        #
-        # df_data_output = df_data.loc[:, ['ID']].copy()
-        #
-        # df_info_output = pd.DataFrame(data=[['ID', 'ID', 'FT', {}]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
-        #
-        # for qre, qre_info in dictQres.items():
-        #
-        #     if qre_info['type'] == 'MA':
-        #
-        #         dfMA = df_data.loc[:, qre_info['MA_cols']]
-        #
-        #         for col_name in qre_info['MA_cols']:
-        #             maName, maCode = col_name.rsplit('_', 1)
-        #             dfMA[col_name] = dfMA[col_name].astype(float)
-        #             dfMA.replace({col_name: {1: int(maCode)}}, inplace=True)
-        #
-        #
-        #         dfMA['combined'] = [[e for e in row if e == e] for row in dfMA[qre_info['MA_cols']].values.tolist()]
-        #         dfMA = pd.DataFrame(dfMA['combined'].tolist(), index=dfMA.index)
-        #
-        #         for i, col_name in enumerate(qre_info['MA_cols']):
-        #
-        #             if i in list(dfMA.columns):
-        #                 dfColMA = dfMA[i].to_frame()
-        #                 dfColMA.rename(columns={i: col_name}, inplace=True)
-        #             else:
-        #                 dfColMA = pd.DataFrame([np.nan] * dfMA.shape[0], columns=[col_name])
-        #
-        #             df_data_output = pd.concat([df_data_output, dfColMA], axis=1)
-        #             dfInfoRow = pd.DataFrame([[col_name, qre_info['label'], 'MA_mtr' if qre_info['isMatrix'] else 'MA', qre_info['cats']]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
-        #             df_info_output = pd.concat([df_info_output, dfInfoRow], axis=0)
-        #
-        #     else:
-        #         if qre in df_data.columns:
-        #             df_data_output = pd.concat([df_data_output, df_data[qre]], axis=1)
-        #             dfInfoRow = pd.DataFrame([[qre, qre_info['label'], f"{qre_info['type']}_mtr" if qre_info['isMatrix'] else qre_info['type'], qre_info['cats']]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
-        #             df_info_output = pd.concat([df_info_output, dfInfoRow], axis=0)
-        #
-        # # dfQreInfo.set_index('var_name', inplace=True)
-        # df_info_output.reset_index(drop=True, inplace=True)
-        #
-        # df_data_output, df_info_output = self.auto_convert_ft_to_float(df_data_output, df_info_output)
-        #
-        # if self.is_zip:
-        #     df_data_output, df_info_output = self.auto_convert_sa_ma_to_int(df_data_output, df_info_output)
-        #
-        # return df_data_output, df_info_output
 
 
 
@@ -707,6 +636,10 @@ class APDataConverter(Logging):
                 self.print(f'Create {str_sav_name}')
                 dict_val_lbl = {a: {int(k): str(v) for k, v in b.items()} for a, b in zip(df_info['var_name'], df_info['val_lbl'])}
                 dict_measure = {a: 'nominal' for a in df_info['var_name']}
+
+                null_columns = df_data.select_dtypes(include='object').columns[df_data.select_dtypes(include='object').isnull().all()].tolist()
+                df_data[null_columns] = df_data[null_columns].astype(float)
+
                 pyreadstat.write_sav(df_data, str_sav_name, column_labels=df_info['var_lbl'].values.tolist(), variable_value_labels=dict_val_lbl, variable_measure=dict_measure)
                 lst_zip_file_name.extend([str_sav_name])
 
@@ -716,11 +649,12 @@ class APDataConverter(Logging):
 
                 if is_recode_to_lbl:
                     df_info_recode = df_info.loc[df_info['val_lbl'] != {}, ['var_name', 'val_lbl']].copy()
-                    df_info_recode.set_index('var_name', inplace=True)
+                    df_info_recode = df_info_recode.set_index('var_name')
+
                     df_info_recode['val_lbl'] = [{int(cat): lbl for cat, lbl in dict_val.items()} for dict_val in df_info_recode['val_lbl']]
 
                     dict_recode = df_info_recode.loc[:, 'val_lbl'].to_dict()
-                    df_data_xlsx.replace(dict_recode, inplace=True)
+                    df_data_xlsx = df_data_xlsx.replace(dict_recode)
 
                 self.print(f"Create {xlsx_name} - sheet {val['sheet_name']}")
 
@@ -735,8 +669,8 @@ class APDataConverter(Logging):
                         wb.remove(wb[ws_data_name])
                         wb.remove(wb[ws_info_name])
 
-                    except Exception:
-                        self.print('There is no sheet existing')
+                    except Exception as err:
+                        self.print('There is no sheet existing', err)
 
                     finally:
                         self.print(f'Create sheets - {ws_data_name} & {ws_info_name}')
@@ -802,7 +736,8 @@ class APDataConverter(Logging):
             try:
                 df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='integer')
                 lst_converted.append(col_name)
-            except Exception:
+
+            except Exception as err:
                 lst_cannot_converted.append(col_name)
                 continue
 

@@ -20,6 +20,8 @@ class DataTableGenerator(Logging):
 
         super().__init__()
 
+        pd.set_option('future.no_silent_downcasting', True)
+
         self.df_data = df_data.copy()
         self.df_info = df_info.copy()
 
@@ -74,7 +76,8 @@ class DataTableGenerator(Logging):
                 str_qre, str_val = str(df_info_ma.at[idx_ma, 'var_name']).rsplit('_', 1)
                 dict_val_lbl[str_val] = df_info_ma.at[idx_ma, 'val_lbl']['1']
 
-                df_data[df_info_ma.at[idx_ma, 'var_name']].replace({1: int(str_val)}, inplace=True)
+                # df_data[df_info_ma.at[idx_ma, 'var_name']].replace({1: int(str_val)}, inplace=True)
+                df_data[df_info_ma.at[idx_ma, 'var_name']] = df_data[df_info_ma.at[idx_ma, 'var_name']].replace({1: int(str_val)})
 
             df_info.loc[df_info_ma.index,  ['val_lbl']] = [dict_val_lbl]
 
@@ -96,7 +99,9 @@ class DataTableGenerator(Logging):
     def valcheck_value_df_data_vs_df_info(self):
 
         df_data, df_info = self.df_data.copy(), self.df_info.copy()
-        df_info.set_index('var_name', inplace=True)
+
+        # df_info.set_index('var_name', inplace=True)
+        df_info = df_info.set_index('var_name')
 
         df_info = df_info.loc[df_info.eval("~var_type.isin(['FT', 'FT_mtr', 'NUM']) | var_name == 'ID'"), :].drop(columns=['var_lbl', 'var_type'])
 
@@ -118,7 +123,9 @@ class DataTableGenerator(Logging):
         df_data = pd.DataFrame(df_data)
 
 
-        df_data.reset_index(drop=True if 'ID' in df_data.columns else False, inplace=True)
+        # df_data.reset_index(drop=True if 'ID' in df_data.columns else False, inplace=True)
+        df_data = df_data.reset_index(drop=True if 'ID' in df_data.columns else False)
+
         df_data = pd.melt(df_data, id_vars=df_data.columns[0], value_vars=df_data.columns[1:]).dropna()
 
         if not df_data.empty:
@@ -487,7 +494,8 @@ class DataTableGenerator(Logging):
 
             # NEW-------------------------------------------------------------------------------------------------------
             df_qre_info = self.df_info.query(f"var_name.isin({lst_qre_col})").copy()
-            df_qre_info.reset_index(drop=True, inplace=True)
+            # df_qre_info.reset_index(drop=True, inplace=True)
+            df_qre_info = df_qre_info.reset_index(drop=True)
 
             if df_qre_info.empty:
                 self.print(f"\n\tQuestion(s) is not found: {qre['qre_name']}\n\tProcess terminated.", self.clr_err)
@@ -560,7 +568,8 @@ class DataTableGenerator(Logging):
 
 
         # drop row which have all value is nan
-        df_tbl.dropna(how='all', inplace=True)
+        # df_tbl.dropna(how='all', inplace=True)
+        df_tbl = df_tbl.dropna(how='all')
 
         # Drop rows in qre oe that have all columns are 0
         if tbl['is_hide_oe_zero_cats']:
@@ -570,7 +579,8 @@ class DataTableGenerator(Logging):
             if not df_sum_oe_val.empty:
                 fil_col = list(df_sum_oe_val.columns)
                 df_sum_oe_val = df_sum_oe_val.loc[:, fil_col[5:]]
-                df_sum_oe_val.replace({'': np.nan, 0: np.nan}, inplace=True)
+                # df_sum_oe_val.replace({'': np.nan, 0: np.nan}, inplace=True)
+                df_sum_oe_val = df_sum_oe_val.replace({'': np.nan, 0: np.nan})
 
                 # df_sum_oe_val = df_sum_oe_val.astype(float)
                 # df_sum_oe_val['sum_val'] = df_sum_oe_val.sum(axis=1, skipna=True, numeric_only=True)
@@ -579,7 +589,8 @@ class DataTableGenerator(Logging):
 
                 df_sum_oe_val = df_sum_oe_val.query('sum_val == 0')
 
-                df_tbl.drop(df_sum_oe_val.index, inplace=True)
+                # df_tbl.drop(df_sum_oe_val.index, inplace=True)
+                df_tbl = df_tbl.drop(df_sum_oe_val.index)
 
 
         # Drop columns which all value equal 0
@@ -589,8 +600,10 @@ class DataTableGenerator(Logging):
             lst_val_col = [v for i, v in enumerate(df_tbl.columns.tolist()[5:]) if i % 2 == 0]
 
             df_fil = df_tbl.query("index >= @start_idx")[lst_val_col].copy()
-            df_fil.replace({0: np.nan}, inplace=True)
-            df_fil.dropna(axis='columns', how='all', inplace=True)
+            # df_fil.replace({0: np.nan}, inplace=True)
+            # df_fil.dropna(axis='columns', how='all', inplace=True)
+
+            df_fil = df_fil.replace({0: np.nan}).dropna(axis='columns', how='all')
 
             lst_keep_col = list()
             for i in df_fil.columns.tolist():
@@ -604,16 +617,8 @@ class DataTableGenerator(Logging):
         # Reset df table index
         df_tbl = df_tbl.reset_index(drop=True)
 
-        # df_tbl['qre_index'] = df_tbl['qre_name'] + '|' + df_tbl['qre_lbl']
-        # df_tbl['qre_index'] = df_tbl['qre_index'].replace(dict_var_name_lbl)
-        #
-        # df_tbl = df_tbl.loc[:, ['qre_index'] + list(df_tbl.columns)[:-1]]
-
-
-        # Add number to header for formatting
-        here = 1
-
-
+        # # Add number to header for formatting
+        # here = 1
 
         # Add number to header for formatting
 
@@ -673,6 +678,8 @@ class DataTableGenerator(Logging):
                                   lst_sig_pair: list, sig_type: str, lst_sig_lvl: list,
                                   cat: str, lbl: str, lst_sub_cat: list | None, weight_var: str = None) -> pd.DataFrame:
 
+        pd.set_option('future.no_silent_downcasting', True)
+
         qre_index = qre_info['qre_index']
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
@@ -723,7 +730,8 @@ class DataTableGenerator(Logging):
                 else:
                     dict_re_qre_val = {int(k): 1 if k == cat else 0 for k, v in qre_val.items()}
 
-                df_filter.replace(dict_re_qre_val, inplace=True)
+                # df_filter.replace(dict_re_qre_val, inplace=True)
+                df_filter = df_filter.replace(dict_re_qre_val)
 
                 dict_pair_to_sig.update({item: df_filter})
 
@@ -759,8 +767,14 @@ class DataTableGenerator(Logging):
 
 
             if sig_type and lst_sig_lvl and not weight_var:
-                df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
 
+                try:
+
+                    df_qre = self.mark_sig_to_df_qre(df_qre, dict_pair_to_sig, sig_pair, dict_header_col_name, sig_type, lst_sig_lvl)
+
+                except Exception as err:
+                    print(qre_name)
+                    raise err
 
 
 
@@ -840,10 +854,12 @@ class DataTableGenerator(Logging):
                     continue
 
                 if mean_factor:
-                    df_filter.replace({org_qre_name: mean_factor}, inplace=True)
+                    # df_filter.replace({org_qre_name: mean_factor}, inplace=True)
+                    df_filter = df_filter.replace({org_qre_name: mean_factor})
 
                 if -999 not in qre_val.keys():
-                    df_filter.replace(qre_val, inplace=True)
+                    # df_filter.replace(qre_val, inplace=True)
+                    df_filter = df_filter.replace(qre_val)
 
                 dict_pair_to_sig.update({item: df_filter})
 
@@ -980,10 +996,13 @@ class DataTableGenerator(Logging):
                 if df_filter.empty:
                     continue
 
-                df_filter.replace(qre_val['recode'], inplace=True)
+                # df_filter.replace(qre_val['recode'], inplace=True)
+                df_filter = df_filter.replace(qre_val['recode'])
 
                 dict_re_qre_val = {int(k): 1 if int(k) == int(cat) else 0 for k, v in qre_val['cats'].items()}
-                df_filter.replace(dict_re_qre_val, inplace=True)
+
+                # df_filter.replace(dict_re_qre_val, inplace=True)
+                df_filter = df_filter.replace(dict_re_qre_val)
 
                 dict_pair_to_sig.update({item: df_filter})
 
@@ -1028,7 +1047,8 @@ class DataTableGenerator(Logging):
     def add_sa_qre_cal_to_tbl_sig(df_qre: pd.DataFrame, qre_info: dict, dict_cal: dict) -> pd.DataFrame:
 
         df_qre['idx_by_cat_lbl'] = df_qre['cat_lbl']
-        df_qre.set_index('idx_by_cat_lbl', inplace=True)
+        # df_qre.set_index('idx_by_cat_lbl', inplace=True)
+        df_qre = df_qre.set_index('idx_by_cat_lbl')
 
         for key, val in dict_cal.items():
 
@@ -1047,7 +1067,8 @@ class DataTableGenerator(Logging):
             # df_qre = pd.concat([df_qre, pd.DataFrame(columns=list(dict_new_row.keys()), data=[list(dict_new_row.values())])], axis=0, ignore_index=True)
 
             df_temp['idx_by_cat_lbl'] = df_temp['cat_lbl']
-            df_temp.set_index('idx_by_cat_lbl', inplace=True)
+            # df_temp.set_index('idx_by_cat_lbl', inplace=True)
+            df_temp = df_temp.set_index('idx_by_cat_lbl')
 
             for col in df_temp.columns:
                 if '@val@' not in col:
@@ -1065,7 +1086,8 @@ class DataTableGenerator(Logging):
             # a = 1
 
 
-        df_qre.reset_index(drop=True, inplace=True)
+        # df_qre.reset_index(drop=True, inplace=True)
+        df_qre = df_qre.reset_index(drop=True)
 
         return df_qre
 
@@ -1073,9 +1095,6 @@ class DataTableGenerator(Logging):
 
     def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, cal_act: str,
                                lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, weight_var: str = None) -> pd.DataFrame:
-
-
-
 
         # Add option: std, quantile 25/50/75, min, max
         dict_cal_act = {
@@ -1242,7 +1261,8 @@ class DataTableGenerator(Logging):
                 else:
                     dict_re_qre_val = {int(k): 1 if k == cat else 0 for k, v in qre_val.items()}
 
-                df_filter.replace(dict_re_qre_val, inplace=True)
+                # df_filter.replace(dict_re_qre_val, inplace=True)
+                df_filter = df_filter.replace(dict_re_qre_val)
 
                 if weight_var:
                     df_fil_base = df_filter[lst_qre_col].dropna(how='all')

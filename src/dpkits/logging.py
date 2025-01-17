@@ -28,55 +28,30 @@ class Logging:
 
 
 
-
-
-    def print(self, txt: str, fore_color: Fore = None, end: str = None, is_remove_prev: bool = False):
+    def print(self, txt: str | list[str], fore_color: None | list[Fore] = None, sep: str = '', end: str = '\n'):
 
         frameinfo = getframeinfo(currentframe().f_back)
         filename = re.split(r"[/|\\]", frameinfo.filename)[-1]
         linenumber = frameinfo.lineno
         now = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-        txt = re.sub('Completed', f'{self.clr_succ}Completed{self.clr_reset}', txt)
-
-
         str_prefix = f"{Fore.LIGHTBLACK_EX}{now} {self.clr_blue}{filename}:{linenumber}{Fore.RESET}"
         str_prefix += " " * (self.max_len - len(str_prefix))
-        str_suffix = f"{fore_color if fore_color else ""}{txt}{Fore.RESET}"
-        str_content = f"{'\r' if is_remove_prev else ''}{str_prefix} {str_suffix}"
 
-        if end is None:
-            print(str_content)
-        else:
-            if end == '\n':
-                print(f'\r{str_content}')
-            else:
-                print(f'\r{str_content}', end=end)
+        lst_txt = [txt] if not isinstance(txt, list) else txt
+        lst_fore_color = [fore_color] if not isinstance(fore_color, list) else fore_color
+        lst_content = list()
 
+        for t, c in zip(lst_txt, lst_fore_color):
+            str_suffix = re.sub('Completed', f'{self.clr_succ}Completed{self.clr_reset}', str(t))
+            str_suffix = f"{c if c else ''}{str_suffix}{Fore.RESET}"
+            lst_content.extend([str_suffix])
 
 
+        str_content = f"{str_prefix} {sep.join(lst_content) if len(lst_content) > 1 else lst_content[0]}"
 
-
-
+        print(str_content, end=end)
 
 
 
-
-    # import inspect
-    # @staticmethod
-    # def print_link(*, txt, file=None, line=None):
-    #     """ Print a link in PyCharm to a line in file.
-    #         Defaults to line where this function was called. """
-    #
-    #     if file is None:
-    #         file = inspect.stack()[1].filename
-    #
-    #     if line is None:
-    #         line = inspect.stack()[1].lineno
-    #
-    #     str_out = f'File "{file}", line {max(line, 1)}'.replace("\\", "/")
-    #
-    #     # str_out = f"{txt} {Fore.LIGHTBLACK_EX}(file: {file}, line: {max(line, 1)}){Fore.RESET}"
-    #
-    #     print(str_out)
 

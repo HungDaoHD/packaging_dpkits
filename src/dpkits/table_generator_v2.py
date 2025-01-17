@@ -1,25 +1,21 @@
-import os
 import pandas as pd
 import numpy as np
 import time
-import json
-import sys
+import datetime
 import math
-import functools
 import multiprocessing
 from scipy import stats
-from datetime import datetime, timedelta
-from .table_formater import TableFormatter
 from .logging import Logging
 
 
 
 class DataTableGeneratorV2(Logging):
 
-    def __init__(self, *, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, is_md: bool = False, dict_df_tables: dict = None):
-
+    def __init__(self, *, df_data: pd.DataFrame, df_info: pd.DataFrame, xlsx_name: str, is_md: bool = False, dict_df_tables: dict = None, is_validate_data: bool = True):
 
         super().__init__()
+
+        pd.set_option('future.no_silent_downcasting', True)
 
         self.is_md = is_md
 
@@ -28,40 +24,6 @@ class DataTableGeneratorV2(Logging):
         self.file_name = xlsx_name.rsplit('/', 1)[-1] if '/' in xlsx_name else xlsx_name
 
         self.dict_df_tables = dict_df_tables if dict_df_tables else dict()
-
-        # Unnetted value label------------------------------------------------------------------------------------------
-        self.df_info['val_lbl_unnetted'] = self.df_info['val_lbl']
-
-        df_val_lbl = df_info[['var_name', 'val_lbl']].astype(str).query("val_lbl.str.contains('net_code')")
-
-        a = str()
-        b = str()
-        for idx in df_val_lbl.index:
-
-            if a != str(self.df_info.at[idx, 'val_lbl_unnetted']):
-                a = str(self.df_info.at[idx, 'val_lbl_unnetted'])
-                b = self.unnetted_qre_val(eval(df_val_lbl.at[idx, 'val_lbl']))
-
-            self.df_info.at[idx, 'val_lbl_unnetted'] = b
-
-        self.print('Unnetted value label - Completed')
-
-
-        # Check matching of data và defines-----------------------------------------------------------------------------
-        tpl_err = self.valcheck_strange_values(df_data=self.df_data, df_info=self.df_info)
-
-        if not tpl_err[0]:
-            self.print(tpl_err[1], self.clr_err)
-            exit()
-        else:
-            self.print(tpl_err[1])
-
-
-        # Remove duplicate value of MA qres------------------------------------------------------------------------------
-        self.df_data = self.valcheck_remove_duplicate_ma_vars_values(df_data=self.df_data, df_info=self.df_info)
-        self.print("", end='\r')
-        self.print("Remove duplicate MA qres' values - Completed", end='\n')
-
 
         # Check file permission-----------------------------------------------------------------------------------------
         try:
@@ -74,34 +36,79 @@ class DataTableGeneratorV2(Logging):
         except FileNotFoundError:
             pass
 
-        # --------------------------------------------------------------------------------------------------------------
+
+        # Unnetted value label------------------------------------------------------------------------------------------
+        self.df_info['val_lbl'] = self.df_info['val_lbl'].apply(lambda x: eval(x) if isinstance(x, str) else x)
+        self.df_info['val_lbl_unnetted'] = self.df_info['val_lbl']
+        self.df_info = self.unnetted_qre_val(df_info=self.df_info)
 
 
+        if is_validate_data:
 
+            # Check matching of data và defines-------------------------------------------------------------------------
+            tpl_err = self.valcheck_strange_values(df_data=self.df_data, df_info=self.df_info)
 
-    def unnetted_qre_val(self, dict_netted) -> dict:
-        dict_unnetted = dict()
-
-        if 'net_code' not in dict_netted.keys():
-            return dict_netted
-
-        for key, val in dict_netted.items():
-
-            if 'net_code' in key:
-                val_lbl_lv1 = dict_netted['net_code']
-
-                for net_key, net_val in val_lbl_lv1.items():
-
-                    if isinstance(net_val, str):
-                        dict_unnetted.update({str(net_key): net_val})
-                    else:
-                        self.print(f"Unnetted {net_key}", self.clr_magenta)
-                        dict_unnetted.update(net_val)
-
+            if not tpl_err[0]:
+                self.print(tpl_err[1], self.clr_err)
+                exit()
             else:
-                dict_unnetted.update({str(key): val})
+                self.print(tpl_err[1])
 
-        return dict_unnetted
+            # Remove duplicate value of MA qres-------------------------------------------------------------------------
+            self.df_data = self.valcheck_remove_duplicate_ma_vars_values(df_data=self.df_data, df_info=self.df_info)
+
+
+
+
+
+
+    def unnetted_qre_val(self, *, df_info: pd.DataFrame) -> pd.DataFrame:
+
+        def unnetted_val(dict_netted: dict) -> dict:
+
+            dict_unnetted = dict()
+
+            if 'net_code' not in dict_netted.keys():
+                return dict_netted
+
+            for key, val in dict_netted.items():
+
+                if 'net_code' in key:
+                    val_lbl_lv1 = dict_netted['net_code']
+
+                    for net_key, net_val in val_lbl_lv1.items():
+
+                        if isinstance(net_val, str):
+                            dict_unnetted.update({str(net_key): net_val})
+                        else:
+                            self.print(f"Unnetted {net_key}", self.clr_magenta)
+                            dict_unnetted.update(net_val)
+
+                else:
+                    dict_unnetted.update({str(key): val})
+
+
+            return dict_unnetted
+
+        df_val_lbl = df_info[['var_name', 'val_lbl']].astype(str).query("val_lbl.str.contains('net_code')")
+
+        if df_val_lbl.empty:
+            self.print(['No Netted in value label', 'Skipped'], [None, self.clr_succ], sep=' - ')
+            return df_info
+
+        val_a = str()
+        val_b = dict()
+        for idx in df_val_lbl.index:
+
+            if val_a != str(df_info.at[idx, 'val_lbl_unnetted']):
+                val_a = str(df_info.at[idx, 'val_lbl_unnetted'])
+                val_b = unnetted_val(eval(df_val_lbl.at[idx, 'val_lbl']))
+
+            df_info.at[idx, 'val_lbl_unnetted'] = val_b
+
+        self.print('Unnetted value label - Completed')
+
+        return df_info
 
 
 
@@ -148,13 +155,17 @@ class DataTableGeneratorV2(Logging):
             if idx == 'ID':
                 continue
 
-            df_info.at[idx, 'val_lbl_unnetted'] = {int(k): np.nan for k in df_info.at[idx, 'val_lbl_unnetted'].keys()}
+            val_lbl_unnetted = eval(df_info.at[idx, 'val_lbl_unnetted']) if isinstance(df_info.at[idx, 'val_lbl_unnetted'], str) else df_info.at[idx, 'val_lbl_unnetted']
+
+            df_info.at[idx, 'val_lbl_unnetted'] = {int(k): np.nan for k in val_lbl_unnetted.keys()}
+
 
         dict_replace = df_info.to_dict()['val_lbl_unnetted']
+        dict_replace.pop('ID')
 
         df_data = df_data.loc[:, df_info.index].replace(dict_replace).dropna(how='all').dropna(axis=1, how='all')
-        df_data = pd.DataFrame(df_data)
 
+        df_data = pd.DataFrame(df_data)
 
         df_data = df_data.reset_index(drop=True if 'ID' in df_data.columns else False)
 
@@ -182,69 +193,135 @@ class DataTableGeneratorV2(Logging):
         for qre_ma in df_info_ma['var_name'].values.tolist():
             prefix, suffix = qre_ma.rsplit('_', 1)
 
-            self.print("", end='\r')
             self.print(f"Remove duplicate MA qres' values - {prefix}", end='')
 
             cols = df_info.loc[df_info.eval(f"var_name.str.contains('^{prefix}_[0-9]{{1,2}}$')"), 'var_name'].values.tolist()
             df_data[cols] = df_data[cols].apply(remove_dup, axis=1, result_type='expand')
 
+            print(end='\r')
+
+
+        self.print("Remove duplicate MA qres' values - Completed")
+
         return df_data
+
+
+
+    def valcheck_header_level(self, *, dict_tables: dict):
+
+        is_err = False
+
+        for key, val in dict_tables.items():
+
+            if len(val['dict_header_qres']) == 1:
+                continue
+
+            prev_len = -1
+            for sub_key, sub_val in val['dict_header_qres'].items():
+                if prev_len == -1:
+                    prev_len = len(sub_val)
+                    continue
+
+                if prev_len != len(sub_val):
+                    self.print(f'Table {key} has invalid header and process is terminated', self.clr_err)
+                    is_err = True
+
+        if is_err:
+            exit()
+
+        self.print('Validate header - Completed')
 
 
 
     def run_tables(self, *, lst_group_tables: list):
 
-        for item in lst_group_tables:
+        st = time.time()
 
-            if not item['tables_to_run']:
+        lst_run_table = list(self.dict_df_tables.keys())
+
+        for group in lst_group_tables:
+
+            if not group['tables_to_run']:
                 self.print('No selected tables. Processing terminated!!!', self.clr_err)
                 exit()
 
-            dict_tables = {k: v for k, v in item['tables_format'].items() if k in item['tables_to_run']}
+            dict_tables = {k: v for k, v in group['tables_format'].items() if k in group['tables_to_run']}
 
             for tbl_key, tbl_val in dict_tables.items():
                 if tbl_val.get('weight_var') and tbl_val.get('sig_test_info').get('sig_type'):
                     self.print(f'Cannot run table "{tbl_key}" with significant test and weighting at the same time. Processing terminated!!!', self.clr_err)
                     exit()
 
-            self.run_tables_by_item(dict_tables=dict_tables, lst_run_table=item['tables_to_run'])
+            lst_run_table.extend(group['tables_to_run'])
+
+            self.generate_tables_by_group(dict_tables=dict_tables, lst_run_table=lst_run_table)
+
+        self.print(f"All table generation have completed in {datetime.timedelta(seconds=time.time() - st)}", self.clr_succ)
 
 
 
-    def run_tables_by_item(self, *, dict_tables: dict, lst_run_table: list):
+    def generate_tables_by_group(self, *, dict_tables: dict, lst_run_table: list):
 
-        # MULTIPLE PROCESSING---------------------------------------------------------------------------------------
-        st = time.time()
-        num_cores = multiprocessing.cpu_count()
-        num_cores_processing = num_cores - 1
-        self.print(f'Number of CPU cores to be used for multiple processing: {num_cores_processing} / {num_cores}', self.clr_warn)
+        self.valcheck_header_level(dict_tables=dict_tables)
 
-        pool = multiprocessing.Pool(processes=num_cores_processing)
+        is_multiple_process, is_new_way = True, False
 
-        # Map tasks to the worker function
-        results = pool.map(self.run_standard_table_sig, list(dict_tables.values()))
+        is_multiple_process = False if __debug__ else True
 
-        # Close and join the pool
-        pool.close()
-        pool.join()
-        # End MULTIPLE PROCESSING-----------------------------------------------------------------------------------
+        lst_processed_tables = list()
 
-        self.dict_df_tables = ({arr[0]: arr[-1] for arr in results})
+        match is_multiple_process:
 
-        self.print(f"All processes have completed in {timedelta(seconds=time.time() - st)}", self.clr_succ)
+            case True:
 
+                # MULTIPLE PROCESSING-----------------------------------------------------------------------------------
+                num_cores = multiprocessing.cpu_count()
+                num_cores_processing = num_cores - 1
+
+                self.print(f'Number of CPU cores to be used for multiple processing: {num_cores_processing} / {num_cores}', self.clr_warn)
+
+                pool = multiprocessing.Pool(processes=num_cores_processing)
+
+                # Map tasks to the worker function
+                lst_processed_tables = pool.map(self.run_standard_table_sig, list(dict_tables.values()))
+
+                # Close and join the pool
+                pool.close()
+                pool.join()
+                # End MULTIPLE PROCESSING-------------------------------------------------------------------------------
+
+            case False:
+
+                for item in list(dict_tables.values()):
+
+                    if not is_new_way:
+                        lst_processed_tables.append(self.run_standard_table_sig(item))
+
+                    else:
+                        # new way processing
+                        lst_processed_tables.append(self.generate_table(dict_table=item))
+
+
+        self.dict_df_tables.update({arr[0]: arr[-1] for arr in lst_processed_tables})
         self.dict_df_tables = dict(sorted(self.dict_df_tables.items(), key=lambda iitem: lst_run_table.index(iitem[0])))
 
         with pd.ExcelWriter(self.file_name, engine='xlsxwriter') as writer:
+            pd.DataFrame(columns=['#', 'Content'], data=[]).to_excel(writer, sheet_name='Content', index=False)
 
             for k, v in self.dict_df_tables.items():
                 v.to_excel(writer, sheet_name=k, index=False)
-                self.print(f"Table {k} is saved - Completed")
+                self.print(['Save table', k, ' Completed'], [None, self.clr_blue, None], sep=' | ')
 
 
 
 
-    def group_sig_table_header(self, lst_header_qres: list) -> list:
+
+
+
+    # OLD---------------------------------------------------------------------------------------------------------------
+
+
+    def convert_table_header_to_list(self, lst_header_qres: list) -> list:
 
         df_info = self.df_info.copy()
 
@@ -419,305 +496,18 @@ class DataTableGeneratorV2(Logging):
 
 
 
+    def run_standard_table_sig(self, tbl: dict) -> list:
 
-    def convert_table_header_to_dataframe(self, header_group: int, lst_header_qres: list) -> pd.DataFrame:
-
-        # PENDING: NOT YET DONE
-
-        df_info = self.df_info.copy()
-
-        def get_cats_by_qre_name(qre_name: str) -> dict:
-            str_qre_name = f'{qre_name[1:]}_1' if '$' in qre_name else qre_name
-            return df_info.loc[df_info.eval(f"var_name == '{str_qre_name}'"), 'val_lbl'].values[0]
-
-
-
-        def get_header_query_by_cats(qre_name: str, qre_lbl: str, tpl_cat: tuple) -> list:
-
-            str_header_label = f"{qre_lbl}@{tpl_cat[1]}"
-
-            if '$' in qre_name:
-
-                if 'RANK' in str(qre_name).upper():
-                    str_query = f"var_name.str.contains('^{qre_name[1:]}[0-9]+$')"
-                else:
-                    str_query = f"var_name.str.contains('^{qre_name[1:]}_[0-9]+$')"
-
-                lst_qre_ma_name = df_info.query(str_query)['var_name'].values.tolist()
-
-                if tpl_cat[0].upper() == 'TOTAL':
-                    return [str_header_label, f"({' | '.join([f'{i} > 0' for i in lst_qre_ma_name])})"]
-
-                return [str_header_label, f"({' | '.join([f'{i} == {tpl_cat[0]}' for i in lst_qre_ma_name])})"]
-
-
-
-            if tpl_cat[0].upper() == 'TOTAL':
-                return [str_header_label, f"({qre_name} > 0)"]
-
-            if '@' in qre_name:
-                return [str_header_label, tpl_cat[0]]
-
-            return [str_header_label, f"({qre_name} == {tpl_cat[0]})"]
-
-
-
-        def combine_df_header_by_level(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-
-            df_a_repeat = pd.DataFrame(np.repeat(df_a.values, df_b.shape[0], axis=0), columns=df_a.columns)
-            df_b_repeat = pd.DataFrame(np.repeat(df_b.values, df_a.shape[0], axis=0), columns=df_b.columns)
-
-            df_b_repeat['idx1'] = df_b_repeat.index % df_a.shape[0]
-            df_b_repeat['idx2'] = df_b_repeat.index
-            df_b_repeat = df_b_repeat.sort_values(by=['idx1', 'idx2']).reset_index(drop=True).drop(columns=['idx1', 'idx2'])
-
-            df_combine = pd.concat([df_a_repeat, df_b_repeat], axis=1)
-
-            return df_combine
-
-
-        df_header = pd.DataFrame()
-
-        for i, item in enumerate(lst_header_qres):
-
-            df_qre = pd.DataFrame()
-
-            for j, qre in enumerate(item):
-
-                if len(qre.get('cats')) == 0:
-                    qre['cats'] = get_cats_by_qre_name(qre['qre_name'])
-
-                qre.update({'header_info': []})
-
-                for cat in qre['cats'].items():
-                    qre['header_info'].append([j] + get_header_query_by_cats(qre['qre_name'], qre['qre_lbl'], cat))
-
-                df_qre_temp = pd.DataFrame(columns=[f'group_{i}', f'label_{i}', f'query_{i}'], data=qre['header_info'])
-                df_qre = pd.concat([df_qre, df_qre_temp], axis=0)
-
-
-            if df_header.empty:
-                df_header = df_qre
-            else:
-                df_header = combine_df_header_by_level(df_header, df_qre)
-
-
-        df_header['header_group'] = header_group
-
-        lst_col = list(df_header.columns)
-        lst_col = lst_col[-1:] + lst_col[:-1]
-
-        df_header = df_header[lst_col]
-
-        # ADD GROUP_[last level]----------------------------------------------------------------------------------------
-
-        last_lvl = len(lst_header_qres) - 1
-
-        lst_level_count_cats = list()
-
-        for qre in lst_header_qres[-1]:
-            lst_level_count_cats.append(len(qre['cats'].keys()))
-
-        idx_min = 0
-        idx_max = sum(lst_level_count_cats) - 1
-
-        for i in range(0, int(df_header.shape[0] / sum(lst_level_count_cats)) * 2, 2):
-            df_header.loc[idx_min:idx_max, f'group_{last_lvl}'] = df_header.loc[idx_min:idx_max, f'group_{last_lvl}'] + i
-            idx_min = idx_max + 1
-            idx_max = idx_max + sum(lst_level_count_cats)
-
-        df_header[f'group_{last_lvl}'] = df_header[f'group_{last_lvl}'].astype(int)
-
-
-        # ADD GROUP_[before last level]---------------------------------------------------------------------------------
-        if len(lst_header_qres) > 1:
-            for ilvl in range(len(lst_header_qres) - 1):
-
-                if ilvl > 0:
-                    df_header[f'group_{ilvl}'] = df_header[[f'label_{ilvl - 1}', f'label_{ilvl}']].agg('|'.join, axis=1)
-                else:
-                    df_header[f'group_{ilvl}'] = df_header[f'label_{ilvl}']
-
-
-                lst_val_label = df_header[f'group_{ilvl}'].drop_duplicates(keep='first').values.tolist()
-                df_header[f'group_{ilvl}'] = df_header[f'group_{ilvl}'].replace({v: i for i, v in enumerate(lst_val_label)})
-
-
-
-        # COMBINE QUERY COLUMNS-----------------------------------------------------------------------------------------
-        df_header['query_combined'] = df_header.filter(regex='^query_[0-9]$').agg(' & '.join, axis=1)
-
-
-        output = [
-            {
-                0: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@CITY@TOTAL', 'query': '(Quota_User > 0) & Method > 0 & CITY > 0'},
-                1: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@CITY@HCM', 'query': '(Quota_User > 0) & Method > 0 & CITY == 1'},
-                2: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@CITY@HN', 'query': '(Quota_User > 0) & Method > 0 & CITY == 2'},
-                3: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@CITY@DN', 'query': '(Quota_User > 0) & Method > 0 & CITY == 3'}},
-            {
-                0: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@Below 18 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@18 - 19 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@20 - 25 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@26 - 35 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@36 - 45 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@46 - 55 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@Above 55 y.o', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@TOTAL@Method@TOTAL@AGE2@Refuse to answer', 'query': '(Quota_User > 0) & Method > 0 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@TOTAL@Method@Offline@CITY@TOTAL', 'query': '(Quota_User > 0) & Method == 2 & CITY > 0'},
-                1: {'lbl': 'Quota_User@TOTAL@Method@Offline@CITY@HCM', 'query': '(Quota_User > 0) & Method == 2 & CITY == 1'},
-                2: {'lbl': 'Quota_User@TOTAL@Method@Offline@CITY@HN', 'query': '(Quota_User > 0) & Method == 2 & CITY == 2'},
-                3: {'lbl': 'Quota_User@TOTAL@Method@Offline@CITY@DN', 'query': '(Quota_User > 0) & Method == 2 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@Below 18 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@18 - 19 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@20 - 25 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@26 - 35 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@36 - 45 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@46 - 55 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@Above 55 y.o', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@TOTAL@Method@Offline@AGE2@Refuse to answer', 'query': '(Quota_User > 0) & Method == 2 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@TOTAL@Method@Online@CITY@TOTAL', 'query': '(Quota_User > 0) & Method == 1 & CITY > 0'},
-                1: {'lbl': 'Quota_User@TOTAL@Method@Online@CITY@HCM', 'query': '(Quota_User > 0) & Method == 1 & CITY == 1'},
-                2: {'lbl': 'Quota_User@TOTAL@Method@Online@CITY@HN', 'query': '(Quota_User > 0) & Method == 1 & CITY == 2'},
-                3: {'lbl': 'Quota_User@TOTAL@Method@Online@CITY@DN', 'query': '(Quota_User > 0) & Method == 1 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@Below 18 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@18 - 19 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@20 - 25 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@26 - 35 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@36 - 45 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@46 - 55 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@Above 55 y.o', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@TOTAL@Method@Online@AGE2@Refuse to answer', 'query': '(Quota_User > 0) & Method == 1 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@CITY@TOTAL', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & CITY > 0'},
-                1: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@CITY@HCM', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & CITY == 1'},
-                2: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@CITY@HN', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & CITY == 2'},
-                3: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@CITY@DN', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@Below 18 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@18 - 19 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@20 - 25 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@26 - 35 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@36 - 45 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@46 - 55 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@Above 55 y.o', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@Intender (include lapser)@Method@TOTAL@AGE2@Refuse to answer', 'query': '(Quota_User.isin([2, 3])) & Method > 0 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@CITY@TOTAL', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & CITY > 0'},
-                1: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@CITY@HCM', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & CITY == 1'},
-                2: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@CITY@HN', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & CITY == 2'},
-                3: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@CITY@DN', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@Below 18 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@18 - 19 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@20 - 25 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@26 - 35 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@36 - 45 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@46 - 55 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@Above 55 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@Intender (include lapser)@Method@Offline@AGE2@Refuse to answer', 'query': '(Quota_User.isin([2, 3])) & Method == 2 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@CITY@TOTAL', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & CITY > 0'},
-                1: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@CITY@HCM', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & CITY == 1'},
-                2: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@CITY@HN', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & CITY == 2'},
-                3: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@CITY@DN', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@Below 18 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@18 - 19 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@20 - 25 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@26 - 35 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@36 - 45 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@46 - 55 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@Above 55 y.o', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@Intender (include lapser)@Method@Online@AGE2@Refuse to answer', 'query': '(Quota_User.isin([2, 3])) & Method == 1 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@CITY@TOTAL', 'query': '(Quota_User.isin([1])) & Method > 0 & CITY > 0'},
-                1: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@CITY@HCM', 'query': '(Quota_User.isin([1])) & Method > 0 & CITY == 1'},
-                2: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@CITY@HN', 'query': '(Quota_User.isin([1])) & Method > 0 & CITY == 2'},
-                3: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@CITY@DN', 'query': '(Quota_User.isin([1])) & Method > 0 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@Below 18 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@18 - 19 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@20 - 25 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@26 - 35 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@36 - 45 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@46 - 55 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@Above 55 y.o', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@Purchaser Only@Method@TOTAL@AGE2@Refuse to answer', 'query': '(Quota_User.isin([1])) & Method > 0 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@CITY@TOTAL', 'query': '(Quota_User.isin([1])) & Method == 2 & CITY > 0'},
-                1: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@CITY@HCM', 'query': '(Quota_User.isin([1])) & Method == 2 & CITY == 1'},
-                2: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@CITY@HN', 'query': '(Quota_User.isin([1])) & Method == 2 & CITY == 2'},
-                3: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@CITY@DN', 'query': '(Quota_User.isin([1])) & Method == 2 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@Below 18 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@18 - 19 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@20 - 25 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@26 - 35 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@36 - 45 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@46 - 55 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@Above 55 y.o', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@Purchaser Only@Method@Offline@AGE2@Refuse to answer', 'query': '(Quota_User.isin([1])) & Method == 2 & AGE2 == 8'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Purchaser Only@Method@Online@CITY@TOTAL', 'query': '(Quota_User.isin([1])) & Method == 1 & CITY > 0'},
-                1: {'lbl': 'Quota_User@Purchaser Only@Method@Online@CITY@HCM', 'query': '(Quota_User.isin([1])) & Method == 1 & CITY == 1'},
-                2: {'lbl': 'Quota_User@Purchaser Only@Method@Online@CITY@HN', 'query': '(Quota_User.isin([1])) & Method == 1 & CITY == 2'},
-                3: {'lbl': 'Quota_User@Purchaser Only@Method@Online@CITY@DN', 'query': '(Quota_User.isin([1])) & Method == 1 & CITY == 3'}
-            },
-            {
-                0: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@Below 18 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 1'},
-                1: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@18 - 19 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 2'},
-                2: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@20 - 25 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 3'},
-                3: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@26 - 35 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 4'},
-                4: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@36 - 45 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 5'},
-                5: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@46 - 55 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 6'},
-                6: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@Above 55 y.o', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 7'},
-                7: {'lbl': 'Quota_User@Purchaser Only@Method@Online@AGE2@Refuse to answer', 'query': '(Quota_User.isin([1])) & Method == 1 & AGE2 == 8'}
-            },
-        ]
-
-        return df_header
-
-
-
-
-
-
-
-
-
-
-
-
-    def run_standard_table_sig(self, tbl: dict):
+        pd.set_option('future.no_silent_downcasting', True)
 
         df_tbl = pd.DataFrame()
 
         # create df_data with tbl_filter in json file
         df_data = self.df_data.query(tbl['tbl_filter']).copy() if tbl.get('tbl_filter') else self.df_data.copy()
 
-
         # create df_info with lst_side_qres in json file
         df_info = pd.DataFrame(columns=['var_name', 'var_lbl', 'var_type', 'val_lbl', 'val_lbl_unnetted', 'qre_fil'], data=[])
-        dict_var_name = dict()
+
         for idx, qre in enumerate(tbl['lst_side_qres']):
 
             if '$' in qre['qre_name']:
@@ -745,6 +535,7 @@ class DataTableGeneratorV2(Logging):
                 exit()
 
             dict_row = {
+                'var_index': int(idx),
                 'var_name': var_name,
                 'var_lbl': qre['qre_lbl'].replace('{lbl}', df_qre_info.at[0, 'var_lbl']) if qre.get('qre_lbl') else df_qre_info.at[0, 'var_lbl'],
                 'var_type': 'MA_comb' if '#combine' in qre['qre_name'] else ('MA_Rank' if '$' in qre['qre_name'] and '_RANK' in str(qre['qre_name']).upper() else df_qre_info.at[0, 'var_type']),
@@ -757,15 +548,11 @@ class DataTableGeneratorV2(Logging):
                 'calculate': qre['calculate'] if qre.get('calculate') else {},
                 'friedman': qre['friedman'] if qre.get('friedman') else {},
                 'weight_var': tbl['weight_var'] if tbl.get('weight_var') else "",
+                'decimal': int(tbl['decimal']) if tbl.get('decimal') else 0,
             }
 
             df_info = pd.concat([df_info, pd.DataFrame(columns=list(dict_row.keys()), data=[list(dict_row.values())])], axis=0, ignore_index=True)
-            df_info = df_info.set_index('var_name', drop=False)
-
-
-            dict_var_name.update({var_name: idx})
-
-
+            df_info = df_info.set_index('var_index', drop=False)
             # ----------------------------------------------------------------------------------------------------------
 
 
@@ -775,7 +562,7 @@ class DataTableGeneratorV2(Logging):
             # df_group_header = self.convert_table_header_to_dataframe(0, tbl['lst_header_qres'])  # test
 
             # Maximum 5 levels of header
-            lst_group_header = self.group_sig_table_header(tbl['lst_header_qres'])
+            lst_group_header = self.convert_table_header_to_list(tbl['lst_header_qres'])
 
         else:
             # TO DO: Run multiple header with same level
@@ -794,18 +581,19 @@ class DataTableGeneratorV2(Logging):
                         exit()
 
                 # PENDING
-                df_group_header = pd.concat([df_group_header, self.convert_table_header_to_dataframe(int_header_group, val_hd)], axis='rows')  # test
+                # df_group_header = pd.concat([df_group_header, self.convert_table_header_to_dataframe(int_header_group, val_hd)], axis='rows')  # test
 
                 # Maximum 5 levels for each header
-                lst_group_header.extend(self.group_sig_table_header(val_hd))
+                lst_group_header.extend(self.convert_table_header_to_list(val_hd))
 
-
+        
         for grp_hd in lst_group_header:
 
             tbl_info_sig = {
                 'tbl_name': tbl['tbl_name'],
                 'is_count': tbl['is_count'],
                 'is_pct_sign': tbl['is_pct_sign'],
+                'decimal': int(tbl['decimal']) if tbl.get('decimal') else 0,
                 'sig_test_info': tbl['sig_test_info'],
                 'dict_grp_header': grp_hd,
                 'weight_var': tbl.get('weight_var') if tbl.get('weight_var') else ''
@@ -816,7 +604,7 @@ class DataTableGeneratorV2(Logging):
             if df_tbl.empty:
                 df_tbl = df_temp
             else:
-                lst_col_temp_to_add = list(df_temp.columns)[5:]
+                lst_col_temp_to_add = list(df_temp.columns)[6:]
                 df_tbl = pd.concat([df_tbl, df_temp[lst_col_temp_to_add]], axis=1)
 
 
@@ -843,38 +631,22 @@ class DataTableGeneratorV2(Logging):
                 df_tbl = df_tbl.drop(df_sum_oe_val.index)
 
 
-        # Drop columns which all value equal 0
-        if tbl['is_hide_zero_cols']:
-
-            start_idx = df_tbl.query(f"cat_val == 'base'").index.tolist()[0]
-            lst_val_col = [v for i, v in enumerate(df_tbl.columns.tolist()[5:]) if i % 2 == 0]
-
-            df_fil = df_tbl.query("index >= @start_idx")[lst_val_col].copy()
-            df_fil = df_fil.replace({0: np.nan}).dropna(axis='columns', how='all')
-
-            lst_keep_col = list()
-            for i in df_fil.columns.tolist():
-                lst_keep_col.extend([i, i.replace('@val@', '@sig@')])
-
-            df_tbl = df_tbl[df_tbl.columns.tolist()[:5] + lst_keep_col]
-
-            # df_tbl.to_excel('df_tbl_review.xlsx')
-
-
-        # Reset df table index
-        df_tbl = df_tbl.reset_index(drop=True)
-
-        df_tbl['qre_index'] = df_tbl['qre_name']
-        df_tbl['qre_index'] = df_tbl['qre_index'].replace(dict_var_name)
-        df_tbl = df_tbl.loc[:, ['qre_index'] + list(df_tbl.columns)[:-1]]
-
-
-        # Add number to header for formatting
-        here = 1
-
-
-
-        # Add number to header for formatting
+        # # Drop columns which all value equal 0
+        # if tbl['is_hide_zero_cols']:
+        #
+        #     start_idx = df_tbl.query(f"cat_val == 'base'").index.tolist()[0]
+        #     lst_val_col = [v for i, v in enumerate(df_tbl.columns.tolist()[5:]) if i % 2 == 0]
+        #
+        #     df_fil = df_tbl.query("index >= @start_idx")[lst_val_col].copy()
+        #     df_fil = df_fil.replace({0: np.nan}).dropna(axis='columns', how='all')
+        #
+        #     lst_keep_col = list()
+        #     for i in df_fil.columns.tolist():
+        #         lst_keep_col.extend([i, i.replace('@val@', '@sig@')])
+        #
+        #     df_tbl = df_tbl[df_tbl.columns.tolist()[:5] + lst_keep_col]
+        #
+        #     # df_tbl.to_excel('df_tbl_review.xlsx')
 
 
         return [tbl['tbl_name'], df_tbl]
@@ -917,7 +689,7 @@ class DataTableGeneratorV2(Logging):
                 if len(lst_tbl_row_data) == 0:
                     str_qre_name = qre_info['qre_name']
                     str_lbl = 'Weighted Base' if len(weight_var) > 0 else 'Base'
-                    lst_tbl_row_data = [str_qre_name, qre_info['qre_lbl'], qre_info['qre_type'], 'base', str_lbl, num_base, np.nan]
+                    lst_tbl_row_data = [qre_info['qre_index'], str_qre_name, qre_info['qre_lbl'], qre_info['qre_type'], 'base', str_lbl, num_base, np.nan]
                 else:
                     lst_tbl_row_data.extend([num_base, np.nan])
 
@@ -932,15 +704,17 @@ class DataTableGeneratorV2(Logging):
                                   lst_sig_pair: list, sig_type: str, lst_sig_lvl: list,
                                   cat: str, lbl: str, lst_sub_cat: list | None, weight_var: str = '') -> pd.DataFrame:
 
+        qre_index = qre_info['qre_index']
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
         qre_type = qre_info['qre_type']
-        qre_val = qre_info['qre_val']
+        qre_val = qre_info['qre_val_unnetted']
         is_count = qre_info['is_count']
         val_pct = qre_info['val_pct']
 
         dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
         dict_new_row.update({
+            'qre_index': qre_index,
             'qre_name': qre_name,
             'qre_lbl': qre_lbl,
             'qre_type': qre_type,
@@ -1027,16 +801,19 @@ class DataTableGeneratorV2(Logging):
 
     def add_sa_qre_mean_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict,
                                    lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, mean_factor: dict,
-                                   is_mean: bool, weight_var: str = '', is_friedman_sig: bool = False) -> pd.DataFrame:
+                                   is_mean: bool, weight_var: str = '', is_friedman_sig: bool = False, is_sem: bool = False) -> pd.DataFrame:
 
+        qre_index = qre_info['qre_index']
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
         qre_type = qre_info['qre_type']
-        qre_val = qre_info['qre_val']
+        # qre_val = qre_info['qre_val']
+        qre_val = qre_info['qre_val_unnetted']
 
         if is_mean:
             dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
             dict_new_row.update({
+                'qre_index': qre_index,
                 'qre_name': qre_name,
                 'qre_lbl': qre_lbl,
                 'qre_type': qre_type,
@@ -1048,6 +825,7 @@ class DataTableGeneratorV2(Logging):
 
             dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
             dict_new_row.update({
+                'qre_index': qre_index,
                 'qre_name': qre_name,
                 'qre_lbl': qre_lbl,
                 'qre_type': qre_type,
@@ -1055,9 +833,23 @@ class DataTableGeneratorV2(Logging):
                 'cat_lbl': 'Friedman P-value',
             })
 
-        else:
+        elif is_sem:
+
             dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
             dict_new_row.update({
+                'qre_index': qre_index,
+                'qre_name': qre_name.replace('_Mean', '_Sem'),
+                'qre_lbl': qre_lbl,
+                'qre_type': qre_type,
+                'cat_val': 'sem',
+                'cat_lbl': 'Standard Error',
+            })
+
+        else:
+
+            dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
+            dict_new_row.update({
+                'qre_index': qre_index,
                 'qre_name': qre_name.replace('_Mean', '_Std'),
                 'qre_lbl': qre_lbl,
                 'qre_type': qre_type,
@@ -1096,7 +888,14 @@ class DataTableGeneratorV2(Logging):
                     df_filter = df_filter.replace({org_qre_name: mean_factor})
 
                 if -999 not in qre_val.keys():
-                    df_filter = df_filter.replace(qre_val)
+
+                    try:
+
+                        df_filter = df_filter.replace(qre_val)
+
+                    except TypeError as err:
+                        raise err
+
 
                 dict_pair_to_sig.update({item: df_filter})
 
@@ -1109,7 +908,7 @@ class DataTableGeneratorV2(Logging):
                 if is_mean:
 
                     # UPDATE FOR WEIGHTED TABLE
-                    if wlen(weight_var) > 0:
+                    if len(weight_var) > 0:
 
                         df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{org_qre_name}.isnull()"), org_qre_name].copy()
 
@@ -1133,6 +932,33 @@ class DataTableGeneratorV2(Logging):
                     else:
                         df_qre.loc[df_qre['cat_val'] == 'mean', [val_col_name, sig_col_name]] = [num_val, np.nan]
 
+
+
+                    pd.DataFrame()
+
+                elif is_sem:
+
+                    # UPDATE FOR WEIGHTED TABLE
+                    if len(weight_var) > 0:
+
+                        df_temp_for_weight = df_filter.loc[df_filter.eval(f"~{org_qre_name}.isnull()"), org_qre_name].copy()
+
+                        if df_temp_for_weight.empty:
+                            num_val_sem = np.nan
+                        else:
+                            df_weight = dict_header_col_name[item]['df_data'].loc[df_temp_for_weight.index, weight_var].copy()
+                            num_mean = np.average(df_temp_for_weight, weights=df_weight)
+                            num_variance = np.average((df_temp_for_weight - num_mean) ** 2, weights=df_weight)
+                            num_val_sem = math.sqrt(num_variance) / math.sqrt(sum(df_weight))
+
+                    else:
+                        num_val_sem = df_filter[org_qre_name].sem()
+
+                    val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
+
+                    df_qre.loc[df_qre['cat_val'] == 'sem', [val_col_name, sig_col_name]] = [num_val_sem, np.nan]
+
+
                 else:
 
                     # UPDATE FOR WEIGHTED TABLE
@@ -1153,6 +979,7 @@ class DataTableGeneratorV2(Logging):
                     val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
 
                     df_qre.loc[df_qre['cat_val'] == 'std', [val_col_name, sig_col_name]] = [num_val_std, np.nan]
+
 
             if len(weight_var) > 0 or (not is_mean and not is_friedman_sig):
                 continue
@@ -1287,6 +1114,7 @@ class DataTableGeneratorV2(Logging):
 
             dict_new_row = {col: '' if '@sig@' in col else dict_cal.get('syntax') for col in df_qre.columns}
             dict_new_row.update({
+                'qre_index': qre_info['qre_index'],
                 'qre_name': qre_info['qre_name'],
                 'qre_lbl': qre_info['qre_lbl'],
                 'qre_type': qre_info['qre_type'],
@@ -1326,13 +1154,11 @@ class DataTableGeneratorV2(Logging):
     def add_num_qre_to_tbl_sig(self, df_qre: pd.DataFrame, qre_info: dict, dict_header_col_name: dict, cal_act: str,
                                lst_sig_pair: list, sig_type: str, lst_sig_lvl: list, weight_var: str = '') -> pd.DataFrame:
 
-
-
-
-        # Add option: std, quantile 25/50/75, min, max
+        # Add option: std, quantile 25/50/75, min, max, sem
         dict_cal_act = {
             'mean': 'Mean',
             'std': 'Std',
+            'sem': 'Standard Error',
             'min': 'Minimum',
             'max': 'Maximum',
             '25%': 'Quantile 25%',
@@ -1340,12 +1166,14 @@ class DataTableGeneratorV2(Logging):
             '75%': 'Quantile 75%',
         }
 
+        qre_index = qre_info['qre_index']
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
         qre_type = qre_info['qre_type']
 
         dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
         dict_new_row.update({
+            'qre_index': qre_index,
             'qre_name': qre_name,
             'qre_lbl': qre_lbl,
             'qre_type': qre_type,
@@ -1391,6 +1219,12 @@ class DataTableGeneratorV2(Logging):
                             num_mean = np.average(df_temp_for_weight, weights=df_weight)
                             num_variance = np.average((df_temp_for_weight - num_mean) ** 2, weights=df_weight)
                             num_val = math.sqrt(num_variance)
+
+                        elif cal_act in ['sem']:
+                            num_mean = np.average(df_temp_for_weight, weights=df_weight)
+                            num_variance = np.average((df_temp_for_weight - num_mean) ** 2, weights=df_weight)
+                            num_val = math.sqrt(num_variance) / math.sqrt(sum(df_weight))
+
                         elif cal_act in ['min', 'max']:
                             num_val = df_filter[qre_name].describe().loc[cal_act]
 
@@ -1415,7 +1249,15 @@ class DataTableGeneratorV2(Logging):
                             num_val = np.average(df_temp_for_weight, weights=dict_header_col_name[item]['df_data'].loc[df_temp_for_weight.index, weight_var])
 
                 else:
-                    num_val = df_filter[qre_name].describe().loc[cal_act]
+
+                    if cal_act == 'sem':
+                        num_val = df_filter[qre_name].sem()
+
+                    else:
+                        num_val = df_filter[qre_name].describe().loc[cal_act]
+
+
+
 
                 val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
 
@@ -1443,10 +1285,11 @@ class DataTableGeneratorV2(Logging):
         if lst_sub_cat is None:
             lst_sub_cat = []
 
+        qre_index = qre_info['qre_index']
         qre_name = qre_info['qre_name']
         qre_lbl = qre_info['qre_lbl']
         qre_type = qre_info['qre_type']
-        qre_val = qre_info['qre_val']
+        qre_val = qre_info['qre_val_unnetted']
         is_count = qre_info['is_count']
         val_pct = qre_info['val_pct']
         # df_ma_info = qre_info['df_ma_info']
@@ -1454,6 +1297,7 @@ class DataTableGeneratorV2(Logging):
 
         dict_new_row = {col: '' if '@sig@' in col else np.nan for col in df_qre.columns}
         dict_new_row.update({
+            'qre_index': qre_index,
             'qre_name': qre_name,  # qre_name.rsplit('_', 1)[0],
             'qre_lbl': qre_lbl,
             'qre_type': qre_type,
@@ -1553,6 +1397,9 @@ class DataTableGeneratorV2(Logging):
 
         df_left, df_right = dict_pair_to_sig[sig_pair[0]], dict_pair_to_sig[sig_pair[1]]
 
+        df_left = df_left.dropna()
+        df_right = df_right.dropna()
+
         if df_left.shape[0] < 30 or df_right.shape[0] < 30:
             return df_qre
 
@@ -1569,23 +1416,38 @@ class DataTableGeneratorV2(Logging):
             if df_left.mean().iloc[0] == 1 and df_right.mean().iloc[0] == 1:
                 return df_qre
 
-        except Exception:
+        except Exception as e:
+
             if df_left.mean() == 0 or df_right.mean() == 0:
                 return df_qre
 
             if df_left.mean() == 1 and df_right.mean() == 1:
                 return df_qre
 
-        if sig_type == 'rel':
-            if df_left.shape[0] != df_right.shape[0]:
-                return df_qre
+        arr_left = df_left.to_numpy(dtype=float).flatten()
+        arr_right = df_right.to_numpy(dtype=float).flatten()
 
-            sigResult = stats.ttest_rel(df_left, df_right)
-        else:
-            sigResult = stats.ttest_ind_from_stats(
-                mean1=df_left.mean(), std1=df_left.std(), nobs1=df_left.shape[0],
-                mean2=df_right.mean(), std2=df_right.std(), nobs2=df_right.shape[0]
-            )
+
+        match sig_type:
+            case 'rel':
+
+                if df_left.shape[0] != df_right.shape[0]:
+                    return df_qre
+
+                # sigResult = stats.ttest_rel(df_left, df_right)
+                sigResult = stats.ttest_rel(arr_left, arr_right)
+
+
+            case 'ind':
+
+                # sigResult = stats.ttest_ind(df_left, df_right)
+                sigResult = stats.ttest_ind(arr_left, arr_right)
+
+            case _:
+
+                raise ValueError(sig_type)
+
+
 
         if sigResult.pvalue:
             if sigResult.statistic > 0:
@@ -1600,7 +1462,7 @@ class DataTableGeneratorV2(Logging):
             elif len(lst_sig_lvl) >= 2:
                 if sigResult.pvalue <= lst_sig_lvl[1]:
                     df_qre.loc[df_qre.index[-1], sig_col_name] = str(df_qre.at[df_qre.index[-1], sig_col_name]).replace('nan', '') + mark_sig_char.lower()
-
+        
         return df_qre
 
 
@@ -1622,6 +1484,7 @@ class DataTableGeneratorV2(Logging):
 
         # lst_tbl_col = ['qre_name', 'qre_lbl', 'qre_type', 'cat_val', 'cat_lbl']
         dict_tbl_data = {
+            'qre_index': list(),
             'qre_name': list(),
             'qre_lbl': list(),
             'qre_type': list(),
@@ -1661,6 +1524,7 @@ class DataTableGeneratorV2(Logging):
             if len(dict_tbl_data['qre_name']) == 0:
                 arr_nan = [np.nan] * len(str_hd_val.split('@'))
                 dict_tbl_data.update({
+                    'qre_index': arr_nan,
                     'qre_name': arr_nan,
                     'qre_lbl': arr_nan,
                     'qre_type': arr_nan,
@@ -1691,7 +1555,10 @@ class DataTableGeneratorV2(Logging):
 
         df_tbl['qre_lbl'] = df_tbl['qre_lbl'].astype('object')
 
-        lst_tbl_info = [f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}"]
+        # lst_tbl_info = [f"Cell content: {'count' if is_count else ('percentage(%)' if tbl_info_sig['is_pct_sign'] else 'percentage')}"]
+
+        str_decimal = f"0.{'0' * tbl_info_sig['decimal']}" if tbl_info_sig['decimal'] > 0 else '0'
+        lst_tbl_info = [f"Cell content: {'count' if is_count else (f'percentage ({str_decimal}%)' if tbl_info_sig['is_pct_sign'] else f'percentage ({str_decimal})')}"]
 
         if not is_count and sig_type != '':
             lst_tbl_info.extend([
@@ -1705,12 +1572,16 @@ class DataTableGeneratorV2(Logging):
 
         df_tbl.loc[1:len(lst_tbl_info), ['qre_lbl']] = lst_tbl_info
 
+        # lst_ft_qre_warn = list()
+
         for idx in df_info.index:
 
+            qre_idx = int(df_info.at[idx, 'var_index'])
             qre_name = df_info.at[idx, 'var_name']
             qre_lbl = df_info.at[idx, 'var_lbl']
             qre_type = df_info.at[idx, 'var_type']
             qre_val = eval(df_info.at[idx, 'val_lbl']) if isinstance(df_info.at[idx, 'val_lbl'], str) else df_info.at[idx, 'val_lbl']
+            qre_val_unnetted = df_info.at[qre_idx, 'val_lbl_unnetted']
             qre_fil = df_info.at[idx, 'qre_fil']
             lst_qre_col = df_info.at[idx, 'lst_qre_col']
             weight_var = df_info.at[idx, 'weight_var']
@@ -1726,18 +1597,31 @@ class DataTableGeneratorV2(Logging):
                 dict_header_col_name[key]['df_data'] = dict_header_col_name[key]['df_data'][lst_qre_col_weight_var]
 
             qre_info = {
+                'qre_index': qre_idx,
                 'qre_name': qre_name,
                 'qre_lbl': qre_lbl,
                 'qre_type': qre_type,
                 'qre_val': qre_val,
+                'qre_val_unnetted': qre_val_unnetted,
                 'is_count': is_count,
                 'val_pct': val_pct,
                 'lst_qre_col': lst_qre_col,
             }
 
-            str_print = f"{tbl_info_sig['tbl_name']} | {dict_grp_header[0]['lbl'].rsplit('@', 1)[0]} | {qre_name}[{qre_type}]"
+            lst_grp_header_item = list()
+            for v in dict_grp_header.values():
+                lst_grp_header_item.extend(v['lbl'].rsplit('@', 1))
 
-            self.print(f'{str_print} in Processing', end='')
+            lst_grp_header_item = list(dict.fromkeys(lst_grp_header_item))
+
+            self.print(
+                ['Populate table', tbl_info_sig['tbl_name'], f"{lst_grp_header_item[0]} - [{', '.join(lst_grp_header_item[1:])}]", f"{qre_name} - {qre_type}"],
+                [None, self.clr_blue, self.clr_cyan_light, self.clr_magenta_light],
+                sep=' | ', end='')
+
+
+
+
 
             df_qre = pd.DataFrame(columns=df_tbl.columns, data=[])
 
@@ -1747,8 +1631,7 @@ class DataTableGeneratorV2(Logging):
 
             if qre_type in ['FT', 'FT_mtr']:
                 # Not run free text questions
-                print('')
-                self.print(f'Cannot create table for free text questions: {qre_name}|{qre_type}', self.clr_warn)
+                # lst_ft_qre_warn.extend([f'{qre_name}|{qre_type}'])
                 pass
 
             elif qre_type in ['NUM']:
@@ -1757,6 +1640,7 @@ class DataTableGeneratorV2(Logging):
                     qre_info['qre_val'] = {
                         'mean': 'Mean',
                         'std': 'Std',
+                        'sem': 'Standard Error',
                         'min': 'Minimum',
                         'max': 'Maximum',
                         '25%': 'Quantile 25%',
@@ -1767,21 +1651,14 @@ class DataTableGeneratorV2(Logging):
                 for key_num_opt in qre_info['qre_val'].keys():
                     df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, key_num_opt, lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
 
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'mean', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'std', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'min', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, 'max', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '25%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '50%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-                # df_qre = self.add_num_qre_to_tbl_sig(df_qre, qre_info, dict_header_col_name, '75%', lst_sig_pair, sig_type, lst_sig_lvl, weight_var)
-
 
             elif qre_type in ['SA', 'SA_mtr', 'RANKING']:
 
-                qre_info['qre_val'] = df_info.at[qre_name, 'val_lbl_unnetted']
+                # qre_info['qre_val'] = df_info.at[qre_name, 'val_lbl_unnetted']
 
                 # HERE
                 # NEED TO OPTIMIZE
+
 
                 for cat, lbl in qre_val.items():
 
@@ -1820,6 +1697,9 @@ class DataTableGeneratorV2(Logging):
                     # Run Std
                     df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor, is_mean=False, weight_var=weight_var)
 
+                    # Run Standard Error
+                    df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor, is_mean=False, weight_var=weight_var, is_sem=True)
+
                 friedman_factor = df_info.at[idx, 'friedman']
                 if friedman_factor.keys():
                     df_qre = self.add_sa_qre_mean_to_tbl_sig(df_qre, qre_info, dict_header_col_name, lst_sig_pair, sig_type, lst_sig_lvl, mean_factor=friedman_factor, is_mean=False, weight_var=weight_var, is_friedman_sig=True)
@@ -1832,7 +1712,7 @@ class DataTableGeneratorV2(Logging):
 
             elif qre_type in ['MA', 'MA_mtr', 'MA_comb', 'MA_Rank']:
 
-                qre_info['qre_val'] = df_info.at[qre_name, 'val_lbl_unnetted']
+                # qre_info['qre_val'] = df_info.at[qre_name, 'val_lbl_unnetted']
 
                 for cat, lbl in qre_val.items():
 
@@ -1885,10 +1765,343 @@ class DataTableGeneratorV2(Logging):
 
             df_tbl = pd.concat([df_tbl, df_qre], axis=0, ignore_index=True)
 
-            self.print(f'{str_print} Completed', end='\r')
+            print(end='\r')
 
+
+        # self.print(f'Cannot create table for free text questions: {lst_ft_qre_warn}', self.clr_warn)
 
         return df_tbl
 
 
-    
+
+    # NEW---------------------------------------------------------------------------------------------------------------
+
+
+    @staticmethod
+    def convert_table_header_to_dataframe(*, header_group: int, lst_header_qres: list, df_info: pd.DataFrame) -> pd.DataFrame:
+
+        def get_cats_by_qre_name(qre_name: str) -> dict:
+            str_qre_name = f'{qre_name[1:]}_1' if '$' in qre_name else qre_name
+            return df_info.loc[df_info.eval(f"var_name == '{str_qre_name}'"), 'val_lbl'].values[0]
+
+
+
+        def get_header_query_by_cats(qre_name: str, qre_lbl: str, tpl_cat: tuple) -> list:
+
+            # str_header_label = f"{qre_lbl}@{tpl_cat[1]}"
+
+            if '$' in qre_name:
+
+                if 'RANK' in str(qre_name).upper():
+                    str_query = f"var_name.str.contains('^{qre_name[1:]}[0-9]+$')"
+                else:
+                    str_query = f"var_name.str.contains('^{qre_name[1:]}_[0-9]+$')"
+
+                lst_qre_ma_name = df_info.query(str_query)['var_name'].values.tolist()
+
+                if tpl_cat[0].upper() == 'TOTAL':
+                    return [qre_lbl, tpl_cat[1], f"({' | '.join([f'{i} > 0' for i in lst_qre_ma_name])})"]
+
+                return [qre_lbl, tpl_cat[1], f"({' | '.join([f'{i} == {tpl_cat[0]}' for i in lst_qre_ma_name])})"]
+
+
+
+            if tpl_cat[0].upper() == 'TOTAL':
+                return [qre_lbl, tpl_cat[1], f"({qre_name} > 0)"]
+
+            if '@' in qre_name:
+                return [qre_lbl, tpl_cat[1], tpl_cat[0]]
+
+            return [qre_lbl, tpl_cat[1], f"({qre_name} == {tpl_cat[0]})"]
+
+
+
+        def combine_df_header_by_level(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
+
+            df_a_repeat = pd.DataFrame(np.repeat(df_a.values, df_b.shape[0], axis=0), columns=df_a.columns)
+            df_b_repeat = pd.DataFrame(np.repeat(df_b.values, df_a.shape[0], axis=0), columns=df_b.columns)
+
+            df_b_repeat['idx1'] = df_b_repeat.index % df_a.shape[0]
+            df_b_repeat['idx2'] = df_b_repeat.index
+            df_b_repeat = df_b_repeat.sort_values(by=['idx1', 'idx2']).reset_index(drop=True).drop(columns=['idx1', 'idx2'])
+
+            df_combine = pd.concat([df_a_repeat, df_b_repeat], axis=1)
+
+            return df_combine
+
+
+        df_header = pd.DataFrame()
+
+        for i, item in enumerate(lst_header_qres):
+
+            df_qre = pd.DataFrame()
+            last_lvl = len(lst_header_qres) - 1
+
+            for j, qre in enumerate(item):
+
+                if len(qre.get('cats')) == 0:
+                    qre['cats'] = get_cats_by_qre_name(qre['qre_name'])
+
+                qre.update({'header_info': []})
+
+                for cat in qre['cats'].items():
+
+                    if i == last_lvl:
+                        lst_header_info = [len(qre['cats'].keys())] + get_header_query_by_cats(qre['qre_name'], qre['qre_lbl'], cat)
+                    else:
+                        lst_header_info = [j] + get_header_query_by_cats(qre['qre_name'], qre['qre_lbl'], cat)
+
+                    qre['header_info'].append(lst_header_info)
+
+                df_qre_temp = pd.DataFrame(columns=[f'group_{i}', f'label_{i}', f'code_{i}', f'query_{i}'], data=qre['header_info'])
+                df_qre = pd.concat([df_qre, df_qre_temp], axis=0)
+
+
+            if df_header.empty:
+                df_header = df_qre
+            else:
+                df_header = combine_df_header_by_level(df_header, df_qre)
+
+
+        df_header['header_group'] = header_group
+
+        lst_col = list(df_header.columns)
+        lst_col = lst_col[-1:] + lst_col[:-1]
+
+        df_header = df_header[lst_col]
+
+        # COMBINE QUERY COLUMNS-----------------------------------------------------------------------------------------
+        df_header.loc[:, ['query_combined']] = df_header.filter(regex='^query_[0-9]$').agg(' & '.join, axis=1)
+
+        return df_header
+
+
+
+    def create_df_tbl_horizontal(self, *, dict_header_qres: dict, df_info: pd.DataFrame) -> pd.DataFrame:
+
+        df_tbl_horizontal = pd.DataFrame()
+        int_last_lvl = int()
+
+        for idx, (key_header, val_header) in enumerate(dict_header_qres.items()):
+            lst_header_qres = val_header
+            int_last_lvl = len(lst_header_qres) - 1
+
+            df_tbl_horizontal = pd.concat([df_tbl_horizontal, self.convert_table_header_to_dataframe(header_group=idx, lst_header_qres=lst_header_qres, df_info=df_info)], axis=0, ignore_index=True)
+
+
+        idx = 0
+        int_order = 0
+        while idx < df_tbl_horizontal.shape[0]:
+            step = df_tbl_horizontal.at[idx, f'group_{int_last_lvl}']
+            df_tbl_horizontal.loc[idx: idx + step - 1, f'group_{int_last_lvl}'] = int_order
+            idx += step
+            int_order += 1
+
+        df_tbl_horizontal['group_last'] = df_tbl_horizontal[f'group_{int_last_lvl}']
+
+
+
+        # if idx == len(dict_header_qres) - 1 and len(lst_header_qres) > 1:
+        #
+        #     # ADD GROUP_[last level]------------------------------------------------------------------------------------
+        #     last_lvl = len(lst_header_qres) - 1
+        #     lst_level_count_cats = list()
+        #
+        #     for qre in lst_header_qres[-1]:
+        #         lst_level_count_cats.append(len(qre['cats'].keys()))
+        #
+        #     idx_min = 0
+        #     idx_max = sum(lst_level_count_cats) - 1
+        #
+        #     for i in range(0, int(df_tbl_horizontal.shape[0] / sum(lst_level_count_cats)) * 2, 2):
+        #         df_tbl_horizontal.loc[idx_min:idx_max, f'group_{last_lvl}'] = df_tbl_horizontal.loc[idx_min:idx_max, f'group_{last_lvl}'] + i
+        #         idx_min = idx_max + 1
+        #         idx_max = idx_max + sum(lst_level_count_cats)
+        #
+        #     df_tbl_horizontal[f'group_{last_lvl}'] = df_tbl_horizontal[f'group_{last_lvl}'].astype(int)
+        #
+        #
+        #     # ADD GROUP_[before last level]-----------------------------------------------------------------------------
+        #
+        #     for ilvl in range(len(lst_header_qres) - 1):
+        #
+        #         if ilvl > 0:
+        #             df_tbl_horizontal[f'group_{ilvl}'] = df_tbl_horizontal[[f'label_{ilvl - 1}', f'label_{ilvl}']].agg('|'.join, axis=1)
+        #         else:
+        #             df_tbl_horizontal[f'group_{ilvl}'] = df_tbl_horizontal[f'label_{ilvl}']
+        #
+        #
+        #         lst_val_label = df_tbl_horizontal[f'group_{ilvl}'].drop_duplicates(keep='first').values.tolist()
+        #         df_tbl_horizontal[f'group_{ilvl}'] = df_tbl_horizontal[f'group_{ilvl}'].replace({v: i for i, v in enumerate(lst_val_label)})
+
+
+        return df_tbl_horizontal
+
+
+
+    @staticmethod
+    def create_df_tbl_vertical(*, lst_side_qres: list, df_info: pd.DataFrame, str_weighted_var: str) -> pd.DataFrame:
+
+        dict_vertical_qre = {
+            'index': list(),
+            'name': list(),
+            'label': list(),
+            'type': list(),
+            'cats': list(),
+            'cats_unnetted': list(),
+            'filter': list(),
+            'lst_data_col': list(),
+            'mean': list(),
+            'sort': list(),
+            'calculate': list(),
+            'friedman': list(),
+            'weight_var': list(),
+        }
+
+        for idx, qre in enumerate(lst_side_qres):
+
+            match qre['qre_name']:
+                case _ if '$' in qre['qre_name']:  # MA | RANK
+                    str_query = f"var_name.str.contains('^{qre['qre_name'][1:]}{'' if '_RANK' in str(qre['qre_name']).upper() else '_'}[0-9]+$')"
+                    lst_data_col = df_info.loc[df_info.eval(str_query), 'var_name'].values.tolist()
+                    str_name = qre['qre_name'].replace('$', '')
+
+                case _ if '#combine' in qre['qre_name']:  # QUERY
+                    str_name, str_comb = qre['qre_name'].split('#combine')
+                    lst_data_col = str_comb.replace('(', '').replace(')', '').replace(' ', '').split(',').strip()
+
+                case _:  # SA | NUM | FT
+                    str_name = qre['qre_name']
+                    lst_data_col = [str_name]
+
+
+            df_info_by_qre = df_info.loc[df_info.eval(f"var_name.isin(@lst_data_col)"), :]
+
+            match df_info_by_qre['var_type'].values[0]:
+
+                case 'NUM':
+                    dict_cats_default = {
+                        'mean': 'Mean',
+                        'std': 'Std',
+                        'min': 'Minimum',
+                        'max': 'Maximum',
+                        '25%': 'Quantile 25%',
+                        '50%': 'Quantile 50%',
+                        '75%': 'Quantile 75%',
+                    }
+
+                case _:
+                    dict_cats_default = df_info_by_qre['val_lbl'].values[0]
+
+
+            dict_vertical_qre['index'].append(idx)
+            dict_vertical_qre['name'].append(str_name)
+            dict_vertical_qre['label'].append(df_info_by_qre['var_lbl'].values[0])
+            dict_vertical_qre['type'].append(df_info_by_qre['var_type'].values[0])
+            dict_vertical_qre['cats'].append(qre['cats'] if qre.get('cats') else dict_cats_default)
+            dict_vertical_qre['cats_unnetted'].append(df_info_by_qre['val_lbl_unnetted'].values[0])
+            dict_vertical_qre['filter'].append(qre['qre_filter'] if qre.get('qre_filter') else "")
+            dict_vertical_qre['lst_data_col'].append(lst_data_col)
+            dict_vertical_qre['mean'].append(qre['mean'] if qre.get('mean') else {})
+            dict_vertical_qre['sort'].append(qre['sort'] if qre.get('sort') else "")
+            dict_vertical_qre['calculate'].append(qre['calculate'] if qre.get('calculate') else {})
+            dict_vertical_qre['friedman'].append(qre['friedman'] if qre.get('friedman') else {})
+            dict_vertical_qre['weight_var'].append(str_weighted_var)
+
+        # HERE: break down by cats (add factor if mean is noted)
+        # HERE
+        
+        
+
+
+
+
+        df_tbl_vertical = pd.DataFrame.from_dict(dict_vertical_qre)
+
+
+        return df_tbl_vertical
+
+
+
+
+    def generate_table(self, *, dict_table: dict) -> list:
+
+        pd.set_option('future.no_silent_downcasting', True)
+
+        # Create df_data with tbl_filter--------------------------------------------------------------------------------
+        df_data_filter = self.df_data.query(dict_table['tbl_filter']).copy() if dict_table.get('tbl_filter') else self.df_data.copy()
+
+        # Create df_tbl_horizontal--------------------------------------------------------------------------------------
+        df_tbl_horizontal = self.create_df_tbl_horizontal(dict_header_qres=dict_table['dict_header_qres'], df_info=self.df_info)
+
+        # Create df_tbl_vertical----------------------------------------------------------------------------------------
+        df_tbl_vertical = self.create_df_tbl_vertical(lst_side_qres=dict_table['lst_side_qres'], df_info=self.df_info, str_weighted_var=dict_table['weight_var'])
+
+
+        # Data frame contain data table---------------------------------------------------------------------------------
+        df_table_count = pd.DataFrame(columns=df_tbl_horizontal.index, data=[])
+        df_table_pct = pd.DataFrame(columns=df_tbl_horizontal.index, data=[])
+        df_table_sig = pd.DataFrame(columns=df_tbl_horizontal.index, data=[])
+
+
+
+
+        # Iterate each question in 'df_tbl_vertical' then crosstab with 'df_tbl_horizontal'
+        here = 1
+
+        def crosstab_vertical_horizontal(sr_qre: pd.Series) -> pd.DataFrame:
+
+            a0 = df_data_filter[sr_qre.lst_data_col].melt().dropna(subset='value')
+            a1 = a0[['value']].astype(int).astype(str).value_counts(sort=False)
+
+
+            return df_tbl_horizontal.code_1
+
+
+
+        df_table_count = df_tbl_vertical.apply(crosstab_vertical_horizontal, axis=1)
+
+
+
+
+        # for testing---------------------------------------------------------------------------------------------------
+        df_tbl_horizontal.to_excel('df_tbl_horizontal.xlsx')
+        df_tbl_vertical.to_excel('df_tbl_vertical.xlsx')
+        df_table_count.to_excel('df_table_count.xlsx')
+        df_table_pct.to_excel('df_table_pct.xlsx')
+        df_table_sig.to_excel('df_table_sig.xlsx')
+        # for testing---------------------------------------------------------------------------------------------------
+
+
+        return list()
+
+
+
+        # for grp_hd in lst_group_header:
+        #
+        #     tbl_info_sig = {
+        #         'tbl_name': tbl['tbl_name'],
+        #         'is_count': tbl['is_count'],
+        #         'is_pct_sign': tbl['is_pct_sign'],
+        #         'sig_test_info': tbl['sig_test_info'],
+        #         'dict_grp_header': grp_hd,
+        #         'weight_var': tbl.get('weight_var') if tbl.get('weight_var') else ''
+        #     }
+        #
+        #     df_temp = self.run_standard_header_sig(df_data, df_info, tbl_info_sig=tbl_info_sig)
+        #
+        #     if df_tbl.empty:
+        #         df_tbl = df_temp
+        #     else:
+        #         lst_col_temp_to_add = list(df_temp.columns)[6:]
+        #         df_tbl = pd.concat([df_tbl, df_temp[lst_col_temp_to_add]], axis=1)
+        #
+        # # drop row which have all value is nan
+        # df_tbl = df_tbl.dropna(how='all')
+        #
+        #
+        # return [tbl['tbl_name'], df_tbl]
+
+
+
+

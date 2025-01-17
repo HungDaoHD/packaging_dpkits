@@ -2,14 +2,15 @@ import numpy
 import pandas as pd
 import numpy as np
 from colorama import Fore
+from .logging import Logging
 
 
 
-class CodeframeReader:
+class CodeframeReader(Logging):
 
     def __init__(self, cf_file_name: str):
+        super().__init__()
         self.cf_file_name = cf_file_name
-
         self.dict_add_new_qres_oe = dict()
         self.df_full_oe_coding = pd.DataFrame
 
@@ -19,7 +20,8 @@ class CodeframeReader:
         file_name = self.cf_file_name
         output_file_name = f'{file_name}_output.xlsx'
 
-        print(Fore.BLUE, f"\nREAD '{file_name}' -> CREATE '{output_file_name}' -> RUN OE\n", Fore.RESET)
+        self.print(['Read', file_name], [None, self.clr_blue], sep=' ')
+        self.print(['Create', output_file_name], [None, self.clr_blue], sep=' ')
 
         dict_df_ws = pd.read_excel(file_name, sheet_name=None, header=None)
         dict_df_coding = dict()
@@ -33,16 +35,14 @@ class CodeframeReader:
 
             if '-CODE' in ws_name:
                 df_ws.columns = df_ws.iloc[1].tolist()
-                df_ws = df_ws.query("index >= 2").copy()
-                df_ws.reset_index(drop=True, inplace=True)
+                df_ws = df_ws.query("index >= 2").copy().reset_index(drop=True)
+
                 df_rid = pd.concat([df_rid, df_ws.loc[:, ['RESPONDENTID']]], axis=0)
                 dict_df_coding.update({ws_name: df_ws})
             else:
                 qre_lbl = df_ws.at[0, 1]
                 df_ws.columns = df_ws.iloc[2].tolist()
-                df_ws = df_ws.query("index >= 3 & RECODE.isnull()").copy()
-                df_ws.drop(columns=['RECODE', 'LABEL ENG'], inplace=True)
-                df_ws.reset_index(drop=True, inplace=True)
+                df_ws = df_ws.query("index >= 3 & RECODE.isnull()").copy().drop(columns=['RECODE', 'LABEL ENG']).reset_index(drop=True)
 
                 dict_df_codelist.update({
                     ws_name: {
@@ -52,12 +52,11 @@ class CodeframeReader:
                     }
                 })
 
-
-        print('EXPORT CODING FILE')
-        df_rid.drop_duplicates(subset=['RESPONDENTID'], inplace=True)
+        self.print('Start process coding file')
+        df_rid = df_rid.drop_duplicates(subset=['RESPONDENTID'])
 
         try:
-            df_rid.sort_values(by=['RESPONDENTID'], inplace=True)
+            df_rid = df_rid.sort_values(by=['RESPONDENTID'])
         except TypeError:
             pass
 
@@ -69,15 +68,13 @@ class CodeframeReader:
 
         for ws_name, df_ws in dict_df_coding.items():
 
-            print(ws_name)
+            self.print(['Process', ws_name], [None, self.clr_blue], sep=' ')
 
-            df_ws.rename(columns={'COLUMN NAME': 'COLUMN_NAME', 'FW CHECK': 'FW_CHECK'}, inplace=True)
+            df_ws = df_ws.rename(columns={'COLUMN NAME': 'COLUMN_NAME', 'FW CHECK': 'FW_CHECK'})
 
             lst_qre_comb = list(dict.fromkeys([a.replace('Y1_', 'Y1|').replace('Y2_', 'Y2|').rsplit('|', 1)[0] for a in df_ws['COLUMN_NAME'].values.tolist()]))
 
-            df_ws['RESPONDENTID'] = df_ws['RESPONDENTID'].astype(str)
-            df_ws['VERBATIM'] = df_ws['VERBATIM'].astype(str)
-            df_ws['CODING'] = df_ws['CODING'].astype(str)
+            df_ws[['RESPONDENTID', 'VERBATIM', 'CODING']] = df_ws[['RESPONDENTID', 'VERBATIM', 'CODING']].astype(str)
 
             df_ws_new = pd.DataFrame(columns=lst_ws_col, data=[])
             for rid in lst_rid:
@@ -105,9 +102,7 @@ class CodeframeReader:
                             data=[[f"{rid}@_@{qre}", rid, qre, verbatim, lst_coding, np.nan]])], axis=0)
 
 
-            df_ws_new['VERBATIM'].replace({'': 'NONE'}, inplace=True)
-
-            df_ws_new.reset_index(drop=True, inplace=True)
+            df_ws_new = df_ws_new.replace({'VERBATIM': {'': 'NONE'}}).reset_index(drop=True)
 
             for rid in lst_rid:
                 df_fil = df_ws_new.query(f"RESPONDENTID == '{rid}' & COLUMN_NAME.isin({lst_qre_comb})")
@@ -131,8 +126,7 @@ class CodeframeReader:
 
                 df_ws_new = pd.concat([df_ws_new, pd.DataFrame(columns=lst_ws_col, data=[lst_total_row])], axis=0)
 
-            df_ws_new.sort_values(by=['RESPONDENTID', 'COLUMN_NAME'], inplace=True)
-            df_ws_new.reset_index(drop=True, inplace=True)
+            df_ws_new = df_ws_new.sort_values(by=['RESPONDENTID', 'COLUMN_NAME']).reset_index(drop=True)
 
             df_ws_new['CODING_LEN'] = [len(a) for a in df_ws_new['CODING']]
             df_ws_new['CODING'] = ['\\'.join(a) for a in df_ws_new['CODING']]
@@ -141,11 +135,8 @@ class CodeframeReader:
 
             df_ws_new[arr_max_len] = df_ws_new['CODING'].str.split('\\', expand=True)
 
-            df_ws_new = pd.melt(df_ws_new, id_vars=['RESPONDENTID', 'COLUMN_NAME'], value_vars=arr_max_len)
-            df_ws_new.sort_values(by=['RESPONDENTID', 'COLUMN_NAME'], inplace=True)
-            df_ws_new.reset_index(drop=True, inplace=True)
+            df_ws_new = pd.melt(df_ws_new, id_vars=['RESPONDENTID', 'COLUMN_NAME'], value_vars=arr_max_len).sort_values(by=['RESPONDENTID', 'COLUMN_NAME']).reset_index(drop=True)
 
-            # df_ws_new['value'].replace({None: np.nan}, inplace=True)
             df_ws_new = df_ws_new.loc[df_ws_new.eval("value != ''"), :].copy()
             df_ws_new['value'] = df_ws_new['value'].astype(float)
 
@@ -153,22 +144,24 @@ class CodeframeReader:
 
             lst_qre_name = df_ws_new['COLUMN_NAME'].copy().drop_duplicates(keep='first').values.tolist()
 
-            df_ws_new.drop_duplicates(subset=['RESPONDENTID', 'COLUMN_NAME', 'variable'], inplace=True)
-
+            df_ws_new = df_ws_new.drop_duplicates(subset=['RESPONDENTID', 'COLUMN_NAME', 'variable'])
             df_ws_new = df_ws_new.set_index(['RESPONDENTID', 'COLUMN_NAME'])['value'].unstack().reset_index()
-
             df_ws_new = df_ws_new.reindex(columns=['RESPONDENTID'] + lst_qre_name)
 
-            print(f'ADD columns to dict_df_codelist[{ws_name.replace("-CODE", "")}]')
+            self.print([f'ADD columns to dict_df_codelist[', ws_name.replace("-CODE", ""), ']'], [None, self.clr_blue, None])
             lst_qre = list(df_ws_new.columns)
             lst_qre.remove('RESPONDENTID')
+
             df_colname = pd.DataFrame(columns=['COL_NAME'], data=lst_qre)
             df_colname[['COL_NAME', 'stt']] = df_colname['COL_NAME'].str.rsplit('_', n=1, expand=True)
-            df_colname.drop_duplicates(subset=['COL_NAME'], keep='last', inplace=True)
+
+            df_colname = df_colname.drop_duplicates(subset=['COL_NAME'], keep='last')
             df_colname['COL_NAME'] = df_colname['COL_NAME'] + '|' + df_colname['stt'].astype(str)
-            df_colname.drop(columns='stt', inplace=True)
-            df_colname.reset_index(drop=True, inplace=True)
+
+            df_colname = df_colname.drop(columns='stt').reset_index(drop=True)
+
             df_colname = pd.concat([df_colname, pd.DataFrame(columns=['SEC', 'LABEL', 'TYPE', 'CODELIST'], data=[['PRODUCT|FORCE_CHOICE|NORMAL_OE', '', 'MA', {}]] * df_colname.shape[0])], axis=1)
+
             df_colname['LABEL'] = dict_df_codelist[ws_name.replace('-CODE', '')]['qre_lbl']
             dict_df_codelist[ws_name.replace('-CODE', '')].update({'df_colname': df_colname})
 
@@ -180,10 +173,10 @@ class CodeframeReader:
 
         # df_full_oe.to_csv(f"{file_name}_CODING.csv", index=False)
 
-        print('EXPORT CODELIST FILE')
+        
         df_full_codelist = pd.DataFrame()
         for ws_name, val in dict_df_codelist.items():
-            print(ws_name)
+            self.print(['Export codelist file', ws_name], [None, self.clr_blue], sep=' ')
             dict_codelist = dict()
             net_count = 900001
             df_codelist = val['df_codelist']
@@ -211,16 +204,13 @@ class CodeframeReader:
             else:
                 df_full_codelist = pd.concat([df_full_codelist, df_colname], axis=0)
 
-        df_full_codelist.reset_index(drop=True, inplace=True)
-        # df_full_codelist.to_csv(f"{file_name}_CODELIST.csv", index=False, encoding='utf-8-sig')
-
-        df_full_codelist.drop(columns=['SEC'], inplace=True)
+        df_full_codelist = df_full_codelist.reset_index(drop=True).drop(columns=['SEC'])
 
         with pd.ExcelWriter(output_file_name, engine="openpyxl") as writer:
             df_full_codelist.to_excel(writer, sheet_name='codelist')
             df_full_oe.to_excel(writer, sheet_name='coding')
 
-        df_full_codelist.set_index('COL_NAME', drop=True, inplace=True)
+        df_full_codelist = df_full_codelist.set_index('COL_NAME', drop=True)
         df_full_codelist.loc[:, 'VALUES'] = np.nan
 
         dict_add_new_qres_oe = df_full_codelist.to_dict('index')
@@ -230,18 +220,15 @@ class CodeframeReader:
 
         self.df_full_oe_coding = df_full_oe
 
-        print('\n')
-
 
 
     def read_dataframe_output_file(self):
 
         output_file_name = f'{self.cf_file_name}_output.xlsx'
 
-        print(Fore.BLUE, f"\nREAD '{output_file_name}' -> RUN OE\n", Fore.RESET)
+        self.print(f"READ '{output_file_name}' -> RUN OE", self.clr_blue)
 
-        df_codelist = pd.read_excel(output_file_name, sheet_name='codelist', index_col=0)
-        df_codelist.set_index('COL_NAME', inplace=True)
+        df_codelist = pd.read_excel(output_file_name, sheet_name='codelist', index_col=0).set_index('COL_NAME')
         df_codelist.loc[:, 'VALUES'] = np.nan
 
         dict_add_new_qres_oe = dict()

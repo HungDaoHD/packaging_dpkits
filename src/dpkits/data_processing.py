@@ -11,6 +11,10 @@ class DataProcessing(Logging):
         self.df_info: pd.DataFrame = df_info
 
 
+    @staticmethod
+    def str_formater(lst_input: list[str]) -> str:
+        return ', '.join(lst_input) if len(lst_input) <= 5 else f"{', '.join(lst_input[:2])},..., {', '.join(lst_input[-2:])}"
+
 
     def add_qres(self, dict_add_new_qres: dict, is_add_oe_col: bool = False) -> (pd.DataFrame, pd.DataFrame):
         """
@@ -24,7 +28,6 @@ class DataProcessing(Logging):
         """
 
         info_col_name = ['var_name', 'var_lbl', 'var_type', 'val_lbl']
-        lst_keys = list(dict_add_new_qres.keys())
 
         lst_data_addin = list()
         lst_info_addin = list()
@@ -32,7 +35,7 @@ class DataProcessing(Logging):
         int_max_row = self.df_data.shape[0]
 
         for key, val in dict_add_new_qres.items():
-            self.print(f'Add new variables to df_data & df_info: {key}', end="" if key != lst_keys[-1] else "\n")
+            self.print(['Add new variables to df_data & df_info', key], [None, self.clr_blue], sep=': ', end='')
 
             if val[1] in ['MA']:
                 qre_ma_name, max_col = str(key).rsplit('|', 1)
@@ -53,6 +56,8 @@ class DataProcessing(Logging):
                     lst_colname.append(key)
                     lst_data_addin.append([val[-1]] * int_max_row)
 
+            print(end='\r')
+
 
         self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=lst_info_addin)], axis=0, ignore_index=True)
 
@@ -61,6 +66,9 @@ class DataProcessing(Logging):
 
         self.df_data.reset_index(drop=True, inplace=True)
         self.df_info.reset_index(drop=True, inplace=True)
+
+        self.print(['Add new variables to df_data & df_info: ', self.str_formater(list(dict_add_new_qres.keys())), ' - Completed'], [None, self.clr_blue, None])
+
 
         return self.df_data, self.df_info
 
@@ -91,6 +99,10 @@ class DataProcessing(Logging):
             if fillna_val:
                 self.df_data.loc[self.df_data.eval(f"{qre}_1.isnull()"), f'{qre}_1'] = fillna_val
 
+        self.print(['Align MA values to left: ', self.str_formater(lst_qre_name), ' - Completed'], [None, self.clr_blue, None], end='')
+        print(end='\r')
+
+
         return self.df_data
 
 
@@ -105,6 +117,8 @@ class DataProcessing(Logging):
 
         self.df_data.reset_index(drop=True, inplace=True)
         self.df_info.reset_index(drop=True, inplace=True)
+
+        self.print(['Remove questions: ', self.str_formater(lst_col), ' - Completed'], [None, self.clr_blue, None])
 
         return self.df_data, self.df_info
 
@@ -121,7 +135,7 @@ class DataProcessing(Logging):
         codelist = self.df_info.loc[self.df_info.eval("var_name == @lst_merge[0]"), 'val_lbl'].values.tolist()[0]
 
         if len(lst_merge) < len(codelist.keys()):
-            self.print(f"Merge_qres(error): Length of lst_merge should be greater than or equal length of codelist!!!\nlst_merge = {lst_merge}\ncodelist = {codelist}\nProcessing terminated!!!", self.err)
+            self.print(f"Merge_qres(error): Length of lst_merge should be greater than or equal length of codelist!!!\nlst_merge = {lst_merge}\ncodelist = {codelist}\nProcessing terminated!!!", self.clr_err)
             exit()
 
 
@@ -140,11 +154,13 @@ class DataProcessing(Logging):
 
         self.df_data[lst_merge] = self.df_data[lst_to_merge].apply(merge_row, lst_col_name=lst_merge, dk=dk_code, axis=1)
 
+        self.print(['Merge questions: ', self.str_formater(lst_to_merge), ' - Completed'], [None, self.clr_blue, None])
+
         return self.df_data
 
 
 
-    def convert_percentage(self, lst_qres: list[str], fil_nan: float, is_check_sum: bool) -> (pd.DataFrame, pd.DataFrame):
+    def convert_percentage(self, lst_qres: list[str], is_check_sum: bool, fil_nan: float = None) -> (pd.DataFrame, pd.DataFrame):
         """
         :param lst_qres: MA likes 'Q1|8'
         :param fil_nan: fill nan value with float
@@ -155,11 +171,11 @@ class DataProcessing(Logging):
         df_check_sum = self.df_data['ID']
 
         for qre in lst_qres:
-            self.print(f"Convert percentage: {qre}")
+            self.print(['Convert percentage', qre], [None, self.clr_blue], sep=': ', end='')
             lst_qre = self.convert_ma_pattern(qre) if '|' in qre else [qre]
 
             self.df_info.loc[self.df_info.eval("var_name.isin(@lst_qre)"), 'var_type'] = 'NUM'
-            self.df_data[lst_qre] = self.df_data[lst_qre].replace(' %', '', regex=True).astype(float)
+            self.df_data[lst_qre] = self.df_data[lst_qre].replace('%| ', '', regex=True).astype(float)
 
             if fil_nan is not None:
                 self.df_data[lst_qre] = self.df_data[lst_qre].fillna(fil_nan)
@@ -168,6 +184,8 @@ class DataProcessing(Logging):
                 df_check_sum = pd.concat([df_check_sum, self.df_data[lst_qre].sum(axis=1)], axis=1)
                 df_check_sum.rename(columns={0: f'{qre.rsplit('|', 1)[0]}_Sum'}, inplace=True)
 
+            print(end='\r')
+
 
         if is_check_sum:
             df_check_sum = df_check_sum.melt(id_vars=['ID']).query("value != 100")
@@ -175,6 +193,8 @@ class DataProcessing(Logging):
             if not df_check_sum.empty:
                 df_check_sum.to_csv('df_check_sum.csv')
                 self.print(f"Please check the percentage of ID: \n{df_check_sum} \n saved with 'df_check_sum.csv'", self.clr_err)
+
+        self.print(['Convert percentage: ', self.str_formater(lst_qres), ' - Completed'], [None, self.clr_blue, None])
 
         return self.df_data, self.df_info
 
@@ -223,6 +243,11 @@ class DataProcessing(Logging):
         :return: df_data
         """
 
+        # Format 'query_fil'--------------------------------------------------------------------------------------------
+
+
+        # END Format 'query_fil'----------------------------------------------------------------------------------------
+
         lst_qre_update = self.convert_ma_pattern(qre_name) if '|' in qre_name else [qre_name]
 
         match method:
@@ -242,6 +267,8 @@ class DataProcessing(Logging):
             case _:
                 self.print(f'Please check param method - {method}', self.clr_err)
                 return pd.DataFrame()
+
+        self.print(['Update data of questions: ', self.str_formater(lst_qre_update), ' - Completed'], [None, self.clr_blue, None])
 
         return self.df_data
 
@@ -301,7 +328,6 @@ class DataProcessing(Logging):
                     self.print(f"{act} is not in [MA, RANKING]!!!", self.clr_err)
                     continue
 
-
         return dict_add_new_qres, dict_data_new_qres
 
 
@@ -312,6 +338,8 @@ class DataProcessing(Logging):
 
         self.add_qres(dict_add_new_qres)
         self.df_data[list(dict_data_new_qres.keys())] = pd.DataFrame.from_dict(dict_data_new_qres).replace(dict_replace) if dict_replace else pd.DataFrame.from_dict(dict_data_new_qres)
+
+        self.print(['Count MA choice of questions: ', self.str_formater(lst_ma_qre), ' - Completed'], [None, self.clr_blue, None])
 
         return self.df_data, self.df_info
 
@@ -324,21 +352,11 @@ class DataProcessing(Logging):
         self.add_qres(dict_add_new_qres)
         self.df_data[list(dict_data_new_qres.keys())] = pd.DataFrame.from_dict(dict_data_new_qres)
 
+        self.print(['Calculate ranking score of questions: ', self.str_formater(lst_ranking_qre), ' - Completed'], [None, self.clr_blue, None])
+
         return self.df_data, self.df_info
 
 
-
-
-
-    # @staticmethod
-    # def concept_evaluate(cpt_filename: str, ) -> (pd.DataFrame, dict):
-    #     # Here: May 16
-    #     # 1. clean inputted concept
-    #     # 2. create codeframe for each word for concept
-    #     # 3. match verbatim to concept codeframe
-    #     # 4. return dataframe with codes of the words in concept
-    #
-    #     return pd.DataFrame(), dict()  # dataframe & codelíst
 
 
 
