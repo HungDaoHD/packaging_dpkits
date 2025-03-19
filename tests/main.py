@@ -2,144 +2,339 @@ import pandas as pd
 import numpy as np
 import time
 import datetime
-import warnings
-
-from dpkits import *
-
-# from dpkits import (
-#     APDataConverter,
-#     DataProcessing,
-#     DataTranspose,
-#     DataTableGenerator,
-#     Tabulation,
-#     TableFormatter,
-#     CodeframeReader,
-#     LSMCalculation,
-#     DataAnalysis
-# )
 
 
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
-# import sys
-# sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
-#
-# from src.dpkits import (
-#     APDataConverter,
-#     DataProcessing,
-#     DataTranspose,
-#     DataTableGenerator,
-#     DataTableGeneratorV2,
-#     Tabulation,
-#     TableFormatter,
-#     CodeframeReader,
-#     LSMCalculation,
-#     DataAnalysis
-# )
-# # IGNORE THIS-----------------------------------------------------------------------------------------------------------
+# from dpkits import *
+
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+import sys
+sys.path.insert(0, 'C:/Users/PC/OneDrive/Dev Area/PyPackages/packaging_dpkits')
+
+from src.dpkits import (
+    APDataConverter,
+    DataProcessing,
+    DataTranspose,
+    DataTableGenerator,
+    DataTableGeneratorV2,
+    Tabulation,
+    TableFormatter,
+    CodeframeReader,
+    LSMCalculation,
+    DataAnalysis
+)
+# IGNORE THIS-----------------------------------------------------------------------------------------------------------
+
+
+
 
 
 if __name__ == '__main__':
 
-
-    # TURN OFF FUTURE WARNING
-    warnings.simplefilter(action='ignore', category=FutureWarning)
-
-    # Save start time
+    # Get start time
     st = time.time()
 
-
     # Define input/output files name
-    str_file_name = 'VN8413_ProjectName'
-    str_tbl_file_name = f'{str_file_name}_Topline.xlsx'
-
+    str_file_name = 'DataToRun/VN9999 - Project Name'
+    str_file_name_no_path = str_file_name.rsplit('/', 1)[-1]
+    str_tbl_file_name = f'{str_file_name_no_path}_Topline.xlsx'
 
     # Call Class APDataConverter with file_name
     converter = APDataConverter(file_name=f'{str_file_name}.xlsx')
-    converter.lstDrop.extend(['DV'])
+    converter.lstDrop.extend(['P0', 'NAME', 'PHONE'])
 
-    """
-    README: Convert input file to dataframe
-    
-    - df_data: contains data as pandas dataframe
-    - df_info: contains data info as pandas dataframe (ex: var_name, var_lbl, var_type, val_lbl)
-        - var_name = data column name (variable)
-        - var_lbl = variable label
-        - var_type = variable type
-        - val_lbl = value label
-    """
-
-    df_data, df_info = converter.convert_df_mc()  # Use 'converter.convert_df_md()' if you need md data
+    df_data, df_info = converter.convert_df_mc()
+    df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
 
 
 
-    # LSM 6 CALCULATION - Only use for Unilever projects which have LSM questions
-    # df_data, df_info = LSMCalculation.cal_lsm_6(df_data, df_info)
-
-    df_data = pd.DataFrame(df_data)
-    df_info = pd.DataFrame(df_info)
-
-
-
-    # AFTER CONVERTING YOU CAN DO ANYTHING WITH DATAFRAME-------------------------------------------------------------------
-    # df_info columns must be ['var_name', 'var_lbl', 'var_type', 'val_lbl']
-
+    # Add new question to df_data & df_info-----------------------------------------------------------------------------
     dict_add_new_qres = {
-        'F1_ByProdCode': ['F1. ByProdCode', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, np.nan],
-        # 'F1_YN_1': {'FC. Y/N', 'SA', {'1': 'Yes', '2': 'No'}, 2},
-        # 'F1_YN_2': {'FC. Y/N', 'SA', {'1': 'Yes', '2': 'No'}, 2},
-        # 'F1_YN_3': {'FC. Y/N', 'SA', {'1': 'Yes', '2': 'No'}, 2},
-        # 'F2_OE_1': {'F2. OE', 'FT', {}, np.nan},
-        # 'F2_OE_2': {'F2. OE', 'FT', {}, np.nan},
-        # 'F2_OE_3': {'F2. OE', 'FT', {}, np.nan},
-        'Ma_SP_1': ['Mã SP', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, 1],
-        'Ma_SP_2': ['Mã SP', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, 2],
-        'Ma_SP_3': ['Mã SP', 'SA', {'1': 'Concept 1', '2': 'Concept 2', '3': 'Concept 3'}, 3],
-        'New_FT': ['New FT', 'FT', {}, np.nan],
-        'New_Num': ['New Num', 'NUM', {}, np.nan],
-        'New_MA|6': ['New MA', 'MA', {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7'}, np.nan],
-        'Weight_Var': ['Weight_Var', 'NUM', {}, np.nan],
-        'S6a|3': ['S6a. New', 'MA', {'1': 'Bia lon/chai', '2': 'Cà phê hòa tan/ uống liền', '3': 'Nước ngọt có ga', '4': 'Nước uống đóng chai', '5': 'Nước tăng lực', '6': 'Tôi không uống loại nào ở trên'}, np.nan],
-        'S6_Merge|6': ['S6. Merge', 'MA', {'1': 'Bia lon/chai', '2': 'Cà phê hòa tan/ uống liền', '3': 'Nước ngọt có ga', '4': 'Nước uống đóng chai', '5': 'Nước tăng lực', '6': 'Tôi không uống loại nào ở trên'}, np.nan],
+        'CIO_Usage_Visa': ['CIO Usage - Visa', 'SA', {'1': 'VISA'}, np.nan],
+        'CIO_Usage_Mastercard': ['CIO Usage - Mastercard', 'SA', {'1': 'Mastercard'}, np.nan],
+        'CIO_Usage_JCB': ['CIO Usage - JCB', 'SA', {'1': 'JCB'}, np.nan],
+
+        'Q54_Merge|6': ['(International travellers) For what purposes have you visited the countries in the last 1 year?_Merge', 'MA', {'1': 'Business', '2': 'Leisure', '3': 'Family visit', '4': 'Education', '5': 'Medical', '6': 'Others'}, np.nan],
+        'Q54_2_Merge|4': ['(International travellers) What kind of travel do you often prefer when coming to each country?_Merge', 'MA', {'1': 'Full tour depart from Vietnam', '2': 'Independent/ self-guided travel', '3': 'Purchase tour/ experience via online travel and activities booking platform (e.g. Klook, Viator, Getyourguide)', '4': 'Others'}, np.nan],
+
+        'Q8_1_Sum': ['Q8_1_Sum', 'SA', {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6'}, np.nan],
+        'Q53_Sum': ['Q53_Sum', 'SA', {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7'}, np.nan],
+
+        'Q8_1_Net': ['Credit Card Usage', 'SA', {'1': 'Single', '2': 'Multiple'}, 1],
+
+        'L7_Score_1': ['L7. Score_Everyday expenses (e.g., groceries, dining, fuel)', 'NUM', {}, 0],
+        'L7_Score_2': ['L7. Score_Large purchases (e.g., electronics, furniture)', 'NUM', {}, 0],
+        'L7_Score_3': ['L7. Score_Travel-related expenses (e.g., flights, hotels, transport)', 'NUM', {}, 0],
+        'L7_Score_4': ['L7. Score_Online shopping', 'NUM', {}, 0],
+        'L7_Score_5': ['L7. Score_Business-related expenses', 'NUM', {}, 0],
+        'L7_Score_6': ['L7. Score_Medical or health-related payments', 'NUM', {}, 0],
+        'L7_Score_7': ['L7. Score_Subscription services (e.g., streaming, memberships)', 'NUM', {}, 0],
+        'L7_Score_8': ['L7. Score_Emergency or unexpected expenses', 'NUM', {}, 0],
+        'L7_Score_9': ['L7. Score_Entertainment and relaxation (movie, bar/ club, spa)', 'NUM', {}, 0],
+        'L7_Score_10': ['L7. Score_Social events (for kids, parents, networking)', 'NUM', {}, 0],
+        'L7_Score_11': ['L7. Score_Other (specify)', 'NUM', {}, 0],
+
+        'L7_Pct_by_Score_1': ['L7. Pct by Score_Everyday expenses (e.g., groceries, dining, fuel)', 'NUM', {}, 0],
+        'L7_Pct_by_Score_2': ['L7. Pct by Score_Large purchases (e.g., electronics, furniture)', 'NUM', {}, 0],
+        'L7_Pct_by_Score_3': ['L7. Pct by Score_Travel-related expenses (e.g., flights, hotels, transport)', 'NUM', {}, 0],
+        'L7_Pct_by_Score_4': ['L7. Pct by Score_Online shopping', 'NUM', {}, 0],
+        'L7_Pct_by_Score_5': ['L7. Pct by Score_Business-related expenses', 'NUM', {}, 0],
+        'L7_Pct_by_Score_6': ['L7. Pct by Score_Medical or health-related payments', 'NUM', {}, 0],
+        'L7_Pct_by_Score_7': ['L7. Pct by Score_Subscription services (e.g., streaming, memberships)', 'NUM', {}, 0],
+        'L7_Pct_by_Score_8': ['L7. Pct by Score_Emergency or unexpected expenses', 'NUM', {}, 0],
+        'L7_Pct_by_Score_9': ['L7. Pct by Score_Entertainment and relaxation (movie, bar/ club, spa)', 'NUM', {}, 0],
+        'L7_Pct_by_Score_10': ['L7. Pct by Score_Social events (for kids, parents, networking)', 'NUM', {}, 0],
+        'L7_Pct_by_Score_11': ['L7. Pct by Score_Other (specify)', 'NUM', {}, 0],
+
+        'Logic_Check': ['Logic_Check', 'FT', {}, np.nan],
     }
 
-    dp = DataProcessing(df_data=df_data, df_info=)
+    dp = DataProcessing(df_data=df_data, df_info=df_info)
+    dp.add_qres(dict_add_new_qres)
+    dp.convert_percentage(lst_qres=['L8|11', 'Q38|5', 'Q59|5'], fil_nan=None, is_check_sum=True)
 
-    # Add new question to df_data & df_info
-    dp.add_qres(dict_add_new_qres=dict_add_new_qres)
-
-
-    # Set dummy data
-    dp.df_data['New_MA_2'] = 2
-    dp.df_data['New_MA_4'] = 4
-    dp.df_data['S6a_2'] = 6
-    dp.df_data.loc[df_data.eval("index % 2 == 0"), 'S6a_1'] = 5
-    dp.df_data.loc[df_data.eval("S3_b == 2"), 'Weight_Var'] = 1.1
-    dp.df_data.loc[df_data.eval("S3_b.isin([3, 4])"), 'Weight_Var'] = 0.9
-    df_data.loc[df_data.eval("ID == '715385_2406381'"), ['S6_4', 'S6_5']] = [1, 2]  # testing remove duplicate values
-
-    # Align MA data values to left
-    dp.align_ma_values_to_left(qre_name=['New_MA|6', 'S6a|3'])
-
-    # Delete question in df_data, df_info
-    dp.delete_qres(lst_col=['F1_ByProdCode'])
-
-    # merge qre values
-    lst_merge_col = ['S6_Merge_1', 'S6_Merge_2', 'S6_Merge_3', 'S6_Merge_4', 'S6_Merge_5', 'S6_Merge_6']
-    lst_to_merge_col = ['S6_1', 'S6_2', 'S6_3', 'S6_4', 'S6_5', 'S6_6', 'S6a_1', 'S6a_2', 'S6a_3']
-    dp.merge_qres(lst_merge=lst_merge_col, lst_to_merge=lst_to_merge_col, dk_code=6)
-
+    dp.merge_qres(lst_merge=['Q54_Merge_1', 'Q54_Merge_2', 'Q54_Merge_3', 'Q54_Merge_4', 'Q54_Merge_5', 'Q54_Merge_6'], lst_to_merge=['Q54_01_1', 'Q54_01_2', 'Q54_01_3', 'Q54_01_4', 'Q54_01_5', 'Q54_01_6', 'Q54_02_1', 'Q54_02_2', 'Q54_02_3', 'Q54_02_4', 'Q54_02_5', 'Q54_02_6', 'Q54_03_1', 'Q54_03_2', 'Q54_03_3', 'Q54_03_4', 'Q54_03_5', 'Q54_03_6', 'Q54_04_1', 'Q54_04_2', 'Q54_04_3', 'Q54_04_4', 'Q54_04_5', 'Q54_04_6', 'Q54_05_1', 'Q54_05_2', 'Q54_05_3', 'Q54_05_4', 'Q54_05_5', 'Q54_05_6', 'Q54_06_1', 'Q54_06_2', 'Q54_06_3', 'Q54_06_4', 'Q54_06_5', 'Q54_06_6', 'Q54_07_1', 'Q54_07_2', 'Q54_07_3', 'Q54_07_4', 'Q54_07_5', 'Q54_07_6', 'Q54_08_1', 'Q54_08_2', 'Q54_08_3', 'Q54_08_4', 'Q54_08_5', 'Q54_08_6', 'Q54_09_1', 'Q54_09_2', 'Q54_09_3', 'Q54_09_4', 'Q54_09_5', 'Q54_09_6', 'Q54_10_1', 'Q54_10_2', 'Q54_10_3', 'Q54_10_4', 'Q54_10_5', 'Q54_10_6', 'Q54_11_1', 'Q54_11_2', 'Q54_11_3', 'Q54_11_4', 'Q54_11_5', 'Q54_11_6', 'Q54_12_1', 'Q54_12_2', 'Q54_12_3', 'Q54_12_4', 'Q54_12_5', 'Q54_12_6', 'Q54_13_1', 'Q54_13_2', 'Q54_13_3', 'Q54_13_4', 'Q54_13_5', 'Q54_13_6', 'Q54_14_1', 'Q54_14_2', 'Q54_14_3', 'Q54_14_4', 'Q54_14_5', 'Q54_14_6'], dk_code=None)
+    dp.merge_qres(lst_merge=['Q54_2_Merge_1', 'Q54_2_Merge_2', 'Q54_2_Merge_3', 'Q54_2_Merge_4'], lst_to_merge=['Q54_2_01_1', 'Q54_2_01_2', 'Q54_2_01_3', 'Q54_2_01_4', 'Q54_2_02_1', 'Q54_2_02_2', 'Q54_2_02_3', 'Q54_2_02_4', 'Q54_2_03_1', 'Q54_2_03_2', 'Q54_2_03_3', 'Q54_2_03_4', 'Q54_2_04_1', 'Q54_2_04_2', 'Q54_2_04_3', 'Q54_2_04_4', 'Q54_2_05_1', 'Q54_2_05_2', 'Q54_2_05_3', 'Q54_2_05_4', 'Q54_2_06_1', 'Q54_2_06_2', 'Q54_2_06_3', 'Q54_2_06_4', 'Q54_2_07_1', 'Q54_2_07_2', 'Q54_2_07_3', 'Q54_2_07_4', 'Q54_2_08_1', 'Q54_2_08_2', 'Q54_2_08_3', 'Q54_2_08_4', 'Q54_2_09_1', 'Q54_2_09_2', 'Q54_2_09_3', 'Q54_2_09_4', 'Q54_2_10_1', 'Q54_2_10_2', 'Q54_2_10_3', 'Q54_2_10_4', 'Q54_2_11_1', 'Q54_2_11_2', 'Q54_2_11_3', 'Q54_2_11_4', 'Q54_2_12_1', 'Q54_2_12_2', 'Q54_2_12_3', 'Q54_2_12_4', 'Q54_2_13_1', 'Q54_2_13_2', 'Q54_2_13_3', 'Q54_2_13_4', 'Q54_2_14_1', 'Q54_2_14_2', 'Q54_2_14_3', 'Q54_2_14_4'], dk_code=None)
 
     df_data, df_info = pd.DataFrame(dp.df_data), pd.DataFrame(dp.df_info)
 
+    # add value to 'CIO_Usage'
+    dict_cio_usage = {
+        'Visa': {
+            'Q10_1': [1, 5],
+            'Q10_2': [1, 2, 3],
+            'Q10_3': [1, 3, 4],
+            'Q10_4': [1, 2],
+            'Q10_5': [1, 2, 3],
+            'Q10_6': [1, 4, 5],
+            'Q10_7': [4, 5],
+            'Q10_8': [1, 3],
+            'Q10_9': [2, 3],
+            'Q10_10': [1, 3],
+            'Q10_12': [2],
+            'Q10_14': [1, 2],
+            'Q10_16': [2],
+            'Q10_17': [2, 3, 4],
+            'Q10_18': [3, 4],
+            'Q10_19': [2],
+        },
+        'Mastercard': {
+            'Q10_1': [3],
+            'Q10_3': [5],
+            'Q10_4': [3],
+            'Q10_7': [2],
+            'Q10_8': [2],
+            'Q10_11': [1],
+            'Q10_12': [3],
+            'Q10_13': [1, 2, 4],
+            'Q10_15': [2],
+            'Q10_17': [1],
+            'Q10_18': [2, 5, 6, 7, 8],
+            'Q10_19': [1, 3],
+        },
+        'JCB': {
+            'Q10_1': [4],
+            'Q10_3': [2, 6],
+            'Q10_7': [1, 3, 7],
+            'Q10_8': [4],
+            'Q10_9': [1, 4],
+            'Q10_10': [2, 4],
+            'Q10_11': [2],
+            'Q10_12': [4],
+            'Q10_13': [3],
+            'Q10_15': [1, 3],
+            'Q10_16': [1, 3],
+        },
+    }
 
-    # Here: 16/05
-    # Read concept files
-    # read txt file
-    # END Read concept files
+    for key, val in dict_cio_usage.items():
+        str_query = str()
+
+        for sub_key, sub_val in val.items():
+            lst_col = df_info.loc[df_info.eval(f"var_name.str.contains('^{sub_key}_[0-9]+$')"), 'var_name'].values.tolist()
+            lst_col = [f"{i}.isin({sub_val})" for i in lst_col]
+
+            if len(str_query) > 0:
+                str_query += f" | ({'|'.join(lst_col)})"
+            else:
+                str_query = f"({'|'.join(lst_col)})"
+
+        df_data.loc[df_data.eval(str_query), f'CIO_Usage_{key}'] = 1
+
+    # Add new question to df_data & df_info-----------------------------------------------------------------------------
+
+
+    # # Align MA data values to left--------------------------------------------------------------------------------------
+    # df_data = dp.align_ma_values_to_left(qre_name='New_MA|6')
+
+    df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
+
+    df_data['Q47'] = df_data['Q47'].astype(float)
+    df_info.loc[df_info.eval("var_name == 'Q47'"), 'var_type'] = 'NUM'
+    df_data[['Q59_3', 'Q59_4', 'Q59_5']] = df_data[['Q59_3', 'Q59_4', 'Q59_5']].fillna(0)
+
+    df_data['Q8_1_Sum'] = df_data[['Q8_1_01', 'Q8_1_02']].replace({6: 0}).sum(axis=1)
+    df_data['Q53_Sum'] = df_data[[f'Q53_{str(i).zfill(2)}' for i in range(1, 15)]].replace({2: 1, 3: 4, 4: 7, 5: 10}).sum(axis=1)
+
+
+    # LOGIC CHECKING----------------------------------------------------------------------------------------------------
+
+
+    def logic_check(sr: pd.Series) -> str:
+
+        lst_err = list()
+
+        # L6 vs L3------------------------------------------------------------------------------------------------------
+        l6_val = sr.filter(regex=r'^L6_[0-9]+$', axis=0).dropna().values.tolist()
+        lst_check_l6 = [
+            ['L3_01', 'L3_02', 3],
+            ['L3_05', 'L3_06', 9],
+            ['L3_08', 'L3_10', 10],
+        ]
+
+        for item in lst_check_l6:
+            if (sr[item[0]] in [1, 2, 3] or sr[item[1]] in [1, 2, 3]) and item[-1] not in l6_val:
+                lst_err.extend([f"{item[0]} or {item[1]} chose 1/2/3 and L6 doesn't chose {item[-1]}"])
+
+        # L7 vs L8------------------------------------------------------------------------------------------------------
+        for i in range(1, 11):
+            l7_rank_curr = sr[f'L7_Rank{i}']
+            l7_rank_next = sr[f'L7_Rank{i+1}']
+
+            if not pd.isnull(l7_rank_next):
+                l8_pct_curr = sr[f'L8_{int(l7_rank_curr)}']
+                l8_pct_next = sr[f'L8_{int(l7_rank_next)}']
+
+                if l8_pct_curr < l8_pct_next:
+                    lst_err.extend([f"L7_Rank{i} = {l7_rank_curr} & L7_Rank{i+1} = {l7_rank_next} but L8_{int(l7_rank_curr)} < L8_{int(l7_rank_next)}"])
+
+
+        # Q8_1_02 vs count of Q9
+        q9_val = sr.filter(regex=r'^Q9_[0-9]+$', axis=0).dropna().values.tolist()
+
+        if len(q9_val) > sr['Q8_1_02']:
+            lst_err.extend([f"Count of bank in Q9 must less than or equal to Q8_1_02 == {sr['Q8_1_02']}"])
+
+        # Q8_1_02 vs count of sum(Q10_1 to Q10_22)
+        lst_q10_col = sr.filter(regex=r'^Q10_[0-9]+_[0-9]+$', axis=0).dropna().values.tolist()
+
+        match sr['Q8_1_02']:
+            case 1 | 2 | 3 | 4:
+                if len(lst_q10_col) != sr['Q8_1_02']:
+                    lst_err.extend([f"Count of card in Q10 must equal to Q8_1_02 == {sr['Q8_1_02']}"])
+
+            case 5:
+                if len(lst_q10_col) < sr['Q8_1_02']:
+                    lst_err.extend([f"Count of card in Q10 must greater than or equal to Q8_1_02 == {sr['Q8_1_02']}"])
+
+            case _:
+                lst_err.extend([f"{sr['Q8_1_02']} = Not owning any types of this card"])
+
+
+        # Q11_2 vs Q33_1
+        q11_2 = sr['Q11_2']
+        q33_1_main_card = sr[f'Q33_1_{str(int(q11_2)).zfill(2)}']
+        q33_1_min = sr.filter(regex=r'^Q33_1_[0-9]+$', axis=0).dropna().min()
+
+        if q33_1_main_card > q33_1_min:
+            lst_err.extend([f"Q11_2 == {q11_2} so Q33_1_{str(int(q11_2)).zfill(2)} must equal {q33_1_min}"])
+
+
+        # Q11_2 vs Q33_2
+        q33_2_main_card = sr[f'Q33_2_{str(int(q11_2)).zfill(2)}']
+        q33_2_max = sr.filter(regex=r'^Q33_2_[0-9]+$', axis=0).dropna().max()
+
+        if q33_2_main_card > q33_2_max:
+            lst_err.extend([f"Q11_2 == {q11_2} so Q33_2_{str(int(q11_2)).zfill(2)} must equal {q33_2_max}"])
+
+
+        # Q38 code 3 vs Q8_1
+        if sr['Q38_3'] > 0 and sr['Q8_1_01'] == 6 and sr['Q8_1_02'] == 1:
+            lst_err.extend([f"Q8_1_01 = 6 & Q8_1_02 = 1 & Q38_3 > 0"])
+
+
+        # Q59 code 3 vs Q8_1
+        if sr['Q59_3'] > 0 and sr['Q8_1_01'] == 6 and sr['Q8_1_02'] == 1:
+            lst_err.extend([f"Q8_1_01 = 6 & Q8_1_02 = 1 & Q59_3 > 0"])
+
+
+        # Q52 vs Q53_01 -> 14
+        q52_val = sr.filter(regex=r'^Q52_[0-9]+$', axis=0).dropna().values.tolist()
+
+        for i in q52_val:
+            if sr[f'Q53_{str(int(i)).zfill(2)}'] == 1:
+                lst_err.extend([f"Q52 = {int(i)} but Q53_{str(int(i)).zfill(2)} = 1"])
+
+        return ' | '.join(lst_err)
+
+
+
+    df_data['Logic_Check'] = df_data.apply(logic_check, axis=1)
+    # END LOGIC CHECKING------------------------------------------------------------------------------------------------
+
+    # REBASE L8
+    lst_l8_col = ['L8_1', 'L8_2', 'L8_3', 'L8_4', 'L8_5', 'L8_6', 'L8_7', 'L8_8', 'L8_9', 'L8_10', 'L8_11']
+    df_data[lst_l8_col] = df_data[lst_l8_col].fillna(0)
+
+    df_data.loc[df_data.eval("(~(Q8_1_02 == 1 & Q8_1_01 == 6))"), 'Q8_1_Net'] = 2
+
+    df_data.loc[df_data.eval("Q31 > 0"), [f'Q32_2_{i}' for i in range(1, 9)]] = [np.nan] * 8
+
+    df_info.loc[df_info.eval(f"var_name == 'Q47'"), ['var_type', 'val_lbl']] = ['SA', {'1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '10'}]
+
+
+    def scoring_l7(sr: pd.Series) -> pd.Series:
+        dict_score = {
+            1: 11,
+            2: 10,
+            3: 9,
+            4: 8,
+            5: 7,
+            6: 6,
+            7: 5,
+            8: 4,
+            9: 3,
+            10: 2,
+            11: 1,
+        }
+
+        l7_sum = 0
+
+        for i in range(1, 12):
+            val_rank = sr[f'L7_Rank{i}']
+
+            if pd.isnull(val_rank):
+                continue
+
+            sr[f'L7_Score_{val_rank}'] = dict_score[i]
+
+            l7_sum += dict_score[i]
+
+
+        for i in range(1, 12):
+            val_rank = sr[f'L7_Rank{i}']
+
+            if pd.isnull(val_rank):
+                continue
+
+            sr[f'L7_Pct_by_Score_{val_rank}'] = dict_score[i] / l7_sum
+
+        return sr
+
+
+    df_data = df_data.apply(scoring_l7, axis=1)
+
+
+
+
+
+
+
+
+
 
 
     # Just for checking
-    with pd.ExcelWriter(f'{str_file_name}_preview.xlsx', engine="openpyxl") as writer:
+    with pd.ExcelWriter(f'{str_file_name_no_path}_preview.xlsx') as writer:
         df_data.to_excel(writer, sheet_name='df_data')
         df_info.to_excel(writer, sheet_name='df_info')
 

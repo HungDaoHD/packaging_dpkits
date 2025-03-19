@@ -28,7 +28,7 @@ class Logging:
 
 
 
-    def print(self, txt: str | list[str], fore_color: None | list[Fore] = None, sep: str = '', end: str = '\n'):
+    def print(self, txt: str | list[str], fore_color: None | list[Fore] | str = None, sep: str = '', end: str = '\n'):
 
         frameinfo = getframeinfo(currentframe().f_back)
         filename = re.split(r"[/|\\]", frameinfo.filename)[-1]

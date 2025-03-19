@@ -275,7 +275,7 @@ class DataProcessing(Logging):
 
 
     def create_count_ma_ranking(self, *, act: str, lst_qre: list) -> (dict, dict):
-
+        
         dict_add_new_qres = dict()
         dict_data_new_qres = dict()
 
@@ -284,12 +284,30 @@ class DataProcessing(Logging):
             lst_result = [np.nan] * ranking_range
 
             df = row.to_frame(name='val')
+            df['val'] = df['val'].fillna(0)
+
             df['score'] = list(range(1, df.shape[0] + 1)[::-1])
 
             for k, v in df.set_index('val', drop=True).to_dict()['score'].items():
+
+                if k == 0:  # ==== Tam sửa ===
+                    continue
+
                 lst_result[k - 1] = v
 
+            df['val'] = df['val'].replace({0: np.nan})  # ==== Tam sửa ===
+
             return lst_result
+
+
+
+
+
+
+
+
+
+
 
 
         for qre in lst_qre:

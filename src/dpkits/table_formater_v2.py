@@ -42,21 +42,21 @@ class TableFormatterV2(Logging):
             str_output_name = str(self.xlsx_name).replace('.xlsx', f" - {datetime.datetime.now().strftime("%b %d")}.xlsx")
 
 
-
-            # wb.sheets['Sheet1'].activate()
+            if 'Content' in wb.sheet_names:
+                wb.sheets['Content'].activate()
 
             wb.save(str_output_name)
             wb.close()
 
             app.display_alerts = True
 
-        except Exception as e:
-            raise e
+        except Exception as ex:
+            raise ex
 
         finally:
             app.quit()
 
-        self.print(f"All sheets formatting have completed in {datetime.timedelta(seconds=time.time() - st)}", self.clr_succ)
+        self.print(f">>> Sheet(s) formatting have completed in {datetime.timedelta(seconds=time.time() - st)}", self.clr_succ)
 
 
     def format_worksheet(self, wb: books, ws: sheets):

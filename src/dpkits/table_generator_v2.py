@@ -4,8 +4,11 @@ import time
 import datetime
 import math
 import multiprocessing
+import traceback
+import warnings
 from scipy import stats
 from .logging import Logging
+
 
 
 
@@ -256,7 +259,7 @@ class DataTableGeneratorV2(Logging):
 
             self.generate_tables_by_group(dict_tables=dict_tables, lst_run_table=lst_run_table)
 
-        self.print(f"All table generation have completed in {datetime.timedelta(seconds=time.time() - st)}", self.clr_succ)
+        self.print(f">>> Table(s) generation have completed in {datetime.timedelta(seconds=time.time() - st)}", self.clr_succ)
 
 
 
@@ -264,9 +267,25 @@ class DataTableGeneratorV2(Logging):
 
         self.valcheck_header_level(dict_tables=dict_tables)
 
-        is_multiple_process, is_new_way = True, False
 
-        is_multiple_process = False if __debug__ else True
+        def detect_debugger():
+            for frame in traceback.extract_stack():
+                if 'pydevd' in frame.filename.lower():
+                    return True
+            return False
+
+        if detect_debugger():
+            is_multiple_process = False
+
+        else:
+            is_multiple_process = True
+
+
+        # # # FOR TESTING--------------------------------
+        # is_multiple_process = True
+        is_new_way = False
+        # # # FOR TESTING--------------------------------
+
 
         lst_processed_tables = list()
 
@@ -278,7 +297,7 @@ class DataTableGeneratorV2(Logging):
                 num_cores = multiprocessing.cpu_count()
                 num_cores_processing = num_cores - 1
 
-                self.print(f'Number of CPU cores to be used for multiple processing: {num_cores_processing} / {num_cores}', self.clr_warn)
+                self.print(f'>>> Number of CPU cores to be used for multiple processing: {num_cores_processing} / {num_cores}', self.clr_warn)
 
                 pool = multiprocessing.Pool(processes=num_cores_processing)
 
@@ -291,6 +310,8 @@ class DataTableGeneratorV2(Logging):
                 # End MULTIPLE PROCESSING-------------------------------------------------------------------------------
 
             case False:
+
+                self.print('>>> Single processing', self.clr_warn)
 
                 for item in list(dict_tables.values()):
 
@@ -1386,11 +1407,15 @@ class DataTableGeneratorV2(Logging):
 
 
 
-    @staticmethod
-    def mark_sig_to_df_qre(df_qre: pd.DataFrame, dict_pair_to_sig: dict, sig_pair: list, dict_header_col_name: dict, sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
+
+    def mark_sig_to_df_qre(self, df_qre: pd.DataFrame, dict_pair_to_sig: dict, sig_pair: list, dict_header_col_name: dict, sig_type: str, lst_sig_lvl: list) -> pd.DataFrame:
 
         if not lst_sig_lvl or not sig_type or not dict_pair_to_sig:
             return df_qre
+
+        if sig_type not in ['rel', 'ind']:
+            self.print(f"\nSig type must be 'rel' or 'ind' instead of '{sig_type}'", self.clr_err)
+            raise ValueError(sig_type)
 
         if sig_pair[0] not in dict_pair_to_sig.keys() or sig_pair[1] not in dict_pair_to_sig.keys():
             return df_qre
@@ -1416,7 +1441,7 @@ class DataTableGeneratorV2(Logging):
             if df_left.mean().iloc[0] == 1 and df_right.mean().iloc[0] == 1:
                 return df_qre
 
-        except Exception as e:
+        except Exception as ex:
 
             if df_left.mean() == 0 or df_right.mean() == 0:
                 return df_qre
@@ -1427,25 +1452,28 @@ class DataTableGeneratorV2(Logging):
         arr_left = df_left.to_numpy(dtype=float).flatten()
         arr_right = df_right.to_numpy(dtype=float).flatten()
 
+        with warnings.catch_warnings():
 
-        match sig_type:
-            case 'rel':
+            warnings.simplefilter("ignore", RuntimeWarning)
 
-                if df_left.shape[0] != df_right.shape[0]:
-                    return df_qre
+            match sig_type:
+                case 'rel':
 
-                # sigResult = stats.ttest_rel(df_left, df_right)
-                sigResult = stats.ttest_rel(arr_left, arr_right)
+                    if df_left.shape[0] != df_right.shape[0]:
+                        return df_qre
+
+                    # sigResult = stats.ttest_rel(df_left, df_right)
+                    sigResult = stats.ttest_rel(arr_left, arr_right)
 
 
-            case 'ind':
+                case 'ind':
 
-                # sigResult = stats.ttest_ind(df_left, df_right)
-                sigResult = stats.ttest_ind(arr_left, arr_right)
+                    # sigResult = stats.ttest_ind(df_left, df_right)
+                    sigResult = stats.ttest_ind(arr_left, arr_right)
 
-            case _:
+                case _:
 
-                raise ValueError(sig_type)
+                    raise ValueError(sig_type)
 
 
 
@@ -1459,10 +1487,13 @@ class DataTableGeneratorV2(Logging):
 
             if sigResult.pvalue <= lst_sig_lvl[0]:
                 df_qre.at[df_qre.index[-1], sig_col_name] = str(df_qre.at[df_qre.index[-1], sig_col_name]).replace('nan', '') + mark_sig_char.upper()
+
             elif len(lst_sig_lvl) >= 2:
+
                 if sigResult.pvalue <= lst_sig_lvl[1]:
                     df_qre.loc[df_qre.index[-1], sig_col_name] = str(df_qre.at[df_qre.index[-1], sig_col_name]).replace('nan', '') + mark_sig_char.lower()
-        
+
+
         return df_qre
 
 
