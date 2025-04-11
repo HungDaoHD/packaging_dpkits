@@ -357,7 +357,8 @@ class DataTableGeneratorV2(Logging):
             if '$' in dict_qre['qre_name']:
 
                 if 'RANK' in str(dict_qre['qre_name']).upper():
-                    lst_qre_ma_name = df_info.query(f"var_name.str.contains('^{dict_qre['qre_name'][1:]}[0-9]+$')")['var_name'].values.tolist()
+                    # lst_qre_ma_name = df_info.query(f"var_name.str.contains('^{dict_qre['qre_name'][1:]}[0-9]+$')")['var_name'].values.tolist()
+                    lst_qre_ma_name = df_info.query(f"var_name.str.contains('^{dict_qre['qre_name'][1:]}_[0-9]+$')")['var_name'].values.tolist()
                 else:
                     lst_qre_ma_name = df_info.query(f"var_name.str.contains('^{dict_qre['qre_name'][1:]}_[0-9]+$')")['var_name'].values.tolist()
 
@@ -534,7 +535,8 @@ class DataTableGeneratorV2(Logging):
             if '$' in qre['qre_name']:
 
                 if '_RANK' in str(qre['qre_name']).upper():
-                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
+                    # lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
+                    lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
                 else:
                     lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
 
@@ -1824,7 +1826,8 @@ class DataTableGeneratorV2(Logging):
             if '$' in qre_name:
 
                 if 'RANK' in str(qre_name).upper():
-                    str_query = f"var_name.str.contains('^{qre_name[1:]}[0-9]+$')"
+                    # str_query = f"var_name.str.contains('^{qre_name[1:]}[0-9]+$')"
+                    str_query = f"var_name.str.contains('^{qre_name[1:]}_[0-9]+$')"
                 else:
                     str_query = f"var_name.str.contains('^{qre_name[1:]}_[0-9]+$')"
 
@@ -1993,7 +1996,7 @@ class DataTableGeneratorV2(Logging):
 
             match qre['qre_name']:
                 case _ if '$' in qre['qre_name']:  # MA | RANK
-                    str_query = f"var_name.str.contains('^{qre['qre_name'][1:]}{'' if '_RANK' in str(qre['qre_name']).upper() else '_'}[0-9]+$')"
+                    str_query = f"var_name.str.contains('^{qre['qre_name'][1:]}{'' if '_RANK_' in str(qre['qre_name']).upper() else '_'}[0-9]+$')"
                     lst_data_col = df_info.loc[df_info.eval(str_query), 'var_name'].values.tolist()
                     str_name = qre['qre_name'].replace('$', '')
 

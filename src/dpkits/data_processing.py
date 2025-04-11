@@ -275,7 +275,7 @@ class DataProcessing(Logging):
 
 
     def create_count_ma_ranking(self, *, act: str, lst_qre: list) -> (dict, dict):
-        
+
         dict_add_new_qres = dict()
         dict_data_new_qres = dict()
 
@@ -302,14 +302,6 @@ class DataProcessing(Logging):
 
 
 
-
-
-
-
-
-
-
-
         for qre in lst_qre:
 
             match act.upper():
@@ -326,7 +318,8 @@ class DataProcessing(Logging):
                     dict_data_new_qres.update({new_num_qre: self.df_data[lst_col_qre].count(axis=1).values.tolist()})
 
                 case 'RANKING':
-                    lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_Rank[\\d]{{1,2}}$') & var_type.isin(['RANKING'])"), 'var_name'].values.tolist()
+                    # lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_Rank[\\d]{{1,2}}$') & var_type.isin(['RANKING'])"), 'var_name'].values.tolist()
+                    lst_col_qre = self.df_info.loc[self.df_info.eval(f"var_name.str.contains(r'^{qre}_Rank_[\\d]{{1,2}}$') & var_type.isin(['RANKING'])"), 'var_name'].values.tolist()
 
                     if not len(lst_col_qre):
                         self.print(f"{qre} is not {act.upper()} questions!!!", self.clr_err)

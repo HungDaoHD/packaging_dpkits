@@ -327,7 +327,8 @@ class APDataConverter(Logging):
             strMatrix = '' if df_info.loc[idx, 'Question(Matrix)'] is None else f"{df_info.loc[idx, 'Question(Matrix)']}_"
             strNormal = df_info.loc[idx, 'Question(Normal)'] if strMatrix == '' else f"{strMatrix}{df_info.loc[idx, 'Question(Normal)']}"
             strQreName = str(df_info.loc[idx, 'Name of items'])
-            strQreName = strQreName.replace('Rank_', 'Rank') if 'Rank_' in strQreName else strQreName
+
+            # strQreName = strQreName.replace('Rank_', 'Rank') if 'Rank_' in strQreName else strQreName
 
             dictQres[strQreName] = {
                 'type': df_info.loc[idx, 'Question type'],
