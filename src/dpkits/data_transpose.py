@@ -71,20 +71,22 @@ class DataTranspose:
         df_data_stack.sort_values(by=[id_col, sp_col], inplace=True)
         df_data_stack.reset_index(drop=True, inplace=True)
 
-        df_info_stack = df_info.copy()
+        df_info_stack: pd.DataFrame = df_info.copy()
+        df_info_stack = df_info_stack.set_index(keys='var_name', drop=False)
 
-        for key, val in dict_sp[1].items():
-            df_info_stack.loc[df_info_stack['var_name'] == key, ['var_name']] = [val]
+        df_info_stack.loc[list(dict_sp[1].keys()), 'var_name'] = list(dict_sp[1].values())
+        df_info_stack = df_info_stack.query(f"var_name.isin({df_data_stack.columns.tolist()})")
 
-        df_info_stack.drop_duplicates(subset=['var_name'], keep='first', inplace=True)
+        df_info_stack = df_info_stack.loc[df_data_stack.columns, :]
 
-        # Reset df_info_stack index
-        df_info_stack['idx_var_name'] = df_info_stack['var_name']
-        df_info_stack.set_index('idx_var_name', inplace=True)
-        df_info_stack = df_info_stack.loc[list(df_data_stack.columns), :]
-        df_info_stack.reindex(list(df_data_stack.columns))
-        df_info_stack.reset_index(drop=True, inplace=True)
+        df_info_stack.loc[sp_col, 'var_lbl'] = sp_col
 
+        rep_lbl = '|'.join(list(df_info_stack.loc[sp_col, 'val_lbl'].values()))
+
+        df_info_stack = df_info_stack.replace({'var_lbl': {rf'_*({rep_lbl})_*': ''}}, regex=True)
+
+        df_info_stack = df_info_stack.reset_index(drop=True)
+        
         return df_data_stack, df_info_stack
 
 

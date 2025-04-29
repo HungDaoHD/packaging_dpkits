@@ -1,6 +1,10 @@
+import re
 import pandas as pd
 import numpy as np
 from .logging import Logging
+from pandas.api.types import CategoricalDtype
+
+
 
 
 class DataProcessing(Logging):
@@ -11,19 +15,22 @@ class DataProcessing(Logging):
         self.df_info: pd.DataFrame = df_info
 
 
+
     @staticmethod
     def str_formater(lst_input: list[str]) -> str:
         return ', '.join(lst_input) if len(lst_input) <= 5 else f"{', '.join(lst_input[:2])},..., {', '.join(lst_input[-2:])}"
 
 
-    def add_qres(self, dict_add_new_qres: dict, is_add_oe_col: bool = False) -> (pd.DataFrame, pd.DataFrame):
+
+    def add_qres(self, dict_add_new_qres: dict, is_add_data_col: bool = True, is_add_info_col: bool = True) -> (pd.DataFrame, pd.DataFrame):
         """
         :param dict_add_new_qres:
             'var_name': ['var_lbl', 'var_type', val_lbl, default value],
             var_name: str
             var_lbl: str
             var_type: str ['SA', 'SA_mtr', 'MA', 'MA_mtr', 'NUM', 'FT']
-        :param is_add_oe_col: bool
+        :param is_add_data_col: bool
+        :param is_add_info_col: bool
         :return: df_data, df_info
         """
 
@@ -44,25 +51,32 @@ class DataProcessing(Logging):
 
                     lst_info_addin.append([f'{qre_ma_name}_{i}', val[0], val[1], val[2]])
 
-                    if '_OE' not in key or is_add_oe_col is True:
-                        lst_colname.append(f'{qre_ma_name}_{i}')
-                        lst_data_addin.append([val[-1]] * int_max_row)
+                    # if '_OE' not in key or is_add_oe_col is True:
+                    #     lst_colname.append(f'{qre_ma_name}_{i}')
+                    #     lst_data_addin.append([val[-1]] * int_max_row)
+
+                    lst_colname.append(f'{qre_ma_name}_{i}')
+                    lst_data_addin.append([val[-1]] * int_max_row)
 
             else:
 
                 lst_info_addin.append([key, val[0], val[1], val[2]])
 
-                if '_OE' not in key or is_add_oe_col is True:
-                    lst_colname.append(key)
-                    lst_data_addin.append([val[-1]] * int_max_row)
+                # if '_OE' not in key or is_add_oe_col is True:
+                #     lst_colname.append(key)
+                #     lst_data_addin.append([val[-1]] * int_max_row)
+
+                lst_colname.append(key)
+                lst_data_addin.append([val[-1]] * int_max_row)
 
             print(end='\r')
 
+        if is_add_info_col:
+            self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=lst_info_addin)], axis=0, ignore_index=True)
 
-        self.df_info = pd.concat([self.df_info, pd.DataFrame(columns=info_col_name, data=lst_info_addin)], axis=0, ignore_index=True)
-
-        if len(lst_colname) > 0:
-            self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=lst_colname, data=np.array(lst_data_addin).transpose())], axis=1)
+        if is_add_data_col:
+            if len(lst_colname) > 0:
+                self.df_data = pd.concat([self.df_data, pd.DataFrame(columns=lst_colname, data=np.array(lst_data_addin).transpose())], axis=1)
 
         self.df_data.reset_index(drop=True, inplace=True)
         self.df_info.reset_index(drop=True, inplace=True)
@@ -369,6 +383,172 @@ class DataProcessing(Logging):
 
 
 
+    def imagery_one_hot_encoding(self, *, dict_encoding: dict) -> (pd.DataFrame, pd.DataFrame):
+
+        id_var = dict_encoding['id_var']
+        regex_imagery_col = dict_encoding['regex_imagery_col']
+        exclusive_codes = dict_encoding['exclusive_codes']
+        lvl1_name = dict_encoding['lvl1_name']
+        lvl2_name = dict_encoding['lvl2_name']
+        lst_col_img = self.df_data.filter(regex=regex_imagery_col).columns.tolist()
 
 
+        # generate codelist
+        df_info_img: pd.DataFrame = self.df_info.query(f"var_name.str.contains(r'{regex_imagery_col.replace('(', '').replace(')', '')}')")
+
+        df_info_img = df_info_img.replace({'var_name': {regex_imagery_col: r'\1'}}, regex=True)
+        df_info_img = df_info_img.replace({'var_lbl': {r'^.+_(.+)$': r'\1'}}, regex=True)
+
+        dict_lvl1_label = {int(k): v for k, v in df_info_img.iloc[0, -1].items()}
+
+        dict_lvl2_label = df_info_img[['var_name', 'var_lbl']].copy().drop_duplicates(keep='first').set_index(keys='var_name', drop=True).to_dict()['var_lbl']
+        dict_lvl2_label = {int(k): v for k, v in dict_lvl2_label.items()}
+
+
+        # generate df_data
+        df_melted: pd.DataFrame = self.df_data[[id_var] + lst_col_img].melt(id_vars=[id_var], value_name=lvl1_name, var_name=lvl2_name)
+
+        df_melted[lvl2_name] = df_melted[lvl2_name].str.replace(regex_imagery_col, r'\1', regex=True).astype(int)
+
+        df_melted = df_melted.dropna(subset=[lvl1_name])
+        df_melted[lvl1_name] = df_melted[lvl1_name].astype(int).astype('category')
+        df_melted = df_melted[~df_melted[lvl1_name].isin(exclusive_codes)]
+        df_melted[lvl1_name] = df_melted[lvl1_name].cat.set_categories(list(dict_lvl1_label.keys()), ordered=True)
+
+        df_melted = df_melted.dropna(subset=[lvl2_name])
+        df_melted[lvl2_name] = df_melted[lvl2_name].astype(int).astype('category')
+        df_melted = df_melted[~df_melted[lvl2_name].isin(exclusive_codes)]
+        df_melted[lvl2_name] = df_melted[lvl2_name].cat.set_categories(list(dict_lvl2_label.keys()), ordered=True)
+
+        df_melted['count'] = 1
+
+        df_melted_pivot = df_melted.pivot_table(
+            index=[id_var],
+            columns=[lvl1_name, lvl2_name],
+            values=['count'],
+            aggfunc='count',
+            fill_value=0,
+            dropna=False,
+            observed=False,
+        )
+
+        df_melted_pivot.columns = df_melted_pivot.columns.droplevel(0)
+        flat_col = df_melted_pivot.columns.to_flat_index()
+
+        df_melted_pivot.columns = [f"{lvl1_name}_{int(lvl1)}_{lvl2_name}_{int(lvl2)}" for lvl1, lvl2 in flat_col]
+
+        # generate df_info
+        dict_add_qre = dict()
+
+        for colname in df_melted_pivot.columns.tolist():
+            lvl1 = re.sub(rf"^{lvl1_name}_(\d+)_{lvl2_name}_(\d+)$", r'\1', colname)
+            lvl2 = re.sub(rf"^{lvl1_name}_(\d+)_{lvl2_name}_(\d+)$", r'\2', colname)
+
+            qre_label = colname.replace(f"{lvl1_name}_{int(lvl1)}", dict_lvl1_label[int(lvl1)]).replace(f"{lvl2_name}_{int(lvl2)}", dict_lvl2_label[int(lvl2)])
+
+            dict_add_qre.update({colname: [qre_label, 'SA', {'1': 'Yes', '0': 'No'}, np.nan]})
+
+
+        self.add_qres(dict_add_qre, is_add_data_col=False)
+
+
+        # merge df_melted_pivot to df_data
+        df_melted_pivot = df_melted_pivot.reset_index(drop=False)
+        self.df_data = self.df_data.merge(df_melted_pivot, how='left', on=id_var)
+
+
+        return self.df_data, self.df_info
+
+
+
+    def one_hot_encoding(self, *, dict_one_hot_regex):
+
+        dict_add_qre = dict()
+
+        for key, val in dict_one_hot_regex.items():
+            str_prefix = key
+            lst_qre_col = self.df_data.filter(regex=val).columns.tolist()
+            str_qre_lbl = self.df_info.loc[self.df_info['var_name'].isin(lst_qre_col), 'var_lbl'].values[0]
+            dict_cate = self.df_info.loc[self.df_info['var_name'].isin(lst_qre_col), 'val_lbl'].values[0]
+
+            if isinstance(dict_cate, str):
+                dict_cate = eval(dict_cate)
+
+            lst_cate_code = [int(k) for k in dict_cate.keys()]
+
+            self.df_data[lst_qre_col] = self.df_data[lst_qre_col].astype(CategoricalDtype(categories=lst_cate_code))
+
+            df_data_one_hot = pd.DataFrame(
+                columns=[f"{str_prefix}_{i}" for i in lst_cate_code] + [f"{str_prefix}_nan"],
+                index=self.df_data.index,
+                data=[[0] * (len(lst_cate_code) + 1)] * self.df_data.shape[0]
+            )
+
+            for qre in lst_qre_col:
+                df_dummies = pd.get_dummies(self.df_data[qre], prefix=str_prefix, dummy_na=True).replace({True: 1, False: 0})
+
+                for col in df_dummies.columns:
+                    df_data_one_hot[col] += df_dummies[col].values
+
+            df_qre_nan = df_data_one_hot.loc[df_data_one_hot[f'{str_prefix}_nan'] == (len(lst_cate_code) + 1), f'{str_prefix}_nan']
+
+            if not df_qre_nan.empty:
+                df_data_one_hot.loc[df_qre_nan.index, :] = [np.nan]
+
+            df_data_one_hot = df_data_one_hot.drop(columns=[f'{str_prefix}_nan'])
+
+            for col in df_data_one_hot.columns:
+                cate = str(col).replace(f"{str_prefix}_", '')
+                dict_add_qre.update({col: [f"{str_qre_lbl}_{dict_cate[cate]}", 'SA', {'1': 'Yes', '0': 'No'}, np.nan]})
+
+
+            self.df_data = pd.concat([self.df_data, df_data_one_hot], axis=1)
+
+
+
+        self.add_qres(dict_add_qre, is_add_data_col=False)
+
+
+
+
+
+
+
+
+        # for lst_col in lst_one_hot:
+        #     codelist = self.df_info.loc[self.df_info['var_name'].isin(lst_col), 'val_lbl'].values[0]
+        #     qre_label = self.df_info.loc[self.df_info['var_name'].isin(lst_col), 'var_lbl'].values[0]
+        #
+        #     lst_cate = [int(k) for k in codelist.keys()]
+        #     self.df_data[lst_col] = self.df_data[lst_col].astype(CategoricalDtype(categories=lst_cate))
+        #
+        #     str_prefix = col if len(lst_col) == 1 else lst_col[0].rsplit('_')
+        #
+        #     df_data_dummies = pd.DataFrame()
+        #
+        #     for col in lst_col:
+        #         df_dummies = pd.get_dummies(self.df_data[col], prefix=col, dummy_na=True).replace({True: 1, False: 0})
+        #         df_dummies.loc[df_dummies.eval(f"{col}_nan == 1"), :] = [np.nan]
+        #         df_dummies = df_dummies.drop(columns=[f'{col}_nan'])
+        #
+        #
+        #
+        #     self.df_data = self.df_data.join(df_data_dummies)
+        #
+        #     for colname in df_data_dummies.columns:
+        #         cate = str(colname).rsplit('_', 1)[-1]
+        #         dict_add_qre.update({colname: [f"{qre_label}_{codelist[cate]}", 'SA', {'1': 'Yes', '0': 'No'}, np.nan]})
+        #
+        #
+        #
+        # self.add_qres(dict_add_qre, is_add_data_col=False)
+
+
+
+
+
+
+
+
+        return self.df_data, self.df_info
 

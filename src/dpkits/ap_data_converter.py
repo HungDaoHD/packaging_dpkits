@@ -465,8 +465,7 @@ class APDataConverter(Logging):
 
 
     @time_it
-    # def convert_df_mc(self, lst_new_row: list = None) -> (pd.DataFrame, pd.DataFrame):
-    def convert_df_mc(self) -> (pd.DataFrame, pd.DataFrame):
+    def convert_df_mc(self, *, is_export_xlsx: bool = False) -> (pd.DataFrame, pd.DataFrame):
         """
         Convert data with MA questions format by columns instead of code
         """
@@ -504,6 +503,15 @@ class APDataConverter(Logging):
 
             df_data[cols] = df_data[cols].apply(recode_md_to_mc, axis=1, result_type='expand')
             df_info.loc[fil_idx, ['val_lbl']] = df_info.loc[fil_idx, ['val_lbl']].apply(create_val_lbl_info_mc, result_type='expand')
+
+
+        df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
+        df_data = df_data[df_info['var_name'].values.tolist()]
+
+        if is_export_xlsx:
+            with pd.ExcelWriter(f'{self.str_file_name} - converted to mc data.xlsx') as writer:
+                df_data.to_excel(writer, sheet_name='df_data', index=False)
+                df_info.to_excel(writer, sheet_name='df_info', index=False)
 
 
         return df_data, df_info
