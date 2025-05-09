@@ -5,11 +5,13 @@ import datetime
 from pathlib import Path
 
 
+
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
-from dpkits import (
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.dpkits import (
     APDataConverter,
     DataProcessing,
     DataTranspose,
@@ -28,7 +30,6 @@ from dpkits import (
 
 
 
-
 if __name__ == '__main__':
 
     # # # --------------------------------------------------------------------------------------------------------------
@@ -43,31 +44,41 @@ if __name__ == '__main__':
     str_file_name = 'VN9999 - Project Name'
     str_tbl_file_name = f'{str_file_name}_Topline.xlsx'
 
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # Call Class APDataConverter with file_name---------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-    converter = APDataConverter(file_name=f'{str_data_folder_path}/{str_file_name}.xlsx')
-    converter.lstDrop.extend(['ResName', 'ResPhone', 'Invite', 'IntName', 'Reward', 'ResEmail'])
+    temp_data_path = Path(f"{str_file_name}_converted.xlsx")  # you could change this file name
 
-    # # # # --------------------------------------------------------------------------------------------------------------
-    # # # # Convert system data to pandas dataframe-----------------------------------------------------------------------
-    # # # # --------------------------------------------------------------------------------------------------------------
-    # df_data, df_info = converter.convert_df_mc(is_export_xlsx=False)
-    # df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
-    #
-    # # # # --------------------------------------------------------------------------------------------------------------
-    # # # # Save dataframe for timing saving when converting--------------------------------------------------------------
-    # # # # --------------------------------------------------------------------------------------------------------------
-    # with pd.ExcelWriter(f"{str_file_name}_converted.xlsx") as writer:
-    #     df_data.to_excel(writer, sheet_name='df_data', index=False)
-    #     df_info.to_excel(writer, sheet_name='df_info', index=False)
+    if not temp_data_path.exists():
+
+        # # # ----------------------------------------------------------------------------------------------------------
+        # # # Call Class APDataConverter with file_name-----------------------------------------------------------------
+        # # # ----------------------------------------------------------------------------------------------------------
+        converter = APDataConverter(file_name=f'{str_data_folder_path}/{str_file_name}.xlsx')
+        converter.lstDrop.extend(['ResName', 'ResPhone', 'Invite', 'IntName', 'Reward', 'ResEmail'])
+
+        # # # ----------------------------------------------------------------------------------------------------------
+        # # # Convert system data to pandas dataframe-------------------------------------------------------------------
+        # # # ----------------------------------------------------------------------------------------------------------
+        df_data, df_info = converter.convert_df_mc(is_export_xlsx=False)
+        df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
+
+        # # # ----------------------------------------------------------------------------------------------------------
+        # # # Save dataframe for timing saving when converting----------------------------------------------------------
+        # # # If saving file to *.csv, notice 'encoding' parameter to ensure string type data saved in right format-----
+        # # # ----------------------------------------------------------------------------------------------------------
+        with pd.ExcelWriter(temp_data_path) as writer:
+            df_data.to_excel(writer, sheet_name='df_data', index=False)
+            df_info.to_excel(writer, sheet_name='df_info', index=False)
+
+    else:
+
+        # # # ----------------------------------------------------------------------------------------------------------
+        # # # Load the saved dataframe----------------------------------------------------------------------------------
+        # # # Be careful with 'val_lbl' when read excel, it will be string type and need to convert to dictionary-------
+        # # # ----------------------------------------------------------------------------------------------------------
+        df_data = pd.read_excel(temp_data_path, sheet_name='df_data')
+        df_info = pd.read_excel(temp_data_path, sheet_name='df_info')
 
 
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # Load the saved dataframe--------------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-    df_data = pd.read_excel(f"{str_file_name}_converted.xlsx", sheet_name='df_data')
-    df_info = pd.read_excel(f"{str_file_name}_converted.xlsx", sheet_name='df_info')
+
 
 
     # # # --------------------------------------------------------------------------------------------------------------
@@ -89,7 +100,7 @@ if __name__ == '__main__':
         '999': 'None of the above',
     }
 
-    df_info.loc[df_info.eval("(var_name.str.contains('^BE2TV_[0-9]{1,2}+$')) | (var_name.str.contains('^BD11TV_[0-9]{2}_[0-9]{1,2}$')) | (var_name.str.contains('^PRE_[0-9]{1,2}+$')) | var_name == 'PRE_MOST'"), ['val_lbl']] = [dict_brand_new]
+    df_info.loc[df_info.eval("(var_name.str.contains('^BE2TV_[0-9]{1,2}+$')) | (var_name.str.contains('^BD11TV_[0-9]{2}_[0-9]{1,2}$')) | (var_name.str.contains('^PRE_[0-9]{1,2}+$')) | (var_name == 'PRE_MOST') | (var_name.str.contains('^BD11TV_INT2_[0-9]{2}_[0-9]{1,2}$'))"), ['val_lbl']] = [dict_brand_new]
 
     lst_col_be2tv = df_data.filter(regex='^BE2TV_[0-9]{1,2}$').columns.tolist()
     df_data[lst_col_be2tv] = df_data[lst_col_be2tv].replace({11: 971, 12: 972, 13: 973, 10: 999})
@@ -99,6 +110,10 @@ if __name__ == '__main__':
 
     lst_col_bd11tv = df_data.filter(regex='^BD11TV_[0-9]{2}_[0-9]{1,2}$').columns.tolist()
     df_data[lst_col_bd11tv] = df_data[lst_col_bd11tv].replace({10: 971, 11: 972, 12: 973, 13: 999, 14: 999, 15: 999})
+
+    lst_col_bd11tv_int = df_data.filter(regex='^BD11TV_INT2_[0-9]{2}_[0-9]{1,2}$').columns.tolist()
+    df_data[lst_col_bd11tv_int] = df_data[lst_col_bd11tv_int].replace({10: 971, 11: 972, 12: 973, 13: 999, 14: 999, 15: 999})
+
 
     # Initialize DataProcessing
     dp = DataProcessing(df_data=df_data, df_info=df_info)
@@ -126,6 +141,17 @@ if __name__ == '__main__':
 
     dp.imagery_one_hot_encoding(dict_encoding=dict_encoding)
 
+    dict_encoding = {
+        'id_var': 'ID',
+        'regex_imagery_col': r'^BD11TV_INT2_(\d+)_\d+$',
+        'exclusive_codes': [999],
+        'lvl1_name': 'BRAND',
+        'lvl2_name': 'IMG2',
+    }
+
+    dp.imagery_one_hot_encoding(dict_encoding=dict_encoding)
+
+
 
     # One-hot encoding PRE(MA) & PRE_MOST(SA)
     dict_one_hot_regex = {
@@ -139,9 +165,11 @@ if __name__ == '__main__':
     # Get processed dataframes
     df_data, df_info = pd.DataFrame(dp.df_data), pd.DataFrame(dp.df_info)
 
+
     # Check data (if needed)
     # ...
-
+    # ...
+    # ...
 
 
     # # # --------------------------------------------------------------------------------------------------------------
@@ -175,25 +203,10 @@ if __name__ == '__main__':
                 f'PRE_MOST_BIN_{k}': 'PRE_MOST_BIN',
                 f'PUR2TV_{k.zfill(2)}': 'PUR2TV',
                 f'CONSTV_{k.zfill(2)}': 'CONSTV',
-                f'BRAND_{k}_IMG_1': 'IMG_1',
-                f'BRAND_{k}_IMG_2': 'IMG_2',
-                f'BRAND_{k}_IMG_3': 'IMG_3',
-                f'BRAND_{k}_IMG_4': 'IMG_4',
-                f'BRAND_{k}_IMG_5': 'IMG_5',
-                f'BRAND_{k}_IMG_6': 'IMG_6',
-                f'BRAND_{k}_IMG_7': 'IMG_7',
-                f'BRAND_{k}_IMG_8': 'IMG_8',
-                f'BRAND_{k}_IMG_9': 'IMG_9',
-                f'BRAND_{k}_IMG_10': 'IMG_10',
-                f'BRAND_{k}_IMG_11': 'IMG_11',
-                f'BRAND_{k}_IMG_12': 'IMG_12',
-                f'BRAND_{k}_IMG_13': 'IMG_13',
-                f'BRAND_{k}_IMG_14': 'IMG_14',
-                f'BRAND_{k}_IMG_15': 'IMG_15',
-                f'BRAND_{k}_IMG_16': 'IMG_16',
-                f'BRAND_{k}_IMG_17': 'IMG_17',
-                f'BRAND_{k}_IMG_18': 'IMG_18',
-                f'BRAND_{k}_IMG_19': 'IMG_19',
+            } | {
+                f'BRAND_{k}_IMG_{i}': f'IMG_{i}' for i in range(1, 20)
+            } | {
+                f'BRAND_{k}_IMG2_{i}': f'IMG2_{i}' for i in range(1, 17)
             }
         })
 
@@ -575,34 +588,32 @@ if __name__ == '__main__':
     # da.penalty_analysis(dict_define_pen=dict_define_pen, output_name='VN8413_Penalty_Analysis')
 
 
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # LINEAR REGRESSION---------------------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-
-    da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
-
-    dict_define_linear = {
-        'TV_General': {
-            'str_query': '',
-            'dependent_vars': ['PUR2TV'],
-            'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
-        },
-        'Sony': {
-            'str_query': '(BRAND == 1)',
-            'dependent_vars': ['PUR2TV'],
-            'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
-        },
-        'Samsung': {
-            'str_query': '(BRAND == 2)',
-            'dependent_vars': ['PUR2TV'],
-            'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
-        },
-
-    }
-
-    da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN9999 - Project Name_Linear_Regression')
-
-
+    # # # # --------------------------------------------------------------------------------------------------------------
+    # # # # LINEAR REGRESSION---------------------------------------------------------------------------------------------
+    # # # # --------------------------------------------------------------------------------------------------------------
+    #
+    # da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
+    #
+    # dict_define_linear = {
+    #     'TV_General': {
+    #         'str_query': '',
+    #         'dependent_vars': ['PUR2TV'],
+    #         'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
+    #     },
+    #     'Sony': {
+    #         'str_query': '(BRAND == 1)',
+    #         'dependent_vars': ['PUR2TV'],
+    #         'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
+    #     },
+    #     'Samsung': {
+    #         'str_query': '(BRAND == 2)',
+    #         'dependent_vars': ['PUR2TV'],
+    #         'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
+    #     },
+    #
+    # }
+    #
+    # da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN9999 - Project Name_Linear_Regression')
 
 
     # # # --------------------------------------------------------------------------------------------------------------
@@ -611,16 +622,15 @@ if __name__ == '__main__':
 
     da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
 
-    lst_img = [f'IMG_{i}' for i in range(1, 20)]
+    lst_img = [f'IMG_{i}' for i in range(1, 20)]  # + [f'IMG2_{i}' for i in range(1, 17)]
 
     dict_kda = {
-        # 'KDA_TV_General_1': {
-        #     'str_query': '',
-        #     'axis_x_dependent_vars': None,
-        #     'axis_y_dependent_vars': ['PUR2TV'],
-        #     'explanatory_vars': lst_img,
-        # },
-
+        'KDA_TV_General_1': {
+            'str_query': '',
+            'axis_x_dependent_vars': None,
+            'axis_y_dependent_vars': ['PUR2TV'],
+            'explanatory_vars': lst_img,
+        },
         'KDA_Sony_1': {
             'str_query': '(BRAND == 1)',
             'axis_x_dependent_vars': None,
@@ -641,6 +651,12 @@ if __name__ == '__main__':
             'explanatory_vars': lst_img,
         },
 
+        'KDA_TV_General_2': {
+            'str_query': '',
+            'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
+            'axis_y_dependent_vars': ['PUR2TV'],
+            'explanatory_vars': lst_img,
+        },
         'KDA_Sony_2': {
             'str_query': '(BRAND == 1)',
             'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
@@ -661,25 +677,100 @@ if __name__ == '__main__':
             'explanatory_vars': lst_img,
         },
 
-
-
     }
 
     da.key_driver_analysis(dict_kda=dict_kda, output_name='VN9999 - Project Name_KDA')
-    
-
-
-
 
 
     # # # --------------------------------------------------------------------------------------------------------------
     # # # Correspondence Analysis (CA)----------------------------------------------------------------------------------
     # # # --------------------------------------------------------------------------------------------------------------
 
+    da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
+
+    lst_img = [f'IMG_{i}' for i in range(1, 20)]  # + [f'IMG2_{i}' for i in range(1, 17)]
+
+    dict_ca = {
+        'CA_All_Brand': {
+            'str_query': '',
+            'id_var': 'ID',
+            'brand_var': 'BRAND',
+            'imagery_vars': lst_img,
+        },
+        'CA_Top_4_Brand': {
+            'str_query': 'BRAND.isin([1, 2, 3, 6])',
+            'id_var': 'ID',
+            'brand_var': 'BRAND',
+            'imagery_vars': lst_img,
+        },
+        'CA_Top_3_Brand': {
+            'str_query': 'BRAND.isin([1, 2, 3])',
+            'id_var': 'ID',
+            'brand_var': 'BRAND',
+            'imagery_vars': lst_img,
+        },
+    }
+
+    da.correspondence_analysis(dict_ca=dict_ca, output_name='VN9999 - Project Name_CA')
+
+    # # # --------------------------------------------------------------------------------------------------------------
+    # # # Price Sensitive Metric----------------------------------------------------------------------------------------
+    # # # --------------------------------------------------------------------------------------------------------------
+
+    da = DataAnalysis(df_data=df_data, df_info=df_info)
+
+    dict_psm = {
+        'PSM_Total': {
+            'str_query': '',
+            'qre_psm': {
+                'too_expensive': 'QQ1',
+                'expensive': 'QQ2',
+                'cheap': 'QQ3',
+                'too_cheap': 'QQ4',
+            },
+            'is_remove_outlier': True
+        },
+        'PSM_HCM': {
+            'str_query': '(CITY == 1)',
+            'qre_psm': {
+                'too_expensive': 'QQ1',
+                'expensive': 'QQ2',
+                'cheap': 'QQ3',
+                'too_cheap': 'QQ4',
+            },
+            'is_remove_outlier': True
+        },
+        'PSM_HN': {
+            'str_query': '(CITY == 2)',
+            'qre_psm': {
+                'too_expensive': 'QQ1',
+                'expensive': 'QQ2',
+                'cheap': 'QQ3',
+                'too_cheap': 'QQ4',
+            },
+            'is_remove_outlier': True
+        },
+        'PSM_DN': {
+            'str_query': '(CITY == 3)',
+            'qre_psm': {
+                'too_expensive': 'QQ1',
+                'expensive': 'QQ2',
+                'cheap': 'QQ3',
+                'too_cheap': 'QQ4',
+            },
+            'is_remove_outlier': True
+        },
+    }
+
+    da.price_sensitive_metric(dict_psm=dict_psm, output_name='VN9999 - Project Name_PSM.xlsx')
+
 
     # # # --------------------------------------------------------------------------------------------------------------
     # # # K-mean Segmentation-------------------------------------------------------------------------------------------
     # # # --------------------------------------------------------------------------------------------------------------
+
+    # HERE 3 ...
+
 
 
     print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=round(time.time() - st, 0)), '\n')
