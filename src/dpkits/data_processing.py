@@ -485,7 +485,7 @@ class DataProcessing(Logging):
             )
 
             for qre in lst_qre_col:
-                df_dummies = pd.get_dummies(self.df_data[qre], prefix=str_prefix, dummy_na=True).replace({True: 1, False: 0})
+                df_dummies = pd.get_dummies(self.df_data[qre], prefix=str_prefix, dummy_na=True).astype(int)
 
                 for col in df_dummies.columns:
                     df_data_one_hot[col] += df_dummies[col].values

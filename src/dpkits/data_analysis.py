@@ -1,16 +1,21 @@
+from .logging import Logging
 import pandas as pd
 import numpy as np
 import pingouin as pg
+import prince
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics.pairwise import euclidean_distances
+from tabulate import tabulate
 
 
 
 
 
-class DataAnalysis:
+class DataAnalysis(Logging):
 
     def __init__(self, *, df_data: pd.DataFrame, df_info: pd.DataFrame):
+        super().__init__()
         self.df_data = df_data
         self.df_info = df_info
 
@@ -26,7 +31,7 @@ class DataAnalysis:
         df_info = self.df_info.copy()
 
         for k_sec, v_sec in dict_define_pen.items():
-            print(f'Processing penalty analysis - {k_sec}')
+            self.print(['Processing penalty analysis: ', k_sec], [None, self.clr_blue])
 
             df_data = self.df_data.query(v_sec.get('query')).copy() if v_sec.get('query') else self.df_data.copy()
 
@@ -73,8 +78,6 @@ class DataAnalysis:
 
 
 
-
-
     def linear_regression(self, *, dict_define_linear: dict, output_name: str | None, coef_only: bool = False) -> dict:
         """
         :param dict_define_linear: dict like
@@ -98,7 +101,7 @@ class DataAnalysis:
         df_lbl = df_lbl.set_index(keys='var_name', drop=True)
 
         for k_lnr, v_lnr in dict_define_linear.items():
-            print(f'Processing linear regression - {k_lnr}')
+            self.print(['Processing linear regression: ', k_lnr], [None, self.clr_blue])
 
             df_data: pd.DataFrame = self.df_data.query(v_lnr['str_query']).copy() if v_lnr['str_query'] else self.df_data.copy()
 
@@ -162,7 +165,7 @@ class DataAnalysis:
 
         with pd.ExcelWriter(f'{output_name}', engine='openpyxl') as writer:
             for key, var in dict_define_corr.items():
-                print(f'Processing correlation - {key}')
+                self.print(['Processing correlation: ', key], [None, self.clr_blue])
 
                 df_data = self.df_data.query(var['str_query']).copy() if var['str_query'] else self.df_data.copy()
 
@@ -193,7 +196,7 @@ class DataAnalysis:
 
 
         for k_kda, v_kda in dict_kda.items():
-            print(f'Processing KDA - {k_kda}')
+            self.print(['Processing KDA: ', k_kda], [None, self.clr_blue])
 
             df_data: pd.DataFrame = self.df_data.query(v_kda['str_query']) if v_kda['str_query'] else self.df_data.copy()
 
@@ -256,10 +259,16 @@ class DataAnalysis:
 
 
         if output_name:
+
             with pd.ExcelWriter(f'{output_name}.xlsx') as writer:
+
                 for k_kda, v_kda in dict_kda.items():
                     ws_name = k_kda
-                    v_kda['df_kda'].to_excel(writer, sheet_name=ws_name, startrow=5)
+
+                    df_kda: pd.DataFrame = v_kda['df_kda']
+                    df_kda = df_kda.reset_index(drop=True)
+
+                    df_kda.to_excel(writer, sheet_name=ws_name, startrow=5)
 
                     # format excel file
                     wb = writer.book
@@ -267,6 +276,7 @@ class DataAnalysis:
 
                     bold = wb.add_format({'bold': True})
 
+                    # KDA information
                     ws.write('B1', 'Filter', bold)
                     ws.write('B2', 'Axis-x dependent variables', bold)
                     ws.write('B3', 'Axis-y dependent variables', bold)
@@ -276,9 +286,485 @@ class DataAnalysis:
                     ws.write('C3', ', '.join(v_kda['axis_y_dependent_vars']))
 
 
+                    # Chart Plotting
+
+                    # Build the scatter chart
+                    chart = wb.add_chart({
+                        'type': 'scatter',
+                        'subtype': 'marker_only',
+                    })
+
+                    # 3.1 Define the data range for the chart:
+                    #     categories = coef_axis_x  (column B, zero-based col 1)
+                    #     values     = coef_axis_y  (column C, zero-based col 2)
+
+                    max_row = len(df_kda) + 5  # number of data rows
+
+                    for idx, irow in enumerate(range(6, max_row)):
+                        chart.add_series({
+                            # 'name': df_kda.at[idx, 'var_lbl'],
+                            'name': [ws_name, irow, 2, irow, 2],
+                            'categories': [ws_name, irow, 5, irow, 5],
+                            'values': [ws_name, irow, 6, irow, 6],
+                            'marker': {'type': 'circle', 'size': 5},
+                            'data_labels': {
+                                'series_name': True,  # ← show the series name
+                                'position': 'above'  # e.g. 'above','below','left','right','center'
+                            }
+                        })
+
+                    # 3.2 Format the axes
+                    str_x_axis_name = f"Derived importance ({', '.join(v_kda['axis_x_dependent_vars'])})" if v_kda['axis_x_dependent_vars'] else 'Stated importance'
+
+                    chart.set_x_axis(
+                        {
+                            'name': str_x_axis_name,
+                            'major_gridlines': {'visible': False},
+                        }
+                    )
+
+                    chart.set_y_axis(
+                        {
+                            'name': f"Derived importance ({', '.join(v_kda['axis_y_dependent_vars'])})",
+                            'major_gridlines': {'visible': False},
+                        }
+                    )
+
+                    chart.set_title({'name': ws_name})
+                    chart.set_style(10)
+
+                    chart.set_legend({'position': 'none'})
+
+                    chart.set_size({
+                        'width': 1000,
+                        'height': 600,
+                    })
+
+
+                    ws.insert_chart('I2', chart)
+
+                    self.print(['Chart inserted: ', ws_name], [None, self.clr_blue])
 
 
         return dict_kda
+
+
+
+    def correspondence_analysis(self, *, dict_ca: dict, output_name: str | None) -> dict:
+
+        for k_ca, v_ca in dict_ca.items():
+
+            df_ca: pd.DataFrame = self.df_data.query(v_ca['str_query']) if v_ca['str_query'] else self.df_data.copy()
+            df_info: pd.DataFrame = self.df_info.copy()
+            df_info = df_info.set_index(keys=['var_name'], drop=False)
+
+            lst_col_ca = [v_ca['id_var'], v_ca['brand_var']] + v_ca['imagery_vars']
+
+            df_ca = df_ca[lst_col_ca].melt(id_vars=[v_ca['id_var'], v_ca['brand_var']])
+            df_ca = df_ca.loc[df_ca['value'] == 1, :]
+
+            dict_brandlist = {int(k): v for k, v in df_info.loc[v_ca['brand_var'], 'val_lbl'].items()}
+            df_ca[v_ca['brand_var']] = df_ca[v_ca['brand_var']].astype(int).replace(dict_brandlist)
+
+            dict_img_list = df_info.loc[v_ca['imagery_vars'], 'var_lbl'].to_dict()
+            df_ca['variable'] = df_ca['variable'].replace(dict_img_list)
+
+            df_contingency = df_ca.pivot_table(
+                index=['variable'],
+                columns=[v_ca['brand_var']],
+                values=['value'],
+                fill_value=0,
+                aggfunc='count'
+            )
+
+            df_contingency.columns = df_contingency.columns.droplevel(0)
+
+            mdl_ca = prince.CA(
+                # n_components=2,      # number of dimensions to keep
+                n_iter=20,           # number of power-iterations
+                # copy=True,           # leave the original table intact
+                # check_input=True,
+                # engine='sklearn',
+                random_state=42
+            ).fit(df_contingency)
+
+
+
+
+
+
+            # Row (IMAGERY) coordinates
+            df_coords_row = mdl_ca.row_coordinates(df_contingency)
+            df_coords_row['Type'] = 'IMAGERY'
+            df_coords_row['Nearest_Point'] = ''
+            df_coords_row.index.name = 'Index'
+
+
+            # Column (BRAND) coordinates
+            df_coords_col = mdl_ca.column_coordinates(df_contingency)
+            df_coords_col['Type'] = 'BRAND'
+            df_coords_row['Nearest_Point'] = ''
+            df_coords_col.index.name = 'Index'
+
+            for brand in df_coords_col.index.tolist():
+                brand_coord = df_coords_col.loc[brand, [0, 1]].values.reshape(1, -1)
+
+                distances = euclidean_distances(brand_coord, df_coords_row[[0, 1]])[0]
+
+                # Create a Series of distances with index
+                distance_series = pd.Series(distances, index=df_coords_row.index)
+
+                # Exclude itself, then get top 3 nearest
+                # nearest_points = distance_series.drop(brand).nsmallest(3)
+                nearest_points = distance_series.nsmallest(3)
+
+                df_coords_row.loc[nearest_points.index, 'Nearest_Point'] += f"|{brand}"
+
+
+            df_coords_row = df_coords_row.reset_index(drop=False)
+            df_coords_col = df_coords_col.reset_index(drop=False)
+
+            v_ca.update({
+                'df_ca': df_ca,
+                'df_contingency': df_contingency,
+                'df_coords': pd.concat([df_coords_col, df_coords_row], axis=0).rename(columns={0: 'Axis-x', 1: 'Axis-y'}),
+            })
+
+
+
+
+        if output_name:
+
+            with pd.ExcelWriter(f'{output_name}.xlsx') as writer:
+
+                for k_ca, v_ca in dict_ca.items():
+                    ws_name = k_ca
+
+                    # v_ca['df_ca'].to_excel(writer, sheet_name=f"{ws_name}-df_ca")
+                    # v_ca['df_contingency'].to_excel(writer, sheet_name=f"{ws_name}-df_con")
+
+                    df_coords: pd.DataFrame = v_ca['df_coords']
+                    df_coords = df_coords.reset_index(drop=True)
+
+                    df_coords.to_excel(writer, sheet_name=ws_name, startrow=5)
+
+                    # format excel file
+                    wb = writer.book
+                    ws = writer.sheets[ws_name]
+
+                    bold = wb.add_format({'bold': True})
+
+                    # CA information
+                    ws.write('B1', 'Filter', bold)
+                    ws.write('C1', v_ca['str_query'] if v_ca['str_query'] else 'No filter')
+
+
+                    # Chart Plotting
+
+                    # Build the scatter chart
+                    chart = wb.add_chart({
+                        'type': 'scatter',
+                        'subtype': 'marker_only',
+                    })
+
+                    max_row = len(df_coords) + 5  # number of data rows
+
+                    for idx, irow in enumerate(range(6, max_row)):
+                        chart.add_series({
+                            'name': [ws_name, irow, 1, irow, 1],
+                            'categories': [ws_name, irow, 2, irow, 2],
+                            'values': [ws_name, irow, 3, irow, 3],
+
+                            'marker': {'type': 'diamond', 'size': 8} if df_coords.at[idx, 'Type'] == 'BRAND' else {'type': 'circle', 'size': 5},
+
+                            'data_labels': {
+                                'series_name': True if len(str(df_coords.at[idx, 'Nearest_Point'])) else False,  # ← show the series name
+                                # 'series_name': True,  # ← show the series name
+                                'position': 'above'  # e.g. 'above','below','left','right','center'
+                            }
+                        })
+
+
+                    chart.set_title({'name': ws_name})
+                    chart.set_style(10)
+
+                    chart.set_legend({'position': 'none'})
+
+                    chart.set_x_axis(
+                        {
+                            # 'name': ,
+                            'major_gridlines': {'visible': False},
+                        }
+                    )
+
+                    chart.set_y_axis(
+                        {
+                            # 'name': ,
+                            'major_gridlines': {'visible': False},
+                        }
+                    )
+
+
+                    chart.set_size({
+                        'width': 1000,
+                        'height': 600,
+                    })
+
+                    ws.insert_chart('H2', chart)
+
+                    self.print(['Chart inserted: ', ws_name], [None, self.clr_blue])
+
+
+
+        return dict_ca
+
+
+
+
+    def price_sensitive_metric(self, *, dict_psm: dict, output_name: str | None) -> dict:
+
+        for k_psm, v_psm in dict_psm.items():
+
+            df_data_psm: pd.DataFrame = self.df_data.loc[self.df_data.eval(v_psm['str_query']), list(v_psm['qre_psm'].values())] if v_psm['str_query'] else self.df_data.loc[:, list(v_psm['qre_psm'].values())]
+            df_data_psm = df_data_psm.rename(columns={old: new for new, old in v_psm['qre_psm'].items()})
+
+            lst_price_col = list(v_psm['qre_psm'].keys())
+
+            # Filter out logically impossible answers
+            df_err = df_data_psm.query("~(too_expensive > expensive > cheap > too_cheap)")
+
+            if not df_err.empty:
+                self.print(["Please check invalid values: \n", tabulate(df_err, headers='keys', tablefmt='pretty')], [self.clr_err, self.clr_err])
+                return dict()
+
+            # ------------------------------------------------------------------
+            # 1)  Structural filter  (answers must be strictly ascending)
+            # ------------------------------------------------------------------
+            cols = ["too_cheap", "cheap", "expensive", "too_expensive"]
+            df_data_psm = df_data_psm[df_data_psm[cols].apply(lambda r: r.is_monotonic_increasing, axis=1)]
+
+
+            # ------------------------------------------------------------------
+            # 2)  Tukey IQR trim  (drops obvious outliers)
+            # ------------------------------------------------------------------
+            if v_psm['is_remove_outlier']:
+                df_data_psm['is_remove'] = False
+
+                def remove_outlier(row: pd.Series) -> pd.Series:
+
+                    # “Tukey IQR fence”
+
+                    for col in lst_price_col:
+
+                        q1, q3 = df_data_psm[col].quantile([0.25, 0.75])
+                        iqr = q3 - q1
+                        k = 1.5
+                        min_price, max_price = (q1 - k * iqr), (q3 + k * iqr)
+
+                        if not (min_price <= row[col] <= max_price):
+                            row['is_remove'] = True
+
+                    return row
+
+                df_data_psm = df_data_psm.apply(remove_outlier, axis=1)
+
+                df_outlier: pd.DataFrame = df_data_psm.loc[df_data_psm['is_remove']]
+
+                if df_outlier.empty:
+                    self.print("No outlier was detected", self.clr_succ)
+
+                else:
+                    self.print([f"PSM({k_psm}) - Detect and remove {df_outlier.shape[0]} rows which contain outlier values"], [self.clr_warn])
+                    df_data_psm = df_data_psm.loc[~df_data_psm['is_remove']]
+
+                df_data_psm = df_data_psm.drop(columns=['is_remove'])
+
+            else:
+
+                self.print(f"You don't remove outlier in PSM({k_psm})", self.clr_warn)
+
+
+
+
+            # # ------------------------------------------------------------------
+            # # 3)  Build the four cumulative curves *with the right direction*
+            # # ------------------------------------------------------------------
+            # price_grid = np.arange(df_data_psm["too_cheap"].min(), df_data_psm["too_expensive"].max() + 1)
+            #
+            # def cum_curve(values, direction):
+            #     """direction: 'le' → ≤p ,  'ge' → ≥p"""
+            #     if direction == "le":
+            #         return np.array([(values <= p).mean() for p in price_grid])
+            #     else:
+            #         return np.array([(values >= p).mean() for p in price_grid])
+            #
+            # curves = {
+            #     "too_cheap": cum_curve(df_data_psm["too_cheap"], "le"),
+            #     "cheap": cum_curve(df_data_psm["cheap"], "le"),
+            #     "expensive": cum_curve(df_data_psm["expensive"], "ge"),
+            #     "too_expensive": cum_curve(df_data_psm["too_expensive"], "ge"),
+            # }
+            #
+            # # ------------------------------------------------------------------
+            # # 4)  Light smoothing (3-point centred rolling mean)
+            # # ------------------------------------------------------------------
+            # for k, v in curves.items():
+            #     curves[k] = pd.Series(v).rolling(3, center=True, min_periods=1).mean().values
+            #
+            # df_cumulative: pd.DataFrame = pd.DataFrame(data=price_grid, columns=['price'])
+            # df_cumulative = pd.concat([df_cumulative, pd.DataFrame.from_dict(curves)])
+            #
+            #
+            # a = 1
+
+
+
+
+
+
+            df_cumulative: pd.DataFrame = df_data_psm.melt()
+            df_cumulative['count'] = 1
+            df_cumulative = pd.pivot_table(
+                df_cumulative,
+                index='value',
+                columns='variable',
+                values='count',
+                aggfunc='count',
+                fill_value=0,
+            )
+
+            df_cumulative = df_cumulative[lst_price_col].apply(lambda x: x.div(x.sum())).cumsum()
+            df_cumulative[['cheap', 'too_cheap']] = [1, 1] - df_cumulative[['cheap', 'too_cheap']]
+
+            df_cumulative = df_cumulative.reset_index(drop=False).rename(columns={'value': 'price'})
+
+            df_cumulative["opp_diff"] = df_cumulative["too_cheap"] - df_cumulative["too_expensive"]
+            df_cumulative["idp_diff"] = df_cumulative["cheap"] - df_cumulative["expensive"]
+            df_cumulative["pmc_diff"] = df_cumulative["too_cheap"] - df_cumulative["expensive"]
+            df_cumulative["pme_diff"] = df_cumulative["cheap"] - df_cumulative["too_expensive"]
+
+            def first_sign_change(diff):
+                sign = np.sign(diff)
+                flips = np.where(np.diff(sign) != 0)[0]  # indices BEFORE the flip
+                return flips[0] if len(flips) else None
+
+
+            def interpolate_cross(x, y):
+                i = first_sign_change(y)
+
+                if i is None:  # no crossing
+                    return None
+
+                x1, x2 = x[i], x[i + 1]
+                y1, y2 = y[i], y[i + 1]
+                return x1 - y1 * (x2 - x1) / (y2 - y1)  # straight‑line interpolation
+
+            opp = interpolate_cross(df_cumulative["price"], df_cumulative["opp_diff"])
+            idp = interpolate_cross(df_cumulative["price"], df_cumulative["idp_diff"])
+
+            pmc = interpolate_cross(df_cumulative["price"], df_cumulative["pmc_diff"])
+            pme = interpolate_cross(df_cumulative["price"], df_cumulative["pme_diff"])
+
+            print('Section:', k_psm)
+            print('    - Optimal Price Point (OPP):', opp)
+            print('    - Indifference Price Point (IDP):', idp)
+            print('    - Point of Marginal Cheapness (PMC):', pmc)
+            print('    - Point of Marginal Expensiveness (PME):', pme)
+
+            df_cumulative = df_cumulative.drop(columns=['opp_diff', 'idp_diff', 'pmc_diff', 'pme_diff'])
+
+            v_psm.update({
+                'df_cumulative': df_cumulative,
+                'opp': opp,
+                'idp': idp,
+                'pmc': pmc,
+                'pme': pme,
+            })
+
+
+        if output_name:
+            # export file & chart
+
+            with pd.ExcelWriter(f'{output_name}.xlsx') as writer:
+
+                for k_psm, v_psm in dict_psm.items():
+
+                    ws_name = k_psm
+
+                    df_cumulative: pd.DataFrame = v_psm['df_cumulative']
+                    df_cumulative.to_excel(writer, sheet_name=ws_name, startrow=5)
+
+                    # format excel file
+                    wb = writer.book
+                    ws = writer.sheets[ws_name]
+                    bold = wb.add_format({'bold': True})
+                    price_fmt = wb.add_format({'num_format': '#,##0'})
+                    pct_fmt = wb.add_format({'num_format': '0.00%'})
+
+                    # PSM information
+                    ws.write('B1', 'Filter', bold)
+                    ws.write('B2', 'Optimal Price Point (OPP)', bold)
+                    ws.write('B3', 'Indifference Price Point (IDP)', bold)
+                    ws.write('B4', 'Point of Marginal Cheapness (PMC)', bold)
+                    ws.write('B5', 'Point of Marginal Expensiveness (PME)', bold)
+
+                    ws.write('C1', v_psm['str_query'] if v_psm['str_query'] else 'No filter')
+                    ws.write('C2', v_psm['opp'], price_fmt)
+                    ws.write('C3', v_psm['idp'], price_fmt)
+                    ws.write('C4', v_psm['pmc'], price_fmt)
+                    ws.write('C5', v_psm['pme'], price_fmt)
+
+
+
+                    # 2) apply them to whole columns:
+                    ws.set_column(0, 0, 3)
+                    #    column 1 (Price), width=12
+                    ws.set_column(1, 1, 35, price_fmt)
+
+                    #    columns 2–5 (your proportions), width=10
+                    ws.set_column(2, 2, 14, pct_fmt)
+                    ws.set_column(3, 5, 12, pct_fmt)
+
+
+                    # Chart Plotting
+
+                    # Build the scatter chart
+                    chart = wb.add_chart({
+                        'type': 'line',
+                        # 'subtype': 'marker_only',
+                    })
+
+                    max_row = len(df_cumulative) + 5  # number of data rows
+
+                    for icol in range(2, 6):
+                        chart.add_series({
+                            'name': [ws_name, 5, icol, 5, icol],
+                            'categories': [ws_name, 6, 1, max_row, 1],
+                            'values': [ws_name, 6, icol, max_row, icol],
+                            # 'marker': {'type': 'automatic'},
+                            'line': {'width': 2},
+                        })
+
+
+                    chart.set_title({'name': ws_name})
+                    chart.set_style(10)
+
+                    chart.set_legend({'position': 'bottom'})
+
+                    chart.set_size({
+                        'width': 1000,
+                        'height': 600,
+                    })
+
+                    ws.insert_chart('H2', chart)
+
+                    self.print(['Chart inserted: ', ws_name], [None, self.clr_blue])
+
+
+
+
+        return dict_psm
+
 
 
 
