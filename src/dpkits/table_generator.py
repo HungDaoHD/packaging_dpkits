@@ -119,7 +119,10 @@ class DataTableGenerator(Logging):
 
         dict_replace = df_info.to_dict()['val_lbl']
 
-        df_data = df_data.loc[:, df_info.index].replace(dict_replace).dropna(how='all').dropna(axis=1, how='all')
+        df_data = df_data.loc[:, df_info.index].astype(float).replace(dict_replace)
+
+
+        df_data = df_data.dropna(how='all').dropna(axis=1, how='all')
         df_data = pd.DataFrame(df_data)
 
 
@@ -133,7 +136,7 @@ class DataTableGenerator(Logging):
             self.print(f'Please check values not in codelist:\n{df_data.to_string()}', self.clr_err)
             exit()
 
-        self.print("Check value - df_data & df_info - Done")
+        self.print(["Check value - df_data & df_info: ", "Completed"], [None, self.clr_succ])
 
 
 

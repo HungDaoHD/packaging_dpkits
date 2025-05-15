@@ -509,46 +509,5 @@ class DataProcessing(Logging):
         self.add_qres(dict_add_qre, is_add_data_col=False)
 
 
-
-
-
-
-
-
-        # for lst_col in lst_one_hot:
-        #     codelist = self.df_info.loc[self.df_info['var_name'].isin(lst_col), 'val_lbl'].values[0]
-        #     qre_label = self.df_info.loc[self.df_info['var_name'].isin(lst_col), 'var_lbl'].values[0]
-        #
-        #     lst_cate = [int(k) for k in codelist.keys()]
-        #     self.df_data[lst_col] = self.df_data[lst_col].astype(CategoricalDtype(categories=lst_cate))
-        #
-        #     str_prefix = col if len(lst_col) == 1 else lst_col[0].rsplit('_')
-        #
-        #     df_data_dummies = pd.DataFrame()
-        #
-        #     for col in lst_col:
-        #         df_dummies = pd.get_dummies(self.df_data[col], prefix=col, dummy_na=True).replace({True: 1, False: 0})
-        #         df_dummies.loc[df_dummies.eval(f"{col}_nan == 1"), :] = [np.nan]
-        #         df_dummies = df_dummies.drop(columns=[f'{col}_nan'])
-        #
-        #
-        #
-        #     self.df_data = self.df_data.join(df_data_dummies)
-        #
-        #     for colname in df_data_dummies.columns:
-        #         cate = str(colname).rsplit('_', 1)[-1]
-        #         dict_add_qre.update({colname: [f"{qre_label}_{codelist[cate]}", 'SA', {'1': 'Yes', '0': 'No'}, np.nan]})
-        #
-        #
-        #
-        # self.add_qres(dict_add_qre, is_add_data_col=False)
-
-
-
-
-
-
-
-
         return self.df_data, self.df_info
 

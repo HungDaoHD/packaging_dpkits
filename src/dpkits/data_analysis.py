@@ -1,13 +1,44 @@
 from .logging import Logging
+from .data_processing import DataProcessing
 import pandas as pd
 import numpy as np
 import pingouin as pg
 import prince
-from sklearn.preprocessing import StandardScaler
+
+from sklearn.preprocessing import StandardScaler, Normalizer
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.cluster import KMeans
+from kneed import KneeLocator
+import matplotlib.pyplot as plt
 from tabulate import tabulate
 
+from pydantic import BaseModel, model_validator, field_validator, ConfigDict
+from typing import Optional, List, Dict
+
+
+
+class PSM(BaseModel):
+
+    class QrePSM(BaseModel):
+        too_expensive: str
+        expensive: str
+        cheap: str
+        too_cheap: str
+
+    # input
+    str_query: str
+    is_remove_outlier: bool = True
+    qre_psm: QrePSM
+
+    # output
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    df_cumulative: Optional[pd.DataFrame] = None
+    opp: Optional[float] = None
+    idp: Optional[float] = None
+    pmc: Optional[float] = None
+    pme: Optional[float] = None
 
 
 
@@ -523,12 +554,17 @@ class DataAnalysis(Logging):
 
     def price_sensitive_metric(self, *, dict_psm: dict, output_name: str | None) -> dict:
 
-        for k_psm, v_psm in dict_psm.items():
 
-            df_data_psm: pd.DataFrame = self.df_data.loc[self.df_data.eval(v_psm['str_query']), list(v_psm['qre_psm'].values())] if v_psm['str_query'] else self.df_data.loc[:, list(v_psm['qre_psm'].values())]
-            df_data_psm = df_data_psm.rename(columns={old: new for new, old in v_psm['qre_psm'].items()})
+        for k_psm, psm in dict_psm.items():
 
-            lst_price_col = list(v_psm['qre_psm'].keys())
+            psm = PSM(**psm)
+            dict_psm[k_psm] = psm
+
+            df_data_psm: pd.DataFrame = self.df_data.loc[self.df_data.eval(psm.str_query), psm.qre_psm.model_dump().values()] if psm.str_query else self.df_data.loc[:, psm.qre_psm.model_dump().values()]
+
+            df_data_psm = df_data_psm.rename(columns={old: new for new, old in psm.qre_psm.model_dump().items()})
+
+            lst_price_col = psm.qre_psm.model_dump().keys()
 
             # Filter out logically impossible answers
             df_err = df_data_psm.query("~(too_expensive > expensive > cheap > too_cheap)")
@@ -547,7 +583,7 @@ class DataAnalysis(Logging):
             # ------------------------------------------------------------------
             # 2)  Tukey IQR trim  (drops obvious outliers)
             # ------------------------------------------------------------------
-            if v_psm['is_remove_outlier']:
+            if psm.is_remove_outlier:
                 df_data_psm['is_remove'] = False
 
                 def remove_outlier(row: pd.Series) -> pd.Series:
@@ -582,44 +618,6 @@ class DataAnalysis(Logging):
             else:
 
                 self.print(f"You don't remove outlier in PSM({k_psm})", self.clr_warn)
-
-
-
-
-            # # ------------------------------------------------------------------
-            # # 3)  Build the four cumulative curves *with the right direction*
-            # # ------------------------------------------------------------------
-            # price_grid = np.arange(df_data_psm["too_cheap"].min(), df_data_psm["too_expensive"].max() + 1)
-            #
-            # def cum_curve(values, direction):
-            #     """direction: 'le' → ≤p ,  'ge' → ≥p"""
-            #     if direction == "le":
-            #         return np.array([(values <= p).mean() for p in price_grid])
-            #     else:
-            #         return np.array([(values >= p).mean() for p in price_grid])
-            #
-            # curves = {
-            #     "too_cheap": cum_curve(df_data_psm["too_cheap"], "le"),
-            #     "cheap": cum_curve(df_data_psm["cheap"], "le"),
-            #     "expensive": cum_curve(df_data_psm["expensive"], "ge"),
-            #     "too_expensive": cum_curve(df_data_psm["too_expensive"], "ge"),
-            # }
-            #
-            # # ------------------------------------------------------------------
-            # # 4)  Light smoothing (3-point centred rolling mean)
-            # # ------------------------------------------------------------------
-            # for k, v in curves.items():
-            #     curves[k] = pd.Series(v).rolling(3, center=True, min_periods=1).mean().values
-            #
-            # df_cumulative: pd.DataFrame = pd.DataFrame(data=price_grid, columns=['price'])
-            # df_cumulative = pd.concat([df_cumulative, pd.DataFrame.from_dict(curves)])
-            #
-            #
-            # a = 1
-
-
-
-
 
 
             df_cumulative: pd.DataFrame = df_data_psm.melt()
@@ -659,39 +657,34 @@ class DataAnalysis(Logging):
                 y1, y2 = y[i], y[i + 1]
                 return x1 - y1 * (x2 - x1) / (y2 - y1)  # straight‑line interpolation
 
-            opp = interpolate_cross(df_cumulative["price"], df_cumulative["opp_diff"])
-            idp = interpolate_cross(df_cumulative["price"], df_cumulative["idp_diff"])
-
-            pmc = interpolate_cross(df_cumulative["price"], df_cumulative["pmc_diff"])
-            pme = interpolate_cross(df_cumulative["price"], df_cumulative["pme_diff"])
-
-            print('Section:', k_psm)
-            print('    - Optimal Price Point (OPP):', opp)
-            print('    - Indifference Price Point (IDP):', idp)
-            print('    - Point of Marginal Cheapness (PMC):', pmc)
-            print('    - Point of Marginal Expensiveness (PME):', pme)
+            psm.opp = interpolate_cross(df_cumulative["price"], df_cumulative["opp_diff"])
+            psm.idp = interpolate_cross(df_cumulative["price"], df_cumulative["idp_diff"])
+            psm.pmc = interpolate_cross(df_cumulative["price"], df_cumulative["pmc_diff"])
+            psm.pme = interpolate_cross(df_cumulative["price"], df_cumulative["pme_diff"])
 
             df_cumulative = df_cumulative.drop(columns=['opp_diff', 'idp_diff', 'pmc_diff', 'pme_diff'])
 
-            v_psm.update({
-                'df_cumulative': df_cumulative,
-                'opp': opp,
-                'idp': idp,
-                'pmc': pmc,
-                'pme': pme,
-            })
+            psm.df_cumulative = df_cumulative
 
+            print('Section:', k_psm)
+            print('    - Optimal Price Point (OPP):', psm.opp)
+            print('    - Indifference Price Point (IDP):', psm.idp)
+            print('    - Point of Marginal Cheapness (PMC):', psm.pmc)
+            print('    - Point of Marginal Expensiveness (PME):', psm.pme)
+
+
+        print("Exporting xlsx file")
 
         if output_name:
             # export file & chart
 
             with pd.ExcelWriter(f'{output_name}.xlsx') as writer:
 
-                for k_psm, v_psm in dict_psm.items():
+                for k_psm, psm in dict_psm.items():
 
                     ws_name = k_psm
 
-                    df_cumulative: pd.DataFrame = v_psm['df_cumulative']
+                    df_cumulative: pd.DataFrame = psm.df_cumulative
                     df_cumulative.to_excel(writer, sheet_name=ws_name, startrow=5)
 
                     # format excel file
@@ -708,11 +701,11 @@ class DataAnalysis(Logging):
                     ws.write('B4', 'Point of Marginal Cheapness (PMC)', bold)
                     ws.write('B5', 'Point of Marginal Expensiveness (PME)', bold)
 
-                    ws.write('C1', v_psm['str_query'] if v_psm['str_query'] else 'No filter')
-                    ws.write('C2', v_psm['opp'], price_fmt)
-                    ws.write('C3', v_psm['idp'], price_fmt)
-                    ws.write('C4', v_psm['pmc'], price_fmt)
-                    ws.write('C5', v_psm['pme'], price_fmt)
+                    ws.write('C1', psm.str_query if psm.str_query else 'No filter')
+                    ws.write('C2', psm.opp, price_fmt)
+                    ws.write('C3', psm.idp, price_fmt)
+                    ws.write('C4', psm.pmc, price_fmt)
+                    ws.write('C5', psm.pme, price_fmt)
 
 
 
@@ -761,9 +754,75 @@ class DataAnalysis(Logging):
                     self.print(['Chart inserted: ', ws_name], [None, self.clr_blue])
 
 
-
-
         return dict_psm
+
+
+
+    def k_mean_segmentation(self, *, dict_k_mean: dict, output_name: str | None) -> (pd.DataFrame, pd.DataFrame):
+
+        dp = DataProcessing(df_data=self.df_data, df_info=self.df_info)
+
+        for key, val in dict_k_mean.items():
+            df_data: pd.DataFrame = self.df_data.query(val['str_query']) if val['str_query'] else self.df_data.copy()
+
+            df_data = df_data.loc[:, val['lst_qre']].fillna(0)
+
+            normalizer = Normalizer()
+            df_data_norm: pd.DataFrame = normalizer.fit_transform(df_data)
+
+            if val['n_clusters'] == 'auto':
+
+                K = range(2, 9)
+                wcss = list()
+
+                for k in K:
+                    # train the model for current value of k on training data
+                    model = KMeans(n_clusters=k, random_state=0).fit(df_data_norm)
+
+                    # Append the within-cluster sum of square to wcss
+                    wcss.append(model.inertia_)
+
+
+                kl = KneeLocator(K, wcss, curve='convex', direction='decreasing')
+                n_clusters = kl.knee
+                self.print([f"Optimal k by knee detection: {n_clusters}"], [self.clr_blue])
+
+                plt.plot(K, wcss, 'bx-')
+                plt.xlabel('Number of clusters k')
+                plt.ylabel('WCSS (inertia)')
+                plt.title('Elbow Method for Optimal k')
+                plt.show()
+
+            else:
+                n_clusters = int(val['n_clusters'])
+                self.print([f"Selected n_clusters: {n_clusters}"], [self.clr_blue])
+
+            kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+            kmeans.fit(df_data_norm)
+
+            dict_add_new_qres = {
+                key: [f'{key}: k-mean', 'SA', {i: f'Cluster {i}' for i in range(1, n_clusters + 1)}, np.nan]
+            }
+
+            dp.add_qres(dict_add_new_qres)
+            self.df_data, self.df_info = dp.df_data, dp.df_info
+
+            self.df_data[key] = kmeans.labels_ + 1
+
+
+        if output_name:
+            self.print(["Export excel file: ", output_name], [None, self.clr_blue])
+
+            with pd.ExcelWriter(f'{output_name}') as writer:
+                self.df_data.to_excel(writer, sheet_name='df_data-k-mean')
+                self.df_info.to_excel(writer, sheet_name='df_info-k-mean')
+
+
+        return self.df_data, self.df_info
+
+
+
+
 
 
 
