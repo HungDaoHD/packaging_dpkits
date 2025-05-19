@@ -5,7 +5,6 @@ import datetime
 from pathlib import Path
 
 
-
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 import sys
 
@@ -634,18 +633,21 @@ if __name__ == '__main__':
             'str_query': '',
             'axis_x_dependent_vars': None,
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
         'KDA_Sony_1': {
             'str_query': '(BRAND == 1)',
             'axis_x_dependent_vars': None,
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
         'KDA_Samsung_1': {
             'str_query': '(BRAND == 2)',
             'axis_x_dependent_vars': None,
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
 
@@ -653,6 +655,7 @@ if __name__ == '__main__':
             'str_query': '(BRAND == 3)',
             'axis_x_dependent_vars': None,
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
 
@@ -660,18 +663,21 @@ if __name__ == '__main__':
             'str_query': '',
             'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
         'KDA_Sony_2': {
             'str_query': '(BRAND == 1)',
             'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
         'KDA_Samsung_2': {
             'str_query': '(BRAND == 2)',
             'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
 
@@ -679,6 +685,7 @@ if __name__ == '__main__':
             'str_query': '(BRAND == 3)',
             'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
             'axis_y_dependent_vars': ['PUR2TV'],
+            'axis_x_explanatory_vars': None,
             'explanatory_vars': lst_img,
         },
 

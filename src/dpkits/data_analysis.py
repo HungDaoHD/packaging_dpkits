@@ -271,18 +271,24 @@ class DataAnalysis(Logging):
                 df_kda['coef_axis_x_std'] = pd.Series(data=scaler_coefs.transform(df_kda['coef_axis_x'].to_numpy().reshape(-1, 1)).ravel(), index=v_kda['explanatory_vars'])
                 df_kda['coef_axis_y_std'] = pd.Series(data=scaler_coefs.transform(df_kda['coef_axis_y'].to_numpy().reshape(-1, 1)).ravel(), index=v_kda['explanatory_vars'])
 
-
             else:
 
                 y2 = df_data[v_kda['axis_y_dependent_vars']].mean(axis=1)
                 y2_std = StandardScaler().fit_transform(y2.to_numpy().reshape(-1, 1)).ravel()
                 model2 = LinearRegression(n_jobs=-1).fit(X_std, y2_std)
 
-                df_kda['coef_axis_x'] = df_data[v_kda['explanatory_vars']].mean(axis=0)
-                df_kda['coef_axis_y'] = pd.Series(data=model2.coef_, index=v_kda['explanatory_vars'])
+                if v_kda['axis_x_explanatory_vars']:
+                    lst_explanatory_vars = v_kda['axis_x_explanatory_vars']
+                else:
+                    lst_explanatory_vars = v_kda['explanatory_vars']
 
-                df_kda['coef_axis_x_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_x'].to_numpy().reshape(-1, 1)).ravel(), index=v_kda['explanatory_vars'])
-                df_kda['coef_axis_y_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_y'].to_numpy().reshape(-1, 1)).ravel(), index=v_kda['explanatory_vars'])
+                df_kda['coef_axis_x'] = df_data[lst_explanatory_vars].mean(axis=0)
+
+
+                df_kda['coef_axis_y'] = pd.Series(data=model2.coef_, index=lst_explanatory_vars)
+
+                df_kda['coef_axis_x_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_x'].to_numpy().reshape(-1, 1)).ravel(), index=lst_explanatory_vars)
+                df_kda['coef_axis_y_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_y'].to_numpy().reshape(-1, 1)).ravel(), index=lst_explanatory_vars)
 
 
             v_kda.update({'df_kda': df_kda})
@@ -548,7 +554,6 @@ class DataAnalysis(Logging):
 
 
         return dict_ca
-
 
 
 

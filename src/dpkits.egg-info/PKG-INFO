@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: dpkits
-Version: 1.5.3
+Version: 1.6.0
 Summary: A small package for data processing
 Author-email: Hung Dao <hung.daotuan.1991@gmail.com>
 Project-URL: Homepage, https://github.com/HungDaoHD/packaging_dpkits
@@ -46,6 +46,9 @@ Requires-Dist: xarray
 Requires-Dist: XlsxWriter
 Requires-Dist: pydantic
 Requires-Dist: xlwings
+Requires-Dist: openai
+Requires-Dist: prince
+Requires-Dist: kneed
 Dynamic: license-file
 
 # Data processing Package
