@@ -279,16 +279,19 @@ class DataAnalysis(Logging):
 
                 if v_kda['axis_x_explanatory_vars']:
                     lst_explanatory_vars = v_kda['axis_x_explanatory_vars']
+
+                    df_mean: pd.DataFrame = df_data[lst_explanatory_vars].mean(axis=0)
+                    df_mean.index = df_kda.index
+
+                    df_kda['coef_axis_x'] = df_mean
+
                 else:
                     lst_explanatory_vars = v_kda['explanatory_vars']
+                    df_kda['coef_axis_x'] = df_data[lst_explanatory_vars].mean(axis=0)
 
-                df_kda['coef_axis_x'] = df_data[lst_explanatory_vars].mean(axis=0)
-
-
-                df_kda['coef_axis_y'] = pd.Series(data=model2.coef_, index=lst_explanatory_vars)
-
-                df_kda['coef_axis_x_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_x'].to_numpy().reshape(-1, 1)).ravel(), index=lst_explanatory_vars)
-                df_kda['coef_axis_y_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_y'].to_numpy().reshape(-1, 1)).ravel(), index=lst_explanatory_vars)
+                df_kda['coef_axis_y'] = pd.Series(data=model2.coef_, index=v_kda['explanatory_vars'])
+                df_kda['coef_axis_x_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_x'].to_numpy().reshape(-1, 1)).ravel(), index=v_kda['explanatory_vars'])
+                df_kda['coef_axis_y_std'] = pd.Series(data=StandardScaler().fit_transform(df_kda['coef_axis_y'].to_numpy().reshape(-1, 1)).ravel(), index=v_kda['explanatory_vars'])
 
 
             v_kda.update({'df_kda': df_kda})
@@ -319,7 +322,7 @@ class DataAnalysis(Logging):
                     ws.write('B3', 'Axis-y dependent variables', bold)
 
                     ws.write('C1', v_kda['str_query'] if v_kda['str_query'] else 'No filter')
-                    ws.write('C2', ', '.join(v_kda['axis_x_dependent_vars']) if v_kda['axis_x_dependent_vars'] else 'Mean of Imagery Factors')
+                    ws.write('C2', ', '.join(v_kda['axis_x_dependent_vars']) if v_kda['axis_x_dependent_vars'] else (f"Mean of: {', '.join(v_kda['axis_x_explanatory_vars'])}" if v_kda['axis_x_explanatory_vars'] else 'Mean of Imagery Factors'))
                     ws.write('C3', ', '.join(v_kda['axis_y_dependent_vars']))
 
 

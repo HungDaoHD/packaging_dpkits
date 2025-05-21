@@ -364,7 +364,36 @@ class APDataConverter(Logging):
 
         df_data_output, df_info_output = df_data, pd.DataFrame(data=[['ID', 'ID', 'FT', {}]], columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])
 
+
+
         for qre, qre_info in dictQres.items():
+
+            if qre_info['type'] == 'FT' and len(qre_info['cats']) > 0:
+
+                dict_rename = dict()
+
+                for k_cat, v_cat in qre_info['cats'].items():
+
+                    v_cat_2 = v_cat.replace(' ', '_')
+                    v_cat_3 = re.sub(r'\s*\([^)]*\)', '', v_cat_2)
+
+                    df_temp: pd.DataFrame = df_data_output.filter(regex=f'^{qre}.+{v_cat_3}', axis=1)
+                    dict_rename.update({col: col.replace(v_cat_2, k_cat) for col in df_temp.columns})
+
+
+
+                df_data_output = df_data_output.rename(columns=dict_rename)
+                lst_col = df_data_output.filter(regex=f'^{qre}.*[0-9]+$', axis=1).columns.tolist()
+
+                arr_rows = list()
+                for col in lst_col:
+                    arr_row = [col, f"{col[:-1]}_{qre_info['cats'][col[-1]]}", qre_info['type'], {}]
+                    arr_rows.append(arr_row)
+
+                df_info_output = pd.concat([df_info_output, pd.DataFrame(data=arr_rows, columns=['var_name', 'var_lbl', 'var_type', 'val_lbl'])])
+
+
+
 
             if qre in df_data_output.columns:
                 arr_row = [qre, self.cleanhtml(qre_info['label']), f"{qre_info['type']}_mtr" if qre_info['isMatrix'] else qre_info['type'], qre_info['cats']]
@@ -716,7 +745,8 @@ class APDataConverter(Logging):
                 df_data[col_name] = pd.to_numeric(df_data[col_name], downcast='float')
                 df_info.loc[df_info.eval(f"var_name == '{col_name}'"), 'var_type'] = 'NUM'
                 lst_converted.append(col_name)
-            except Exception:
+
+            except Exception as ex:
                 lst_cannot_converted.append(col_name)
                 continue
 

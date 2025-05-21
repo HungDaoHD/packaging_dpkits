@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # # # Define input/output files name--------------------------------------------------------------------------------
     # # # --------------------------------------------------------------------------------------------------------------
     str_data_folder_path = 'DataToRun'
-    str_file_name = 'VN9999 - Project Name'
+    str_file_name = 'VN8738 - Customer journey - 21 May'  # 'VN9999 - Project Name'
     str_tbl_file_name = f'{str_file_name}_Topline.xlsx'
 
     temp_data_path = Path(f"{str_file_name}_converted.xlsx")  # you could change this file name
