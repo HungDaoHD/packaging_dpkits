@@ -236,9 +236,9 @@ class DataTableGenerator(Logging):
 
         num_cores = multiprocessing.cpu_count()
         self.print(f'Number of CPU cores: {num_cores}')
-        self.print(f'Number of CPU cores to be used for multiple processing: {num_cores - 1}', self.clr_warn)
+        self.print(f'Number of CPU cores to be used for multiple processing: {num_cores - 2}', self.clr_warn)
 
-        pool = multiprocessing.Pool(processes=num_cores - 1)
+        pool = multiprocessing.Pool(processes=num_cores - 2)
 
         # Map tasks to the worker function
         results = pool.map(self.run_standard_table_sig, list(dict_tables.values()))
@@ -1328,41 +1328,54 @@ class DataTableGenerator(Logging):
         if sig_pair[0] not in dict_pair_to_sig.keys() or sig_pair[1] not in dict_pair_to_sig.keys():
             return df_qre
 
-        df_left, df_right = dict_pair_to_sig[sig_pair[0]], dict_pair_to_sig[sig_pair[1]]
+        df_left = dict_pair_to_sig[sig_pair[0]]
+        df_right = dict_pair_to_sig[sig_pair[1]]
 
-        if df_left.shape[0] < 30 or df_right.shape[0] < 30:
+        sr_left: pd.Series = df_left.squeeze() if isinstance(df_left, pd.DataFrame) else pd.Series(df_left)
+        sr_right: pd.Series = df_right.squeeze() if isinstance(df_right, pd.DataFrame) else pd.Series(df_right)
+
+        # 2. Coerce any non‑numeric → NaN
+        sr_left = pd.to_numeric(sr_left, errors='coerce').reset_index(drop=True).astype(float)
+        sr_right = pd.to_numeric(sr_right, errors='coerce').reset_index(drop=True).astype(float)
+
+
+        if (sr_left.shape[0] < 30 or sr_right.shape[0] < 30) or (sr_left.isnull().values.all() or sr_right.isnull().values.all()):
             return df_qre
 
-        is_df_left_null = df_left.isnull().values.all()
-        is_df_right_null = df_right.isnull().values.all()
-
-        if is_df_left_null or is_df_right_null:
+        if (sr_left.mean() == 0 or sr_right.mean() == 0) or (sr_left.mean() == 1 and sr_right.mean() == 1):
             return df_qre
-
-        try:
-            if df_left.mean().iloc[0] == 0 or df_right.mean().iloc[0] == 0:
-                return df_qre
-
-            if df_left.mean().iloc[0] == 1 and df_right.mean().iloc[0] == 1:
-                return df_qre
-
-        except Exception:
-            if df_left.mean() == 0 or df_right.mean() == 0:
-                return df_qre
-
-            if df_left.mean() == 1 and df_right.mean() == 1:
-                return df_qre
 
         if sig_type == 'rel':
-            if df_left.shape[0] != df_right.shape[0]:
+
+            if sr_left.shape[0] != sr_right.shape[0]:
                 return df_qre
 
-            sigResult = stats.ttest_rel(df_left, df_right)
+            # 3. Drop any pairs where either entry is NaN
+            mask = sr_left.notna() & sr_right.notna()
+            left_clean = sr_left[mask]
+            right_clean = sr_right[mask]
+
+            # 4. Convert to flat float arrays
+            arr_left = left_clean.to_numpy(dtype=float).ravel()
+            arr_right = right_clean.to_numpy(dtype=float).ravel()
+
+            # 5. Sanity check
+            if arr_left.ndim != 1 or arr_right.ndim != 1:
+                raise ValueError(f"Inputs must be 1‑D, got shapes {arr_left.shape} & {arr_right.shape}")
+
+            if arr_left.size < 2:
+                # sigResult = None  # not enough data to test
+                return df_qre
+            else:
+                sigResult = stats.ttest_rel(arr_left, arr_right)
+
         else:
+
             sigResult = stats.ttest_ind_from_stats(
-                mean1=df_left.mean(), std1=df_left.std(), nobs1=df_left.shape[0],
-                mean2=df_right.mean(), std2=df_right.std(), nobs2=df_right.shape[0]
+                mean1=sr_left.mean(), std1=sr_left.std(), nobs1=sr_left.shape[0],
+                mean2=sr_right.mean(), std2=sr_right.std(), nobs2=sr_right.shape[0]
             )
+
 
         if sigResult.pvalue:
             if sigResult.statistic > 0:

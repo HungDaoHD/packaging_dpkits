@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # # # Define input/output files name--------------------------------------------------------------------------------
     # # # --------------------------------------------------------------------------------------------------------------
     str_data_folder_path = 'DataToRun'
-    str_file_name = 'VN8738 - Customer journey - 21 May'  # 'VN9999 - Project Name'
+    str_file_name = 'VN9999 - Project Name'
     str_tbl_file_name = f'{str_file_name}_Topline.xlsx'
 
     temp_data_path = Path(f"{str_file_name}_converted.xlsx")  # you could change this file name
@@ -58,6 +58,8 @@ if __name__ == '__main__':
         # # # ----------------------------------------------------------------------------------------------------------
         df_data, df_info = converter.convert_df_mc(is_export_xlsx=False)
         df_data, df_info = pd.DataFrame(df_data), pd.DataFrame(df_info)
+
+
 
         # # # ----------------------------------------------------------------------------------------------------------
         # # # Save dataframe for timing saving when converting----------------------------------------------------------
@@ -590,282 +592,282 @@ if __name__ == '__main__':
     # }
     #
     # da.penalty_analysis(dict_define_pen=dict_define_pen, output_name='VN8413_Penalty_Analysis')
-
-
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # LINEAR REGRESSION---------------------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-
-    da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
-
-    dict_define_linear = {
-        'TV_General': {
-            'str_query': '',
-            'dependent_vars': ['PUR2TV'],
-            'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
-        },
-        'Sony': {
-            'str_query': '(BRAND == 1)',
-            'dependent_vars': ['PUR2TV'],
-            'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
-        },
-        'Samsung': {
-            'str_query': '(BRAND == 2)',
-            'dependent_vars': ['PUR2TV'],
-            'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
-        },
-
-    }
-
-    da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN9999 - Project Name_Linear_Regression')
-
-
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # Key Driver Analysis (KDA)-------------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-
-    da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
-
-    lst_img = [f'IMG_{i}' for i in range(1, 20)]  # + [f'IMG2_{i}' for i in range(1, 17)]
-
-    dict_kda = {
-        'KDA_TV_General_1': {
-            'str_query': '',
-            'axis_x_dependent_vars': None,
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-        'KDA_Sony_1': {
-            'str_query': '(BRAND == 1)',
-            'axis_x_dependent_vars': None,
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-        'KDA_Samsung_1': {
-            'str_query': '(BRAND == 2)',
-            'axis_x_dependent_vars': None,
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-
-        'KDA_LG_1': {
-            'str_query': '(BRAND == 3)',
-            'axis_x_dependent_vars': None,
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-
-        'KDA_TV_General_2': {
-            'str_query': '',
-            'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-        'KDA_Sony_2': {
-            'str_query': '(BRAND == 1)',
-            'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-        'KDA_Samsung_2': {
-            'str_query': '(BRAND == 2)',
-            'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-
-        'KDA_LG_2': {
-            'str_query': '(BRAND == 3)',
-            'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
-            'axis_y_dependent_vars': ['PUR2TV'],
-            'axis_x_explanatory_vars': None,
-            'explanatory_vars': lst_img,
-        },
-
-    }
-
-    da.key_driver_analysis(dict_kda=dict_kda, output_name='VN9999 - Project Name_KDA')
-
-
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # Correspondence Analysis (CA)----------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-
-    da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
-
-    lst_img = [f'IMG_{i}' for i in range(1, 20)]  # + [f'IMG2_{i}' for i in range(1, 17)]
-
-    dict_ca = {
-        'CA_All_Brand': {
-            'str_query': '',
-            'id_var': 'ID',
-            'brand_var': 'BRAND',
-            'imagery_vars': lst_img,
-        },
-        'CA_Top_4_Brand': {
-            'str_query': 'BRAND.isin([1, 2, 3, 6])',
-            'id_var': 'ID',
-            'brand_var': 'BRAND',
-            'imagery_vars': lst_img,
-        },
-        'CA_Top_3_Brand': {
-            'str_query': 'BRAND.isin([1, 2, 3])',
-            'id_var': 'ID',
-            'brand_var': 'BRAND',
-            'imagery_vars': lst_img,
-        },
-    }
-
-    da.correspondence_analysis(dict_ca=dict_ca, output_name='VN9999 - Project Name_CA')
-
-
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # Price Sensitive Metric----------------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-
-    da = DataAnalysis(df_data=df_data, df_info=df_info)
-
-    dict_psm = {
-        'PSM_Total': {
-            'str_query': '',
-            'qre_psm': {
-                'too_expensive': 'QQ1',
-                'expensive': 'QQ2',
-                'cheap': 'QQ3',
-                'too_cheap': 'QQ4',
-            },
-            'is_remove_outlier': True
-        },
-        'PSM_HCM': {
-            'str_query': '(CITY == 1)',
-            'qre_psm': {
-                'too_expensive': 'QQ1',
-                'expensive': 'QQ2',
-                'cheap': 'QQ3',
-                'too_cheap': 'QQ4',
-            },
-            'is_remove_outlier': True
-        },
-        'PSM_HN': {
-            'str_query': '(CITY == 2)',
-            'qre_psm': {
-                'too_expensive': 'QQ1',
-                'expensive': 'QQ2',
-                'cheap': 'QQ3',
-                'too_cheap': 'QQ4',
-            },
-            'is_remove_outlier': True
-        },
-        'PSM_DN': {
-            'str_query': '(CITY == 3)',
-            'qre_psm': {
-                'too_expensive': 'QQ1',
-                'expensive': 'QQ2',
-                'cheap': 'QQ3',
-                'too_cheap': 'QQ4',
-            },
-            'is_remove_outlier': True
-        },
-    }
-
-    da.price_sensitive_metric(dict_psm=dict_psm, output_name='VN9999 - Project Name_PSM.xlsx')
-
-
-    # # # --------------------------------------------------------------------------------------------------------------
-    # # # K-mean Segmentation-------------------------------------------------------------------------------------------
-    # # # --------------------------------------------------------------------------------------------------------------
-
-    # # ------------------------------------------------------------------
-    # # REMEMBER One-hot encoding CATEGORICAL variables before run model
-    # # ------------------------------------------------------------------
-
-    dict_one_hot_regex = {
-        'GEN_BIN': '^GEN$',
-        'AGE2_BIN': '^AGE2$',
-        'OWN0_BIN': '^OWN0_[0-9]{1,2}$',
-        'BE2TV_BIN': '^BE2TV_[0-9]{1,2}$',
-    }
-
-    dp = DataProcessing(df_data=df_data, df_info=df_info)
-
-    dp.one_hot_encoding(dict_one_hot_regex=dict_one_hot_regex)
-
-    # Get processed dataframes
-    df_data, df_info = pd.DataFrame(dp.df_data), pd.DataFrame(dp.df_info)
-
-
-    # # ------------------------------------------
-    # # After One-hot encoding then run model
-    # # ------------------------------------------
-
-    da = DataAnalysis(df_data=df_data, df_info=df_info)
-
-    lst_qre = [
-                'GEN_BIN_1',
-                'GEN_BIN_2',
-                'AGE2_BIN_1',
-                'AGE2_BIN_2',
-                'AGE2_BIN_3',
-                'AGE2_BIN_4',
-                'AGE2_BIN_5',
-                'AGE2_BIN_6',
-                'AGE2_BIN_7',
-                'AGE2_BIN_8',
-                'OWN0_BIN_1',
-                'OWN0_BIN_2',
-                'OWN0_BIN_3',
-                'OWN0_BIN_4',
-                'OWN0_BIN_5',
-                'OWN0_BIN_6',
-                'OWN0_BIN_7',
-                'OWN0_BIN_8',
-                'OWN0_BIN_9',
-                'OWN0_BIN_10',
-                'OWN0_BIN_11',
-                'OWN0_BIN_12',
-                'OWN0_BIN_13',
-                'OWN0_BIN_14',
-                'BE2TV_BIN_1',
-                'BE2TV_BIN_2',
-                'BE2TV_BIN_3',
-                'BE2TV_BIN_4',
-                'BE2TV_BIN_5',
-                'BE2TV_BIN_6',
-                'BE2TV_BIN_7',
-                'BE2TV_BIN_8',
-                'BE2TV_BIN_9',
-                'PUR2TV_01',
-                'PUR2TV_02',
-                'PUR2TV_03',
-                'PUR2TV_04',
-                'PUR2TV_05',
-                'PUR2TV_06',
-                'PUR2TV_07',
-                'PUR2TV_08',
-                'PUR2TV_09',
-            ]
-
-    dict_k_mean = {
-        'CLUSTER_1': {
-            'str_query': '',
-            'lst_qre': lst_qre,
-            'n_clusters': 'auto',  # auto = model will find the best fit 'n_clusters', input number if you already know 'n_clusters'
-        },
-        # 'CLUSTER_2': {
-        #     'str_query': '',
-        #     'lst_qre': lst_qre,
-        #     'n_clusters': 3,
-        # },
-    }
-
-    df_data, df_info = da.k_mean_segmentation(dict_k_mean=dict_k_mean, output_name='VN9999 - Project Name_k_mean.xlsx')
+    #
+    #
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # # # # # LINEAR REGRESSION---------------------------------------------------------------------------------------------
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # #
+    # # da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
+    # #
+    # # dict_define_linear = {
+    # #     'TV_General': {
+    # #         'str_query': '',
+    # #         'dependent_vars': ['PUR2TV'],
+    # #         'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
+    # #     },
+    # #     'Sony': {
+    # #         'str_query': '(BRAND == 1)',
+    # #         'dependent_vars': ['PUR2TV'],
+    # #         'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
+    # #     },
+    # #     'Samsung': {
+    # #         'str_query': '(BRAND == 2)',
+    # #         'dependent_vars': ['PUR2TV'],
+    # #         'explanatory_vars': [f'IMG_{i}' for i in range(1, 20)],
+    # #     },
+    # #
+    # # }
+    # #
+    # # da.linear_regression(dict_define_linear=dict_define_linear, output_name='VN9999 - Project Name_Linear_Regression')
+    #
+    #
+    # # # # --------------------------------------------------------------------------------------------------------------
+    # # # # Key Driver Analysis (KDA)-------------------------------------------------------------------------------------
+    # # # # --------------------------------------------------------------------------------------------------------------
+    #
+    # da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
+    #
+    # lst_img = [f'IMG_{i}' for i in range(1, 20)]  # + [f'IMG2_{i}' for i in range(1, 17)]
+    #
+    # dict_kda = {
+    #     'KDA_TV_General_1': {
+    #         'str_query': '',
+    #         'axis_x_dependent_vars': None,
+    #         'axis_y_dependent_vars': ['PUR2TV'],
+    #         'axis_x_explanatory_vars': None,
+    #         'explanatory_vars': lst_img,
+    #     },
+    #     # 'KDA_Sony_1': {
+    #     #     'str_query': '(BRAND == 1)',
+    #     #     'axis_x_dependent_vars': None,
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #     # 'KDA_Samsung_1': {
+    #     #     'str_query': '(BRAND == 2)',
+    #     #     'axis_x_dependent_vars': None,
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #     #
+    #     # 'KDA_LG_1': {
+    #     #     'str_query': '(BRAND == 3)',
+    #     #     'axis_x_dependent_vars': None,
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #     #
+    #     # 'KDA_TV_General_2': {
+    #     #     'str_query': '',
+    #     #     'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #     # 'KDA_Sony_2': {
+    #     #     'str_query': '(BRAND == 1)',
+    #     #     'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #     # 'KDA_Samsung_2': {
+    #     #     'str_query': '(BRAND == 2)',
+    #     #     'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #     #
+    #     # 'KDA_LG_2': {
+    #     #     'str_query': '(BRAND == 3)',
+    #     #     'axis_x_dependent_vars': ['PRE_BIN', 'PRE_MOST_BIN'],
+    #     #     'axis_y_dependent_vars': ['PUR2TV'],
+    #     #     'axis_x_explanatory_vars': None,
+    #     #     'explanatory_vars': lst_img,
+    #     # },
+    #
+    # }
+    #
+    # da.key_driver_analysis(dict_kda=dict_kda, output_name='VN9999 - Project Name_KDA')
+    #
+    #
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # # # # # Correspondence Analysis (CA)----------------------------------------------------------------------------------
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # #
+    # # da = DataAnalysis(df_data=df_data_stack, df_info=df_info_stack)
+    # #
+    # # lst_img = [f'IMG_{i}' for i in range(1, 20)]  # + [f'IMG2_{i}' for i in range(1, 17)]
+    # #
+    # # dict_ca = {
+    # #     'CA_All_Brand': {
+    # #         'str_query': '',
+    # #         'id_var': 'ID',
+    # #         'brand_var': 'BRAND',
+    # #         'imagery_vars': lst_img,
+    # #     },
+    # #     'CA_Top_4_Brand': {
+    # #         'str_query': 'BRAND.isin([1, 2, 3, 6])',
+    # #         'id_var': 'ID',
+    # #         'brand_var': 'BRAND',
+    # #         'imagery_vars': lst_img,
+    # #     },
+    # #     'CA_Top_3_Brand': {
+    # #         'str_query': 'BRAND.isin([1, 2, 3])',
+    # #         'id_var': 'ID',
+    # #         'brand_var': 'BRAND',
+    # #         'imagery_vars': lst_img,
+    # #     },
+    # # }
+    # #
+    # # da.correspondence_analysis(dict_ca=dict_ca, output_name='VN9999 - Project Name_CA')
+    #
+    #
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # # # # # Price Sensitive Metric----------------------------------------------------------------------------------------
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # #
+    # # da = DataAnalysis(df_data=df_data, df_info=df_info)
+    # #
+    # # dict_psm = {
+    # #     'PSM_Total': {
+    # #         'str_query': '',
+    # #         'qre_psm': {
+    # #             'too_expensive': 'QQ1',
+    # #             'expensive': 'QQ2',
+    # #             'cheap': 'QQ3',
+    # #             'too_cheap': 'QQ4',
+    # #         },
+    # #         'is_remove_outlier': True
+    # #     },
+    # #     'PSM_HCM': {
+    # #         'str_query': '(CITY == 1)',
+    # #         'qre_psm': {
+    # #             'too_expensive': 'QQ1',
+    # #             'expensive': 'QQ2',
+    # #             'cheap': 'QQ3',
+    # #             'too_cheap': 'QQ4',
+    # #         },
+    # #         'is_remove_outlier': True
+    # #     },
+    # #     'PSM_HN': {
+    # #         'str_query': '(CITY == 2)',
+    # #         'qre_psm': {
+    # #             'too_expensive': 'QQ1',
+    # #             'expensive': 'QQ2',
+    # #             'cheap': 'QQ3',
+    # #             'too_cheap': 'QQ4',
+    # #         },
+    # #         'is_remove_outlier': True
+    # #     },
+    # #     'PSM_DN': {
+    # #         'str_query': '(CITY == 3)',
+    # #         'qre_psm': {
+    # #             'too_expensive': 'QQ1',
+    # #             'expensive': 'QQ2',
+    # #             'cheap': 'QQ3',
+    # #             'too_cheap': 'QQ4',
+    # #         },
+    # #         'is_remove_outlier': True
+    # #     },
+    # # }
+    # #
+    # # da.price_sensitive_metric(dict_psm=dict_psm, output_name='VN9999 - Project Name_PSM.xlsx')
+    #
+    #
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # # # # # K-mean Segmentation-------------------------------------------------------------------------------------------
+    # # # # # --------------------------------------------------------------------------------------------------------------
+    # #
+    # # # # ------------------------------------------------------------------
+    # # # # REMEMBER One-hot encoding CATEGORICAL variables before run model
+    # # # # ------------------------------------------------------------------
+    # #
+    # # dict_one_hot_regex = {
+    # #     'GEN_BIN': '^GEN$',
+    # #     'AGE2_BIN': '^AGE2$',
+    # #     'OWN0_BIN': '^OWN0_[0-9]{1,2}$',
+    # #     'BE2TV_BIN': '^BE2TV_[0-9]{1,2}$',
+    # # }
+    # #
+    # # dp = DataProcessing(df_data=df_data, df_info=df_info)
+    # #
+    # # dp.one_hot_encoding(dict_one_hot_regex=dict_one_hot_regex)
+    # #
+    # # # Get processed dataframes
+    # # df_data, df_info = pd.DataFrame(dp.df_data), pd.DataFrame(dp.df_info)
+    # #
+    # #
+    # # # # ------------------------------------------
+    # # # # After One-hot encoding then run model
+    # # # # ------------------------------------------
+    # #
+    # # da = DataAnalysis(df_data=df_data, df_info=df_info)
+    # #
+    # # lst_qre = [
+    # #             'GEN_BIN_1',
+    # #             'GEN_BIN_2',
+    # #             'AGE2_BIN_1',
+    # #             'AGE2_BIN_2',
+    # #             'AGE2_BIN_3',
+    # #             'AGE2_BIN_4',
+    # #             'AGE2_BIN_5',
+    # #             'AGE2_BIN_6',
+    # #             'AGE2_BIN_7',
+    # #             'AGE2_BIN_8',
+    # #             'OWN0_BIN_1',
+    # #             'OWN0_BIN_2',
+    # #             'OWN0_BIN_3',
+    # #             'OWN0_BIN_4',
+    # #             'OWN0_BIN_5',
+    # #             'OWN0_BIN_6',
+    # #             'OWN0_BIN_7',
+    # #             'OWN0_BIN_8',
+    # #             'OWN0_BIN_9',
+    # #             'OWN0_BIN_10',
+    # #             'OWN0_BIN_11',
+    # #             'OWN0_BIN_12',
+    # #             'OWN0_BIN_13',
+    # #             'OWN0_BIN_14',
+    # #             'BE2TV_BIN_1',
+    # #             'BE2TV_BIN_2',
+    # #             'BE2TV_BIN_3',
+    # #             'BE2TV_BIN_4',
+    # #             'BE2TV_BIN_5',
+    # #             'BE2TV_BIN_6',
+    # #             'BE2TV_BIN_7',
+    # #             'BE2TV_BIN_8',
+    # #             'BE2TV_BIN_9',
+    # #             'PUR2TV_01',
+    # #             'PUR2TV_02',
+    # #             'PUR2TV_03',
+    # #             'PUR2TV_04',
+    # #             'PUR2TV_05',
+    # #             'PUR2TV_06',
+    # #             'PUR2TV_07',
+    # #             'PUR2TV_08',
+    # #             'PUR2TV_09',
+    # #         ]
+    # #
+    # # dict_k_mean = {
+    # #     'CLUSTER_1': {
+    # #         'str_query': '',
+    # #         'lst_qre': lst_qre,
+    # #         'n_clusters': 'auto',  # auto = model will find the best fit 'n_clusters', input number if you already know 'n_clusters'
+    # #     },
+    # #     # 'CLUSTER_2': {
+    # #     #     'str_query': '',
+    # #     #     'lst_qre': lst_qre,
+    # #     #     'n_clusters': 3,
+    # #     # },
+    # # }
+    # #
+    # # df_data, df_info = da.k_mean_segmentation(dict_k_mean=dict_k_mean, output_name='VN9999 - Project Name_k_mean.xlsx')
 
 
     print('\nPROCESSING COMPLETED | Duration', datetime.timedelta(seconds=round(time.time() - st, 0)), '\n')

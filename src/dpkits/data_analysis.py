@@ -151,6 +151,9 @@ class DataAnalysis(Logging):
             y_std = scaler_y.fit_transform(df_data['dep_var'].to_numpy().reshape(-1, 1)).ravel()
 
             df_linear = pg.linear_regression(y=y_std, X=X_std)
+            # df_linear = pg.logistic_regression(y=df_data['dep_var'].to_numpy().reshape(-1, 1), X=X_std)
+            
+
 
             if coef_only:
                 df_linear = df_linear[['names', 'coef']]
@@ -360,6 +363,10 @@ class DataAnalysis(Logging):
                         {
                             'name': str_x_axis_name,
                             'major_gridlines': {'visible': False},
+                            'min': -3,
+                            'max': 3,
+                            'major_unit': 1,
+                            'crossing': -3,
                         }
                     )
 
@@ -367,9 +374,13 @@ class DataAnalysis(Logging):
                         {
                             'name': f"Derived importance ({', '.join(v_kda['axis_y_dependent_vars'])})",
                             'major_gridlines': {'visible': False},
+                            'min': -3,
+                            'max': 3,
+                            'major_unit': 1,
+                            'crossing': -3,
                         }
                     )
-
+                    
                     chart.set_title({'name': ws_name})
                     chart.set_style(10)
 
