@@ -1,14 +1,12 @@
 import pandas as pd
-import numpy as np
 import time
 import datetime
-from pathlib import Path
 
 
 # IGNORE THIS-----------------------------------------------------------------------------------------------------------
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, "C:\\Users\\PC\\OneDrive\\DevZone\\PyPackages\\packaging_dpkits")
 
 from src.dpkits import (
     APDataConverter,

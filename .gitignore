@@ -7,3 +7,5 @@ dist
 .pypirc
 Old
 dpkits-env
+tk.txt
+src/dpkits_v2
