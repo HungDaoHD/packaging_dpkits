@@ -6,6 +6,8 @@ dist
 *.rar
 .pypirc
 Old
-dpkits-env
 tk.txt
-src/dpkits_v2
+tests
+dpkits-env
+src/dpkits2
+venv-dpkits2
