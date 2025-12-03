@@ -7,7 +7,6 @@ dist
 .pypirc
 Old
 tk.txt
-tests
+tests/dpkits
 dpkits-env
-src/dpkits2
 venv-dpkits2
