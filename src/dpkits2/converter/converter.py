@@ -16,7 +16,6 @@ from ..metadata.metadata import *
 
 
 
-
 class InputFile(BaseModel):
     folder_name: str = Field(min_length=1, default='DataToRun')
     file_name: str = Field(pattern=r"^.+\.(xlsx|csv|zip)$")
@@ -38,7 +37,7 @@ class InputFile(BaseModel):
 
 
 
-class Output(BaseModel):
+class DataBundle(BaseModel):
     file_name: str = Field(min_length=2)
     df_data: pd.DataFrame = Field(default=None)
     metadata: Optional[Metadata] = None
@@ -53,7 +52,7 @@ class DataConverter:
     def __init__(self, input_file: InputFile | dict):
         
         self.input_file = InputFile(**input_file) if isinstance(input_file, dict) else input_file
-        self.output = Output(file_name=self.input_file.file_name.rsplit('.', 1)[0])
+        self.data_bundle = DataBundle(file_name=self.input_file.file_name.rsplit('.', 1)[0])
         self.lst_dropped = [
             'Approve',
             'Reject',
@@ -371,21 +370,21 @@ class DataConverter:
 
     
     @_time_it
-    def convert(self) -> Output:    
+    def convert(self) -> DataBundle:    
         
         df_data_qme, df_info_qme = self._read_qme_file()
         
         # For test
-        df_data_qme.to_csv('df_data_qme.csv', encoding='utf-8-sig', index=False)
-        df_info_qme.to_csv('df_info_qme.csv', encoding='utf-8-sig', index=False)
+        df_data_qme.to_csv(f'{self.input_file.folder_name}\\df_data_qme.csv', encoding='utf-8-sig', index=False)
+        df_info_qme.to_csv(f'{self.input_file.folder_name}\\df_info_qme.csv', encoding='utf-8-sig', index=False)
         # For test
         
         metadata_builder = MetadataBuilder(df_data=df_data_qme, df_info=df_info_qme)
         
-        self.output.metadata = metadata_builder.build()
-        self.output.df_data = df_data_qme
+        self.data_bundle.metadata = metadata_builder.build()
+        self.data_bundle.df_data = df_data_qme
         
-        return self.output
+        return self.data_bundle
 
         
 

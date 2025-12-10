@@ -1,15 +1,12 @@
-from dpkits2.converter.data_converter import *
+from dpkits2 import *
 
 
 # # # ------------------------------------------------------------------------------------------------------------------
 
 
 # # # START HERE
-converter = DataConverter(InputFile(folder_name='DataToRun', file_name='VN9999 - Project Name.xlsx'))
-output = converter.convert()
-
-
-
+cvt = DataConverter(InputFile(folder_name='tests\\dpkits2\\DataToRun', file_name='VN9999 - Project Name.xlsx'))
+output = cvt.convert()
 
 
 output.metadata.qres['AGE2'].codes[9002] = NettedCode(
@@ -21,14 +18,14 @@ output.metadata.qres['AGE2'].codes[9002] = NettedCode(
 
 
 
-output.metadata.save_json('metadata.json')
+output.metadata.save_json('tests\\dpkits2\\metadata.json')
 
 
 # output.metadata = output.metadata.from_json_file('metadata.json')
 
 # aaa = output.metadata.qres
 
-print('>>> Finish Task')
+print('>>> Finish Tasks')
 
 
 
