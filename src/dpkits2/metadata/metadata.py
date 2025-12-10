@@ -12,7 +12,7 @@ class GeneralCode(BaseModel):
     is_exclusive: bool = False
     is_other: bool = False
     
-    
+
 class NettedCode(BaseModel):
     value: int
     label: str = Field(min_length=1)
@@ -400,7 +400,7 @@ class MetadataBuilder:
         
         obj_sub_qres = {}
         
-        for sub_qre_grp, df_sub_qre in df_qre.groupby(self.col_q_simple_group, sort=False):
+        for _, df_sub_qre in df_qre.groupby(self.col_q_simple_group, sort=False):
             
             obj_sub_qre = self._build_simple_question(df_sub_qre, df_sub_qre[self.col_qtype].values[0])
             obj_sub_qres[obj_sub_qre.name] = obj_sub_qre
@@ -421,11 +421,6 @@ class MetadataBuilder:
     
     
     
-    
-    
-    
-    
-    
     # -----------------------------
     # Public API
     # -----------------------------
@@ -441,9 +436,6 @@ class MetadataBuilder:
         lst_qre_matrix = list()
         
         
-        
-
-        
         # Build matrix questions from qme dataframe to pydantic model
         for qre_grp, df_qre in df_matrix.groupby(self.col_q_matrix_group, sort=False):
             
@@ -453,8 +445,6 @@ class MetadataBuilder:
             print(f'Metadata: Matrix question {qre_grp} was built.')
             
         
-        
-          
         # Build simple questions from qme dataframe to pydantic model
         for qre_grp, df_qre in df_simple.groupby(self.col_q_simple_group, sort=False):
             
@@ -463,9 +453,6 @@ class MetadataBuilder:
             qres[obj_qre.name] = obj_qre
             print(f'Metadata: Simple question {obj_qre.name} was built.')
             
-                
-        
-        
         
         return Metadata(qres=qres, lst_qre_simple=lst_qre_simple, lst_qre_matrix=lst_qre_matrix).sort_qres_by_index()
 

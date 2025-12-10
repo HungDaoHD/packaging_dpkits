@@ -2,7 +2,7 @@
     "qres": {
         "ID": {
             "name": "ID",
-            "label": "ID",
+            "label": "ID ID  ID xxxxx",
             "qtype": "FT",
             "data_fields": [
                 "ID"
@@ -209,16 +209,6 @@
                     "factor": null,
                     "is_exclusive": true,
                     "is_other": false
-                },
-                "9002": {
-                    "value": 9002,
-                    "label": "abc def ghi",
-                    "netted_type": "Net",
-                    "netted_fields": [
-                        "5",
-                        "6",
-                        "7"
-                    ]
                 }
             },
             "other_fields": null

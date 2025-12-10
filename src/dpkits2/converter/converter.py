@@ -11,7 +11,7 @@ import numpy as np
 from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator  # , computed_field, EmailStr
 from typing import Union, Optional, Literal, Dict, List, Annotated
 
-from ..metadata.metadata import *
+from ..metadata.metadata import MetadataBuilder, Metadata
 
 
 
@@ -373,10 +373,10 @@ class DataConverter:
     def convert(self) -> DataBundle:    
         
         df_data_qme, df_info_qme = self._read_qme_file()
-        
+
         # For test
-        df_data_qme.to_csv(f'{self.input_file.folder_name}\\df_data_qme.csv', encoding='utf-8-sig', index=False)
-        df_info_qme.to_csv(f'{self.input_file.folder_name}\\df_info_qme.csv', encoding='utf-8-sig', index=False)
+        df_data_qme.to_csv(f'tests\\dpkits2\\df_data_qme.csv', encoding='utf-8-sig', index=False)
+        df_info_qme.to_csv(f'tests\\dpkits2\\df_info_qme.csv', encoding='utf-8-sig', index=False)
         # For test
         
         metadata_builder = MetadataBuilder(df_data=df_data_qme, df_info=df_info_qme)

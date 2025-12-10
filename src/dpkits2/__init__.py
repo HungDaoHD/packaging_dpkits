@@ -1,12 +1,19 @@
-from .converter.converter import *
-from .metadata.metadata import *
+# # Import all public names from submodules
+# from .converter.converter import *
+# from .metadata.metadata import *
 
-from .converter import converter
-from .metadata import metadata
+# import sys
+# import inspect
 
-    
-    
-__all__ = (
-    getattr(converter, "__all__", []) +
-    getattr(metadata, "__all__", [])
-)
+# module = sys.modules[__name__]
+
+
+
+# # Automatically collect all classes defined in dpkits2.*
+# __all__ = [
+#     name
+#     for name, obj in inspect.getmembers(module)
+#     if inspect.isclass(obj)
+#     and obj.__module__.startswith(module.__name__)
+#     and not name.startswith("_")  # ignore private
+# ]
