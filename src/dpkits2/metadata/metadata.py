@@ -23,113 +23,147 @@ class NettedCode(BaseModel):
 class _QreBase(BaseModel):
     name: str = Field(min_length=2)
     label: str = Field(min_length=2)
+    qtype: str
     data_fields: list[str] = Field(min_length=1)
+    index: int
+    
+    model_config = {
+        "extra": "allow"
+    }
 
 
 class QreFreeText(_QreBase):
-    qtype: str = 'FT'
+    qtype: Literal['FT']
     is_other_field: bool = False
 
 
 class QreNumeric(_QreBase):
-    qtype: str = 'NUM'
+    qtype: Literal['NUM']
+    pass
 
     
 class QreSingleAnswer(_QreBase):
-    qtype: str = 'SA'
+    qtype: Literal['SA']
     codes: Dict[int, Union[GeneralCode, NettedCode]]
-    other_fields: Optional[List[str]] = None
+    other_fields: Optional[Dict[str, QreFreeText]] = None
     
 
 class QreMultipleAnswer(_QreBase):
-    qtype: str = 'MA'
+    qtype: Literal['MA']
     codes: Dict[int, Union[GeneralCode, NettedCode]]
-    other_fields: Optional[List[str]] = None
+    other_fields: Optional[Dict[str, QreFreeText]] = None
 
 
 class QreRanking(_QreBase):
-    qtype: str = 'RANKING'
+    qtype: Literal['RANKING']
     codes: Dict[int, Union[GeneralCode, NettedCode]]
+
+
+
+MatrixSubQuestion = Annotated[
+     Union[
+        QreFreeText,
+        QreNumeric,
+        QreSingleAnswer,
+        QreMultipleAnswer,
+        QreRanking
+    ],
+    Field(discriminator='qtype'),
+]
 
 
 
 class QreMatrix(_QreBase):
-    qre: Union[QreFreeText, QreNumeric, QreSingleAnswer, QreMultipleAnswer, QreRanking]
+    qtype: Literal['MATRIX']
+    sub_qres: Dict[str, MatrixSubQuestion] = Field(default_factory=dict)
     
     
+    
+Question = Annotated[
+     Union[
+        QreFreeText,
+        QreNumeric,
+        QreSingleAnswer,
+        QreMultipleAnswer,
+        QreRanking,
+        QreMatrix
+    ],
+    Field(discriminator='qtype'),
+]    
+
+
 
 class Metadata(BaseModel):
-    qres: Dict[str, Union[QreFreeText, QreNumeric, QreSingleAnswer, QreMultipleAnswer, QreRanking, QreMatrix]] = {}
-    lst_qre_simple: List[str] = []
-    lst_qre_maxtrix: List[str] = []
+    qres: Dict[str, Question] = Field(default_factory=dict)
+    lst_qre_simple: List[str] = Field(default_factory=list)
+    lst_qre_matrix: List[str] = Field(default_factory=list)
+    
+    model_config = {
+        'arbitrary_types_allowed': True
+    }
     
     
+    def sort_qres_by_index(self):
+        sorted_items = sorted(
+            self.qres.items(),
+            key=lambda item: item[1].index,  # item = (key, Question)
+        )
+        
+        self.qres = dict(sorted_items)
+        return self
+        
+    
+    
+    def to_json(self, indent: int = 4):
+        return self.model_dump_json(indent=indent)
+    
+    
+    def save_json(self, filepath: str, indent: int = 4):
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(self.model_dump_json(indent=indent))
+    
+    
+    @classmethod
+    def from_json(cls, json_str: str) -> "Metadata":
+        """Create a Metadata instance from a JSON string."""
+        return cls.model_validate_json(json_str)
+
+    
+    @classmethod
+    def from_json_file(cls, filepath: str) -> "Metadata":
+        """Create a Metadata instance from a JSON file."""
+        with open(filepath, "r", encoding="utf-8") as f:
+            json_str = f.read()
+        
+        return cls.model_validate_json(json_str)
 
 
 class MetadataBuilder:
     
     def __init__(
         self, df_data: pd.DataFrame, df_info: pd.DataFrame, 
-        col_name: str = "Name of items", 
-        col_qtype: str = "Question type", 
-        col_q_label: str = "Question(Normal)", 
-        col_q_matrix: str = "Question(Matrix)"
+        col_name: str = 'Name of items', 
+        col_qtype: str = 'Question type', 
+        col_q_label: str = 'Question(Normal)', 
+        col_q_matrix_label: str = 'Question(Matrix)',
+        col_q_simple_group: str = 'Qre_Simple_Group',
+        col_q_matrix_group: str = 'Qre_Matrix_Group',
     ):
         
         self.df_data = df_data
         self.df_info = df_info
+          
         self.col_name = col_name
         self.col_qtype = col_qtype
         self.col_q_label = col_q_label
-        self.col_q_matrix = col_q_matrix
+        self.col_q_matrix_label = col_q_matrix_label
+        self.col_q_simple_group = col_q_simple_group
+        self.col_q_matrix_group = col_q_matrix_group
+        self.prop_cols = [col_name, col_qtype, col_q_label, col_q_matrix_label, col_q_simple_group, col_q_matrix_group]
         self.code_cols = [c for c in df_info.columns if str(c).isdigit()]
-
-    
-
-    # # -----------------------------
-    # # Matrix questions
-    # # -----------------------------
-    # def _derive_matrix_name(self, first_name: str) -> str:
-    #     """
-    #     Turn e.g. 'CONSTV_01_1' -> 'CONSTV_01'.
-    #     Adjust according to your naming convention.
-    #     """
-    #     first_name = first_name.strip()
-    #     if "_" in first_name:
-    #         return first_name.rsplit("_", 1)[0]
-    #     return first_name
-
-    
-    
-    # def _build_matrix_question(self, matrix_text: str, group: pd.DataFrame) -> QreMatrix:
-    #     first = group.iloc[0]
-
-    #     first_name = str(first[self.col_name]).strip()
-    #     mat_name = self._derive_matrix_name(first_name)
-
-    #     label = self._safe_label(matrix_text, fallback=mat_name)
-    #     qtype = str(first[self.col_qtype]).strip()
-
-    #     # Codes often duplicated on every row; first row is enough
-    #     codes = self._build_codes_from_row(first)
-
-    #     data_fields = [str(v).strip() for v in group[self.col_name].tolist()]
-
-    #     inner_qre = QreSimple(
-    #         name=mat_name,
-    #         label=label,
-    #         qtype=qtype,
-    #         codes=codes,
-    #         data_fields=data_fields,
-    #     )
-
-    #     return QreMatrix(
-    #         name=mat_name,
-    #         label=label,
-    #         qre=inner_qre,
-    #     )
-
-    
+        
+        
+        
     
     # -----------------------------
     # Helpers
@@ -139,65 +173,67 @@ class MetadataBuilder:
         Make sure label meets min_length requirement of QreSimple.label.
         Adjust / relax this if you change the model constraint.
         """
+        min_lenght = 2
+        
         label = (label_raw or "").strip()
-        if len(label) < 5:
+        if len(label) < min_lenght:
             # simple fallback strategy; feel free to change
-            label = fallback if len(fallback) >= 5 else (label or fallback).ljust(5, "_")
+            label = fallback if len(fallback) >= min_lenght else (label or fallback).ljust(min_lenght, "_")
         return label
     
     
     
-    def _build_codes(self, sr_qre: pd.Series | pd.DataFrame) -> tuple[Dict[int, GeneralCode], list]:
-        """
-        Read code columns ('1','2',...) from one row and convert them to GeneralCode.
-        """
+    def _build_codes(self, qre: pd.DataFrame, other_fields: list) -> tuple[Dict[int, GeneralCode], list]:
+        
+        EXCLKUSIVE = ['NONE', 'REFUSE', 'KHÔNG CÓ', 'KHÔNG BIẾT']
         codes: Dict[int, GeneralCode] = {}
-        EXCLKUSIVE = ['NONE', 'REFUSE', 'KHÔNG CÓ', 'KHÔNG BIẾT'] 
+        qtype = qre[self.col_qtype].values[0]
         
-        other_fields = list()
+        if qtype in ['SA', 'RANKING']:
+            sr_codes_only = qre.drop(columns=self.prop_cols + ['prefix', 'code'], errors='ignore').T.squeeze()
+            col_prefix = qre[self.col_name].values[0]
+            
+        else:
+            sr_codes_only = (
+                qre[['code', 'label']]
+                .set_index('code', drop=True)
+                .squeeze()
+            )
+            col_prefix = qre['prefix'].values[0]
+            
+            
         
-        for col in self.code_cols:
-            val = sr_qre.get(col)
+        for code, label in sr_codes_only.items():
             
-            # treat NaN / empty as no code
-            if isinstance(val, float) and pd.isnull(val):
-                continue
+            code_val = int(code)
+            code_lbl = str(label).strip()
             
-            if val is None:
-                continue
-            
-            if isinstance(val, str) and not val.strip():
-                continue
-
-            code_val = int(col)
-            code_lbl = str(val).strip() 
             is_exclusive = True if any(k in code_lbl.upper() for k in EXCLKUSIVE) else False
+            is_other = True if other_fields and f"{col_prefix}_o{code_val}" in other_fields else False
             
             
-            is_other = self.df_info[self.col_name].str.contains(rf"^{sr_qre[self.col_name]}_o{code_val}$", regex=True, case=False, na=False).any()
-            
-            if is_other:
-                other_fields.append(f"{sr_qre[self.col_name]}_o{code_val}")
-        
             codes[code_val] = GeneralCode(
                 value=code_val,
                 label=code_lbl,
                 is_exclusive=is_exclusive,
                 is_other=is_other
             )
-            
-            
+
         
-        return codes, other_fields
+        return codes
     
     
     
-    def _build_freetext_numeric_question(self, sr_qre: pd.Series) -> QreFreeText | QreNumeric:
+    def _build_freetext_numeric_question(self, qre: pd.DataFrame) -> QreFreeText | QreNumeric:
+        
+        sr_qre = qre.squeeze()
         
         name = str(sr_qre[self.col_name]).strip()
         qtype = str(sr_qre[self.col_qtype]).strip()
         label_raw = sr_qre.get(self.col_q_label)
         label = self._safe_label(label_raw if not pd.isna(label_raw) else "", fallback=name)
+        index = sr_qre.name
+        
         
         if qtype == 'FT':
         
@@ -205,6 +241,7 @@ class MetadataBuilder:
                 name=name,
                 label=label,
                 qtype=qtype,
+                index=index,
                 data_fields=[name],
                 is_other_field=re.fullmatch(r"^.+_o\d+$", name) is not None
             )
@@ -215,96 +252,174 @@ class MetadataBuilder:
                 name=name,
                 label=label,
                 qtype=qtype,
-                data_fields=[name],
+                index=index,
+                data_fields=[name]
             ) 
         
         return obj_qre
     
     
     
-    def _build_single_answer_question(self, sr_qre: pd.Series) -> QreSingleAnswer:
+    def _build_single_answer_question(self, qre: pd.DataFrame) -> QreSingleAnswer:
         
-        name = str(sr_qre[self.col_name]).strip()
-        qtype = str(sr_qre[self.col_qtype]).strip()
-        label_raw = sr_qre.get(self.col_q_label)
+        df_qre = qre.loc[qre[self.col_qtype] == 'SA']
+        df_other = qre.loc[qre[self.col_qtype] == 'FT']
+        
+        index = df_qre.index[0]
+        
+        name = str(df_qre.loc[index, self.col_name]).strip()
+        qtype = str(df_qre.loc[index, self.col_qtype]).strip()
+        label_raw = df_qre.loc[index, self.col_q_label]
+        
         label = self._safe_label(label_raw if not pd.isna(label_raw) else "", fallback=name)
-        codes, other_fields = self._build_codes(sr_qre)
-
+        codes = self._build_codes(df_qre, other_fields=df_other[self.col_name].to_list() if not df_other.empty else [])
+        
+        obj_others = dict()
+        if not df_other.empty:
+            for _, qre_other in df_other.iterrows():
+                obj_other = self._build_simple_question(qre_other.to_frame(), 'FT')
+                obj_others[obj_other.name] = obj_other
+        
+        
         obj_qre = QreSingleAnswer(
             name=name,
             label=label,
             qtype=qtype,
             codes=codes,
+            index=index,
             data_fields=[name],
-            other_fields=other_fields if other_fields else None
+            other_fields=obj_others if obj_others else None
         )
         
         return obj_qre
     
     
     
-    def _build_multiple_answer_question(self, df_qre: pd.Series) -> QreMultipleAnswer:
+    def _build_multiple_answer_question(self, qre: pd.DataFrame) -> QreMultipleAnswer:
+        
+        index = qre.index[0]
+        lst_col_splited = ['prefix', 'code']
         
         df_qre = (
-            df_qre
-            .reset_index(drop=True)
-            .dropna(how='all', axis=1)
+            qre
+            .loc[qre[self.col_qtype] == 'MA']
+            .rename(columns={1: 'label'})
         )
+        df_qre[lst_col_splited] = df_qre[self.col_name].str.rsplit('_', n=1, expand=True)
         
-        df_qre[['Name', 'code']] = df_qre[self.col_name].str.rsplit('_', n=1, expand=True)
-        
-        
-        
-        name = str(df_qre.loc[0, 'Name']).strip()
-        qtype = str(df_qre.loc[0, self.col_qtype]).strip()
-        
-        
-        label_raw = df_qre.loc[0, self.col_q_label]
-        label = self._safe_label(label_raw if not pd.isna(label_raw) else "", fallback=name)
-        # codes, other_fields = self._build_codes(df_qre)
+        df_other = qre.loc[qre[self.col_qtype] == 'FT']
+        if not df_other.empty:
+            df_other.loc[:, lst_col_splited] = df_other[self.col_name].str.rsplit('_', n=1, expand=True)
+            
+        name = str(df_qre.loc[index, lst_col_splited[0]]).strip()
+        qtype = str(df_qre.loc[index, self.col_qtype]).strip()
+        label_raw = df_qre.loc[index, self.col_q_label]
 
+        label = self._safe_label(label_raw if not pd.isna(label_raw) else "", fallback=name)
+        codes = self._build_codes(df_qre, other_fields=df_other[self.col_name].to_list() if not df_other.empty else [])
+        
+        obj_others = dict()
+        if not df_other.empty:
+            for _, qre_other in df_other.iterrows():
+                obj_other = self._build_simple_question(qre_other.to_frame(), 'FT')
+                obj_others[obj_other.name] = obj_other
+        
         obj_qre = QreMultipleAnswer(
             name=name,
             label=label,
             qtype=qtype,
-            # codes=codes,
+            codes=codes,
+            index=index,
             data_fields=df_qre[self.col_name].values.tolist(),
-            # other_fields=other_fields if other_fields else None
+            other_fields=obj_others if obj_others else None 
         )
-                
-        # class QreMultipleAnswer(_QreBase):
-        # qtype: str = 'MA'
-        # codes: Dict[int, Union[GeneralCode, NettedCode]]
-        # other_fields: Optional[List[str]] = None
-
-        
         
         return obj_qre
 
+    
+    
+    def _build_ranking_question(self, qre: pd.DataFrame) -> QreMultipleAnswer:
+        
+        index = qre.index[0]
+        lst_col_splited = ['prefix', 'code']
+        df_qre = qre.loc[qre[self.col_qtype] == 'RANKING']
+        df_qre[lst_col_splited] = df_qre[self.col_name].str.rsplit('_', n=1, expand=True)
+        
+        name = str(df_qre.loc[index, lst_col_splited[0]]).strip()
+        qtype = str(df_qre.loc[index, self.col_qtype]).strip()
+        label_raw = df_qre.loc[index, self.col_q_label]
+        label = self._safe_label(label_raw if not pd.isna(label_raw) else "", fallback=name)
+        
+        codes = self._build_codes(df_qre.loc[index, :].to_frame().T, other_fields=[])
+        
+        obj_qre = QreRanking(
+            name=name,
+            label=label,
+            qtype=qtype,
+            codes=codes,
+            index=index,
+            data_fields=df_qre[self.col_name].values.tolist(),
+            other_fields=None
+        )
+        
+        return obj_qre
+    
     
     
     # -----------------------------
     # Simple questions (non-matrix)
     # -----------------------------
-    def _build_simple_question(self, qre: pd.Series | pd.DataFrame, qtype: str) -> QreFreeText | QreNumeric | QreSingleAnswer | QreMultipleAnswer | QreRanking | QreMatrix:
+    def _build_simple_question(self, df_qre: pd.DataFrame, qtype: str) -> QreFreeText | QreNumeric | QreSingleAnswer | QreMultipleAnswer | QreRanking:
+        
+        df_qre = df_qre.dropna(how='all', axis=1)
         
         match qtype:
             case 'FT' | 'NUM':
-                return self._build_freetext_numeric_question(qre)
+                return self._build_freetext_numeric_question(df_qre)
                 
             case 'SA':
-                return self._build_single_answer_question(qre)
+                return self._build_single_answer_question(df_qre)
                 
             case 'MA':
-                return self._build_multiple_answer_question(qre)
+                return self._build_multiple_answer_question(df_qre)
             
             case 'RANKING':
-                # Tạm
-                return self._build_single_answer_question(qre)
-                
-                
+                return self._build_ranking_question(df_qre)
+            
             case _:
-                raise ValueError(f"{qre[self.col_name]}: Question type {qtype} is undefined!!!")
+                raise ValueError(f"{df_qre[self.col_name]}: Question type {qtype} is undefined!!!")
+    
+    
+    # -----------------------------
+    # Matrix questions
+    # -----------------------------
+    def _build_matrix_question(self, qre_grp: str, df_qre: pd.DataFrame, ) -> QreMatrix:
+        
+        df_qre = df_qre.dropna(how='all', axis=1)
+        index = df_qre.index[0]
+        
+        obj_sub_qres = {}
+        
+        for sub_qre_grp, df_sub_qre in df_qre.groupby(self.col_q_simple_group, sort=False):
+            
+            obj_sub_qre = self._build_simple_question(df_sub_qre, df_sub_qre[self.col_qtype].values[0])
+            obj_sub_qres[obj_sub_qre.name] = obj_sub_qre
+            print(f'Metadata: Matrix sub-question {obj_sub_qre.name} was built.')
+        
+        
+        obj_matrix = QreMatrix(
+            name=qre_grp,
+            label=df_qre.loc[index, self.col_q_matrix_label],
+            qtype='MATRIX',
+            index=index,
+            data_fields=df_qre[self.col_name].values.tolist(),
+            sub_qres=obj_sub_qres
+        )
+    
+
+        return obj_matrix
+    
+    
     
     
     
@@ -315,44 +430,47 @@ class MetadataBuilder:
     # Public API
     # -----------------------------
     def build(self) -> Metadata:
-        
+         
         qres: Dict[str, Union[QreFreeText, QreNumeric, QreSingleAnswer, QreMultipleAnswer, QreRanking, QreMatrix, QreMatrix]] = {}
-        matrix_mask = self.df_info[self.col_q_matrix].notna()
+        
+        matrix_mask = self.df_info[self.col_q_matrix_group].notna()
         df_simple = self.df_info[~matrix_mask]
+        df_matrix = self.df_info[matrix_mask]
+        
         lst_qre_simple = list()
-        lst_qre_built = list()
+        lst_qre_matrix = list()
         
         
-        for _, sr_qre in df_simple.iterrows():
+        
+
+        
+        # Build matrix questions from qme dataframe to pydantic model
+        for qre_grp, df_qre in df_matrix.groupby(self.col_q_matrix_group, sort=False):
             
-            if sr_qre.get(self.col_name) in lst_qre_built:
-                continue
-            
-            if sr_qre.get(self.col_qtype) == 'MA':                
-                ma_mask = df_simple[self.col_name].str.contains(rf"^{sr_qre.get(self.col_name).rsplit('_', 1)[0]}_\d{{1,2}}$", regex=True, case=False, na=False)
-                obj_qre = self._build_simple_question(df_simple[ma_mask], sr_qre.get(self.col_qtype))
-    
-            else:
-                obj_qre = self._build_simple_question(sr_qre, sr_qre.get(self.col_qtype))
-            
-            lst_qre_simple.append(obj_qre.name)
-            lst_qre_built.append(sr_qre.get(self.col_name))
+            obj_qre = self._build_matrix_question(qre_grp, df_qre)
+            lst_qre_matrix.append(obj_qre.name)
             qres[obj_qre.name] = obj_qre
-                    
+            print(f'Metadata: Matrix question {qre_grp} was built.')
+            
         
         
-        # # 1) Build all matrices
-        # matrix_df = self.df[matrix_mask]
-        # for matrix_text, group in matrix_df.groupby(self.col_q_matrix, sort=False):
-        #     q_matrix = self._build_matrix_question(matrix_text, group)
-        #     qres[q_matrix.name] = q_matrix
-
+          
+        # Build simple questions from qme dataframe to pydantic model
+        for qre_grp, df_qre in df_simple.groupby(self.col_q_simple_group, sort=False):
+            
+            obj_qre = self._build_simple_question(df_qre, df_qre[self.col_qtype].values[0])
+            lst_qre_simple.append(obj_qre.name)
+            qres[obj_qre.name] = obj_qre
+            print(f'Metadata: Simple question {obj_qre.name} was built.')
+            
+                
         
-
-        return Metadata(qres=qres, lst_qre_simple=lst_qre_simple)
+        
+        
+        return Metadata(qres=qres, lst_qre_simple=lst_qre_simple, lst_qre_matrix=lst_qre_matrix).sort_qres_by_index()
 
     
-    
+
 
 
 

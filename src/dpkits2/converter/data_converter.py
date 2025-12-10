@@ -38,11 +38,11 @@ class InputFile(BaseModel):
 
 
 
-class OutputFile(BaseModel):
+class Output(BaseModel):
     file_name: str = Field(min_length=2)
     df_data: pd.DataFrame = Field(default=None)
     metadata: Optional[Metadata] = None
-
+    
     # allow pandas types
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -53,7 +53,7 @@ class DataConverter:
     def __init__(self, input_file: InputFile | dict):
         
         self.input_file = InputFile(**input_file) if isinstance(input_file, dict) else input_file
-        self.output_file = OutputFile(file_name=self.input_file.file_name.rsplit('.', 1)[0])
+        self.output = Output(file_name=self.input_file.file_name.rsplit('.', 1)[0])
         self.lst_dropped = [
             'Approve',
             'Reject',
@@ -164,7 +164,7 @@ class DataConverter:
         ]
 
     
-    
+    # Helpers ------------------------------------------------------------------------------------------------------------------------------------------------
     @staticmethod
     def _time_it(func):
 
@@ -180,12 +180,78 @@ class DataConverter:
         return inner_func
 
     
+    
+    @staticmethod
+    def _cleanhtml(sr: pd.Series) -> str:
+        CLEANR = re.compile('{.*?}|<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});|\n|\xa0')
+        sr['Question(Matrix)'] = re.sub(CLEANR, '', sr['Question(Matrix)']) if isinstance(sr['Question(Matrix)'], str) else sr['Question(Matrix)']
+        sr['Question(Normal)'] = re.sub(CLEANR, '', sr['Question(Normal)']) if isinstance(sr['Question(Normal)'], str) else sr['Question(Normal)']
+        return sr
+    
+    
+    
+    @staticmethod
+    def _qre_grouping(sr: pd.Series) -> list:
+        
+        is_simple_qre = pd.isnull(sr['Question(Matrix)'])
+        qtype = sr['Question type']
+        qname = sr['Name of items']
+        
+        
+        match qtype:
+            case 'FT':
+                
+                if is_simple_qre:
+                    if re.match(pattern=r".+_o\d{1,2}$", string=qname):
+                        
+                        return [qname.rsplit('_', 1)[0], np.nan]
+                        
+                    else:
+                        return [qname, np.nan]
+
+                else: 
+                    
+                    if re.match(pattern=r".+_o\d{1,2}$", string=qname):
+                        return [qname.rsplit('_', 1)[0], qname.rsplit('_', 2)[0]]
+
+                    else:
+                        return [qname, qname.rsplit('_', 1)[0]]
+            
+
+            case 'NUM' | 'SA':
+                
+                if is_simple_qre:
+                    return [qname, np.nan]
+                
+                else: 
+                    return [qname, qname.rsplit('_', 1)[0]]
+            
+            
+            case 'MA' | 'RANKING':
+                
+                if is_simple_qre:
+                    return [qname.rsplit('_', 1)[0], np.nan]
+                
+                else:
+                    return [qname.rsplit('_', 1)[0], qname.rsplit('_', 2)[0]]
+                    
+            case _:
+                return [np.nan, np.nan]
+        
+       
+            
+        
+    
+    # End of Helpers -----------------------------------------------------------------------------------------------------------------------------------------
+        
+    
 
     @_time_it
     def _read_qme_file(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         
         print(f'Read input file {self.input_file.file_name}.')
         
+        # Read file and convert to qme dataframe
         if not self.input_file.is_qme_file:
             print(f'Error: {self.input_file.file_name} is not Q&Me data file.')
             return
@@ -209,16 +275,27 @@ class DataConverter:
             df_info_qme = pd.read_excel(str_full_path, sheet_name='Question')
             df_data_qme = pd.read_excel(str_full_path, sheet_name='Data', header=4)
         
-        
-        
+        # Re-format Matrix MA questions in 'df_info_qme'
         mask = (
             df_info_qme['Question(Matrix)'].notna()
             & (df_info_qme['Question type'] == 'MA')
-            & df_info_qme[1].notna()
+            & df_info_qme[1].isna()
+        )
+        
+        df_info_qme.loc[mask, 1] = df_info_qme.loc[mask, 'Question(Normal)']
+        df_info_qme.loc[mask, 'Question(Normal)'] = np.nan
+        df_info_qme['Question(Normal)'] = df_info_qme['Question(Normal)'].ffill()
+        
+        # Remove unuse rows of matrix questions in 'df_info_qme'
+        mask = (
+            df_info_qme['Question(Matrix)'].notna()
+            & (df_info_qme['Question type'] == 'MA')
+            & df_info_qme[2].notna()
         )
         lst_dropped_columns = df_info_qme.loc[mask, 'Name of items'].tolist()
         lst_dropped_columns.extend(set(df_info_qme.query("`Question type` == 'RANKING'")['Name of items'].values.tolist()).difference(df_data_qme.columns.to_list()))
         
+        # Insert 'ID' row to 'df_info_qme'
         df_info_qme = pd.concat([pd.DataFrame(
             columns=df_info_qme.columns.to_list(),
             data=[['ID', 'FT', np.nan, 'ID'] + [np.nan] * (df_info_qme.shape[1] - 4)]
@@ -231,23 +308,30 @@ class DataConverter:
             .reset_index(drop=False)
         )
         
+        # Check duplicated variables 'Name of items' in 'df_info_qme'
         dup_vars = df_info_qme.duplicated(subset=['Name of items'])
         if dup_vars.any():
             print(f"Error: Please check duplicated variables: {', '.join(df_info_qme.loc[dup_vars, 'Name of items'].values.tolist())}")
             return
 
-        def cleanhtml(sr) -> str:
-            CLEANR = re.compile('{.*?}|<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});|\n|\xa0')
-            sr['Question(Matrix)'] = re.sub(CLEANR, '', sr['Question(Matrix)']) if isinstance(sr['Question(Matrix)'], str) else sr['Question(Matrix)']
-            sr['Question(Normal)'] = re.sub(CLEANR, '', sr['Question(Normal)']) if isinstance(sr['Question(Normal)'], str) else sr['Question(Normal)']
-            return sr
-    
-        df_info_qme = df_info_qme.apply(cleanhtml, axis=1)
+        # Clean HTML formatting in 'df_info_qme'
+        df_info_qme[['Question(Matrix)', 'Question(Normal)']] = df_info_qme[['Question(Matrix)', 'Question(Normal)']].apply(self._cleanhtml, axis=1)
+        
+        # Add group to all questions
+        df_info_qme[['Qre_Simple_Group', 'Qre_Matrix_Group']] = df_info_qme.apply(self._qre_grouping, axis=1, result_type='expand')
+        
+        df_info_qme.insert(4, 'Qre_Matrix_Group', df_info_qme.pop('Qre_Matrix_Group'))
+        df_info_qme.insert(4, 'Qre_Simple_Group', df_info_qme.pop('Qre_Simple_Group'))
         
         
+        # drop all nan codes columns
+        code_cols = [c for c in df_info_qme.columns if str(c).isdigit()]
+        code_cols_dropped = df_info_qme[code_cols].isna().all(axis=0)
+        df_info_qme = df_info_qme.drop(columns=code_cols_dropped[code_cols_dropped].index)
         
+        
+        # Start format df_data_qme
         df_data_qme = df_data_qme.T.reset_index(drop=False)
-        
         mask = df_data_qme[0].notnull()
         
         df_data_qme.loc[mask, 'index'] = (
@@ -270,111 +354,100 @@ class DataConverter:
             .reset_index(drop=True)
         )
         
-      
         # for idx in df_temp.index:
         #     str_prefix = df_data_header.at[idx, 3]
         #     str_suffix = df_data_header.at[idx, 4]
-
         #     if 'Reply' in str_suffix:
         #         df_data_header.at[idx, 3] = f"{str_prefix}_{str_suffix.replace(' - ', '_').replace(' ',  '_')}"
         #     else:
         #         df_data_header.at[idx, 3] = f"{str_prefix}_{str_suffix.rsplit('_', 1)[1]}"
-
         # df_data_header.loc[pd.isnull(df_data_header[3]), 3] = df_data_header.loc[pd.isnull(df_data_header[3]), 5]
         # dict_header = df_data_header[3].to_dict()
-
         # df_data = df_data.rename(columns=dict_header).drop(list(range(6)))
         
         return df_data_qme, df_info_qme
 
         
 
-        
+    
     @_time_it
-    def convert(self):    
+    def convert(self) -> Output:    
         
         df_data_qme, df_info_qme = self._read_qme_file()
         
-        # # For test
-        # df_data_qme.to_csv('df_data_qme.csv', encoding='utf-8-sig', index=False)
-        # df_info_qme.to_csv('df_info_qme.csv', encoding='utf-8-sig', index=False)
-        # # For test
+        # For test
+        df_data_qme.to_csv('df_data_qme.csv', encoding='utf-8-sig', index=False)
+        df_info_qme.to_csv('df_info_qme.csv', encoding='utf-8-sig', index=False)
+        # For test
         
         metadata_builder = MetadataBuilder(df_data=df_data_qme, df_info=df_info_qme)
-        metadata = metadata_builder.build()
+        
+        self.output.metadata = metadata_builder.build()
+        self.output.df_data = df_data_qme
+        
+        return self.output
+
         
 
 
-        # _here
-        
-        
-        return True
+    # def convert_upload_files_to_df_converted(self):
+
+    #     files = self.lst_input_files
+    #     is_qme = self.is_qme
+
+    #     try:
+
+    #         if len(files) == 1:
+    #             file = files[0]
+    #             self.str_file_name = file
+
+    #             if '.sav' in file:
+    #                 # this function is pending
+    #                 # self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
+    #                 # self.zip_name = file.replace('.sav', '_Data.zip')
+    #                 pass
+
+    #             elif '.zip' in file:
+    #                 self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
+    #                 self.zip_name = file.replace('.zip', '_Data.zip')
+
+    #             else:
+    #                 self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
+    #                 self.zip_name = file.replace('.xlsx', '_Data.zip')
+
+    #         else:
+    #             self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
+    #             self.zip_name = self.str_file_name.replace('.xlsx', '_Data.zip')
+
+    #             df_data_converted_merge = pd.DataFrame()
+    #             df_info_converted_merge = pd.DataFrame()
+
+    #             for i, file in enumerate(files):
+    #                 df_data_converted, df_info_converted = self.read_file_xlsx(file, is_qme)
+
+    #                 if not df_data_converted.empty:
+    #                     df_data_converted_merge = pd.concat([df_data_converted_merge, df_data_converted], axis=0)
+
+    #                 if df_info_converted_merge.empty:
+    #                     df_info_converted_merge = df_info_converted
+
+    #             df_data_converted_merge = df_data_converted_merge.reset_index(drop=True)
+
+    #             self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
+
+    #         self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
+    #         self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
+
+    #         self.print(['Convert data file', self.str_file_name, 'to dataframe'], [None, self.clr_blue, None], sep=' ')
+
+    #     except Exception as err:
+    #         raise err
 
 
-
-
-    def convert_upload_files_to_df_converted(self):
-
-        files = self.lst_input_files
-        is_qme = self.is_qme
-
-        try:
-
-            if len(files) == 1:
-                file = files[0]
-                self.str_file_name = file
-
-                if '.sav' in file:
-                    # this function is pending
-                    # self.df_data_converted, self.df_info_converted = self.read_file_sav(file)
-                    # self.zip_name = file.replace('.sav', '_Data.zip')
-                    pass
-
-                elif '.zip' in file:
-                    self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme, is_zip=True)
-                    self.zip_name = file.replace('.zip', '_Data.zip')
-
-                else:
-                    self.df_data_converted, self.df_info_converted = self.read_file_xlsx(file, is_qme)
-                    self.zip_name = file.replace('.xlsx', '_Data.zip')
-
-            else:
-                self.str_file_name = f"{files[0].filename.rsplit('_', 1)[0]}.xlsx"
-                self.zip_name = self.str_file_name.replace('.xlsx', '_Data.zip')
-
-                df_data_converted_merge = pd.DataFrame()
-                df_info_converted_merge = pd.DataFrame()
-
-                for i, file in enumerate(files):
-                    df_data_converted, df_info_converted = self.read_file_xlsx(file, is_qme)
-
-                    if not df_data_converted.empty:
-                        df_data_converted_merge = pd.concat([df_data_converted_merge, df_data_converted], axis=0)
-
-                    if df_info_converted_merge.empty:
-                        df_info_converted_merge = df_info_converted
-
-                df_data_converted_merge = df_data_converted_merge.reset_index(drop=True)
-
-                self.df_data_converted, self.df_info_converted = df_data_converted_merge, df_info_converted_merge
-
-            self.zip_name = self.zip_name.rsplit('/', 1)[-1] if '/' in self.zip_name else self.zip_name
-            self.str_file_name = self.str_file_name.rsplit('/', 1)[-1] if '/' in self.str_file_name else self.str_file_name
-
-            self.print(['Convert data file', self.str_file_name, 'to dataframe'], [None, self.clr_blue, None], sep=' ')
-
-        except Exception as err:
-            raise err
-
-
-        if self.check_duplicate_variables():
-            exit()
+    #     if self.check_duplicate_variables():
+    #         exit()
             
             
-            
-            
-            
-
 
 # 
 # 
