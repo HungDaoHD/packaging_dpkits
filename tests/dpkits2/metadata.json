@@ -2,7 +2,7 @@
     "qres": {
         "ID": {
             "name": "ID",
-            "label": "ID ID  ID xxxxx",
+            "label": "ID",
             "qtype": "FT",
             "data_fields": [
                 "ID"
@@ -138,12 +138,11 @@
         "AGE1": {
             "name": "AGE1",
             "label": "Please let us know your exact birth year",
-            "qtype": "FT",
+            "qtype": "NUM",
             "data_fields": [
                 "AGE1"
             ],
-            "index": 13,
-            "is_other_field": false
+            "index": 13
         },
         "AGE2": {
             "name": "AGE2",
@@ -570,12 +569,11 @@
         "OWNTV": {
             "name": "OWNTV",
             "label": "How many TV are there in your house?",
-            "qtype": "FT",
+            "qtype": "NUM",
             "data_fields": [
                 "OWNTV"
             ],
-            "index": 32,
-            "is_other_field": false
+            "index": 32
         },
         "OWN1": {
             "name": "OWN1",

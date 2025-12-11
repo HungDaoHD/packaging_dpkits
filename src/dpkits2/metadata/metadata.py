@@ -1,95 +1,8 @@
-from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator  # , computed_field, EmailStr
-from typing import Union, Optional, Literal, Dict, List, Annotated
+from pydantic import BaseModel, Field
+from typing import Union, Dict, List
 import pandas as pd
 import re
-
-
-
-class GeneralCode(BaseModel):
-    value: int
-    label: str = Field(min_length=1)
-    factor: Optional[Union[int, float]] = None
-    is_exclusive: bool = False
-    is_other: bool = False
-    
-
-class NettedCode(BaseModel):
-    value: int
-    label: str = Field(min_length=1)
-    netted_type: Literal['Net', 'Combine']
-    netted_fields: Optional[List[str]] = None
-
-
-class _QreBase(BaseModel):
-    name: str = Field(min_length=2)
-    label: str = Field(min_length=2)
-    qtype: str
-    data_fields: list[str] = Field(min_length=1)
-    index: int
-    
-    model_config = {
-        "extra": "allow"
-    }
-
-
-class QreFreeText(_QreBase):
-    qtype: Literal['FT']
-    is_other_field: bool = False
-
-
-class QreNumeric(_QreBase):
-    qtype: Literal['NUM']
-    pass
-
-    
-class QreSingleAnswer(_QreBase):
-    qtype: Literal['SA']
-    codes: Dict[int, Union[GeneralCode, NettedCode]]
-    other_fields: Optional[Dict[str, QreFreeText]] = None
-    
-
-class QreMultipleAnswer(_QreBase):
-    qtype: Literal['MA']
-    codes: Dict[int, Union[GeneralCode, NettedCode]]
-    other_fields: Optional[Dict[str, QreFreeText]] = None
-
-
-class QreRanking(_QreBase):
-    qtype: Literal['RANKING']
-    codes: Dict[int, Union[GeneralCode, NettedCode]]
-
-
-
-MatrixSubQuestion = Annotated[
-     Union[
-        QreFreeText,
-        QreNumeric,
-        QreSingleAnswer,
-        QreMultipleAnswer,
-        QreRanking
-    ],
-    Field(discriminator='qtype'),
-]
-
-
-
-class QreMatrix(_QreBase):
-    qtype: Literal['MATRIX']
-    sub_qres: Dict[str, MatrixSubQuestion] = Field(default_factory=dict)
-    
-    
-    
-Question = Annotated[
-     Union[
-        QreFreeText,
-        QreNumeric,
-        QreSingleAnswer,
-        QreMultipleAnswer,
-        QreRanking,
-        QreMatrix
-    ],
-    Field(discriminator='qtype'),
-]    
+from .questions import *
 
 
 
@@ -113,7 +26,6 @@ class Metadata(BaseModel):
         return self
         
     
-    
     def to_json(self, indent: int = 4):
         return self.model_dump_json(indent=indent)
     
@@ -121,7 +33,33 @@ class Metadata(BaseModel):
     def save_json(self, filepath: str, indent: int = 4):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(self.model_dump_json(indent=indent))
+        print(f"File '{filepath}' was saved.")
+        
     
+    def get_data_fields(self) -> list[str]:
+        """Return sorted list of all data field names in the metadata (including matrix sub-questions)."""
+        if not self.qres:
+            return []
+        
+        fields: set[str] = set()
+        
+        for q in self.qres.values():
+            fields.update(q.data_fields)
+            
+            other_fields = getattr(q, "other_fields", None)
+            if other_fields:
+                fields.update(other_fields.keys())
+            
+            if getattr(q, "qtype", None) == "MATRIX":
+                for sub_q in q.sub_qres.values():
+                    fields.update(sub_q.data_fields)
+                    
+                    sub_other_fields = getattr(sub_q, "other_fields", None)
+                    if sub_other_fields:
+                        fields.update(sub_other_fields.keys())
+        
+        return sorted(fields)
+        
     
     @classmethod
     def from_json(cls, json_str: str) -> "Metadata":
@@ -136,6 +74,8 @@ class Metadata(BaseModel):
             json_str = f.read()
         
         return cls.model_validate_json(json_str)
+
+    
 
 
 class MetadataBuilder:
@@ -152,7 +92,7 @@ class MetadataBuilder:
         
         self.df_data = df_data
         self.df_info = df_info
-          
+        
         self.col_name = col_name
         self.col_qtype = col_qtype
         self.col_q_label = col_q_label
@@ -234,10 +174,42 @@ class MetadataBuilder:
         label = self._safe_label(label_raw if not pd.isna(label_raw) else "", fallback=name)
         index = sr_qre.name
         
+        # ----------------------------
+        # AUTO-DETECT NUMERIC FT
+        # ----------------------------
+        def _is_numeric_column(col_name: str) -> bool:
+            """Check if df_data column is fully numeric (ignoring NA)."""
+            if self.df_data is None or col_name not in self.df_data.columns:
+                return False
+
+            s = self.df_data[col_name].dropna()
+            if s.empty:
+                # empty column considered free-text
+                return False
+            
+            try:
+                pd.to_numeric(s, errors="raise")
+                return True
+            except Exception:
+                return False
         
-        if qtype == 'FT':
         
-            obj_qre = QreFreeText(
+        # -------------------------------------------------------------------------
+        # CASE 1: qtype is FT — check if the underlying data is numeric
+        # -------------------------------------------------------------------------
+        if qtype == "FT":
+            if _is_numeric_column(name):
+                # AUTO-CONVERT FT → NUM
+                return QreNumeric(
+                    name=name,
+                    label=label,
+                    qtype='NUM',
+                    index=index,
+                    data_fields=[name]
+                ) 
+
+            # otherwise keep as FreeText
+            return QreFreeText(
                 name=name,
                 label=label,
                 qtype=qtype,
@@ -245,18 +217,19 @@ class MetadataBuilder:
                 data_fields=[name],
                 is_other_field=re.fullmatch(r"^.+_o\d+$", name) is not None
             )
-            
-        else:
-          
-           obj_qre = QreNumeric(
-                name=name,
-                label=label,
-                qtype=qtype,
-                index=index,
-                data_fields=[name]
-            ) 
+
+
+        # -------------------------------------------------------------------------
+        # CASE 2: qtype is already NUM
+        # -------------------------------------------------------------------------
+        return QreNumeric(
+            name=name,
+            label=label,
+            qtype=qtype,
+            index=index,
+            data_fields=[name],
+        )
         
-        return obj_qre
     
     
     
@@ -452,7 +425,7 @@ class MetadataBuilder:
             lst_qre_simple.append(obj_qre.name)
             qres[obj_qre.name] = obj_qre
             print(f'Metadata: Simple question {obj_qre.name} was built.')
-            
+        
         
         return Metadata(qres=qres, lst_qre_simple=lst_qre_simple, lst_qre_matrix=lst_qre_matrix).sort_qres_by_index()
 
