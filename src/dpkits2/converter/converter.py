@@ -233,7 +233,7 @@ class DataConverter:
         
     
 
-    @_time_it
+    # @_time_it
     def _read_qme_file(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         
         print(f'Read input file {self.input_file.file_name}.')
@@ -357,7 +357,7 @@ class DataConverter:
         
 
     
-    @_time_it
+    # @_time_it
     def convert(self) -> DataBox:    
         
         df_data_qme, df_info_qme = self._read_qme_file()

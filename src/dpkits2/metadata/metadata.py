@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Union, Dict, List
 import pandas as pd
 import re
+from pydantic import BaseModel, Field
+from typing import Union, Dict, List
 from .questions import *
 
 
@@ -75,6 +75,19 @@ class Metadata(BaseModel):
         
         return cls.model_validate_json(json_str)
 
+    
+    
+    def add_qres(self, qres: List[Question]) -> Metadata:
+        
+        # 1. add new to qres
+        # 2. then add new cols to lst_qre_simple or lst_qre_matrix
+        
+        # Test
+        self.lst_qre_simple.append('99999999999999999999999999999')
+        
+        return self
+    
+    
     
 
 
@@ -377,7 +390,7 @@ class MetadataBuilder:
             
             obj_sub_qre = self._build_simple_question(df_sub_qre, df_sub_qre[self.col_qtype].values[0])
             obj_sub_qres[obj_sub_qre.name] = obj_sub_qre
-            print(f'Metadata: Matrix sub-question {obj_sub_qre.name} was built.')
+            print(f'Metadata: Matrix sub-question {obj_sub_qre.name} was built.' + ' ' * 30, end='\r')
         
         
         obj_matrix = QreMatrix(
@@ -408,6 +421,14 @@ class MetadataBuilder:
         lst_qre_simple = list()
         lst_qre_matrix = list()
         
+        # Build simple questions from qme dataframe to pydantic model
+        for qre_grp, df_qre in df_simple.groupby(self.col_q_simple_group, sort=False):
+            
+            obj_qre = self._build_simple_question(df_qre, df_qre[self.col_qtype].values[0])
+            lst_qre_simple.append(obj_qre.name)
+            qres[obj_qre.name] = obj_qre
+            print(f'Metadata: Simple question {obj_qre.name} was built.' + ' ' * 30, end='\r')
+        
         
         # Build matrix questions from qme dataframe to pydantic model
         for qre_grp, df_qre in df_matrix.groupby(self.col_q_matrix_group, sort=False):
@@ -415,16 +436,10 @@ class MetadataBuilder:
             obj_qre = self._build_matrix_question(qre_grp, df_qre)
             lst_qre_matrix.append(obj_qre.name)
             qres[obj_qre.name] = obj_qre
-            print(f'Metadata: Matrix question {qre_grp} was built.')
+            print(f'Metadata: Matrix question {qre_grp} was built.' + ' ' * 30, end='\r')
             
         
-        # Build simple questions from qme dataframe to pydantic model
-        for qre_grp, df_qre in df_simple.groupby(self.col_q_simple_group, sort=False):
-            
-            obj_qre = self._build_simple_question(df_qre, df_qre[self.col_qtype].values[0])
-            lst_qre_simple.append(obj_qre.name)
-            qres[obj_qre.name] = obj_qre
-            print(f'Metadata: Simple question {obj_qre.name} was built.')
+        # print(f"Metadata's build completed.", end='\n')
         
         
         return Metadata(qres=qres, lst_qre_simple=lst_qre_simple, lst_qre_matrix=lst_qre_matrix).sort_qres_by_index()

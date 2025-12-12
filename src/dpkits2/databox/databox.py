@@ -1,7 +1,7 @@
 import pandas as pd
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 from typing import Optional
-from ..metadata.metadata import Metadata
+from ..metadata.metadata import Metadata, Question, List
 
 
 
@@ -35,7 +35,12 @@ class DataBox(BaseModel):
         return self
     
     
-    
-    
-    
+    def add_qres(self, qres: List[Question]) -> DataBox:
+        
+        # 1. add new to metadata
+        # 2. add new cols to df_data
+        
+        self.metadata.add_qres(qres=qres)
+        
+        return self
     

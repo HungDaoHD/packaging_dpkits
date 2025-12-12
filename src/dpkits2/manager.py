@@ -1,5 +1,5 @@
 from .converter.converter import DataConverter, InputFile
-from .databox.databox import DataBox
+from .databox.databox import DataBox, Question, List
 
 
 
@@ -19,6 +19,35 @@ class Manager:
         """Run the full process: load data → build metadata → bundle output."""
         self.data_box = self.converter.convert()
         return self
+    
+    
+    
+    def add_qres(self, qres: List[Question]) -> Manager:
+        
+        if not isinstance(qres, list):
+            raise TypeError("qres must be a list of Question")
+
+        if not all(isinstance(q, Question) for q in qres):
+            raise TypeError("All items in qres must be Question")
+        
+        self.data_box.add_qres(qres=qres)
+
+        return self
+
+    
+    
+    def metadata_to_json(self, full_path: str):
+        """Shortcut to save metadata as json files"""
+        if not self.data_box.metadata:
+            raise RuntimeError("Metadata not built yet.")
+        
+        self.data_box.metadata.save_json(filepath=full_path)
+    
+        
+        
+    
+        
+        
     
     
     
@@ -43,9 +72,9 @@ class Manager:
 
     
     
-    def metadata_to_json(self, full_path: str):
-        """Shortcut to save metadata as json files"""
-        if not self.data_box.metadata:
-            raise RuntimeError("Metadata not built yet.")
+    
         
-        self.data_box.metadata.save_json(filepath=full_path)
+        
+    
+    
+    
