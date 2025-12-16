@@ -13,3 +13,5 @@ tk.txt
 tests/dpkits
 dpkits-env
 venv-dpkits2
+scr/dpkits2
+tests/dpkits2

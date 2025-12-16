@@ -2,7 +2,6 @@ from .converter.converter import DataConverter, InputFile
 from .databox.databox import DataBox, Question, List
 
 
-
 class Manager:
     
     def __init__(self, folder_name: str, file_name: str):
@@ -23,15 +22,7 @@ class Manager:
     
     
     def add_qres(self, qres: List[Question]) -> Manager:
-        
-        if not isinstance(qres, list):
-            raise TypeError("qres must be a list of Question")
-
-        if not all(isinstance(q, Question) for q in qres):
-            raise TypeError("All items in qres must be Question")
-        
         self.data_box.add_qres(qres=qres)
-
         return self
 
     
@@ -42,12 +33,9 @@ class Manager:
             raise RuntimeError("Metadata not built yet.")
         
         self.data_box.metadata.save_json(filepath=full_path)
+
     
-        
-        
     
-        
-        
     
     
     

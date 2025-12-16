@@ -37,10 +37,13 @@ class DataBox(BaseModel):
     
     def add_qres(self, qres: List[Question]) -> DataBox:
         
-        # 1. add new to metadata
-        # 2. add new cols to df_data
+        # HERE
         
+        # 1. add new to metadata
         self.metadata.add_qres(qres=qres)
+        
+        # 2. add new cols to df_data
+        # ....
         
         return self
     

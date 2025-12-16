@@ -43,11 +43,14 @@ class _QreBase(BaseModel):
         if self.name is None:
             errs.append('name must not None!')
         
-        if self.data_fields is None:
-            errs.append('data_fields must not None!')
+        if self.label is None:
+            errs.append('label must not None!')
         
-        if self.index is None:
-            errs.append('index must not None!')
+        # if self.data_fields is None:
+        #     errs.append('data_fields must not None!')
+        
+        # if self.index is None:
+        #     errs.append('index must not None!')
         
         if errs:
             raise ValueError('\n'.join(errs))

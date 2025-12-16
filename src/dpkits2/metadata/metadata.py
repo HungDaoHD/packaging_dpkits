@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 from typing import Union, Dict, List
 from .questions import *
 
@@ -79,11 +79,31 @@ class Metadata(BaseModel):
     
     def add_qres(self, qres: List[Question]) -> Metadata:
         
-        # 1. add new to qres
-        # 2. then add new cols to lst_qre_simple or lst_qre_matrix
+        if not isinstance(qres, list):
+            raise TypeError("qres must be a list of Question")
         
-        # Test
-        self.lst_qre_simple.append('99999999999999999999999999999')
+        
+        QuestionAdapter = TypeAdapter(list[Question])
+        QuestionAdapter.validate_python(qres)
+        
+        
+        # HERE: Code this first
+        a = 1
+        
+        
+        # 1. add new to qres
+        # 1.1. convert to dict[str, question]
+        
+        
+        # 1.2. check duplicated question 
+        
+        
+        
+        
+        
+        # 2. then add new items to lst_qre_simple or lst_qre_matrix
+        
+        
         
         return self
     
@@ -116,7 +136,7 @@ class MetadataBuilder:
         self.code_cols = [c for c in df_info.columns if str(c).isdigit()]
         
         
-        
+    
     
     # -----------------------------
     # Helpers
