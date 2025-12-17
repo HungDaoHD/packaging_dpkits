@@ -90,16 +90,13 @@ class Metadata(BaseModel):
         # HERE: Code this first
         a = 1
         
-        
+         
         # 1. add new to qres
         # 1.1. convert to dict[str, question]
         
         
         # 1.2. check duplicated question 
-        
-        
-        
-        
+                
         
         # 2. then add new items to lst_qre_simple or lst_qre_matrix
         

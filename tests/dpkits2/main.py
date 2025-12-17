@@ -10,7 +10,8 @@ mgr.run()
 lst_new_qres = [
     QreFreeText(name='New_FT', label='Add new FT testing'),
     QreNumeric(name='New_NUM', label='Add New NUM testing'),
-    
+    'ádsadasdsa',
+    123123123123
     
     # QreSingleAnswer(
     #     name='New_SA_Scale', label='New_SA_Scale. Testing', index=999999,
