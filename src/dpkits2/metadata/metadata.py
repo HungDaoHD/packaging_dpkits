@@ -77,33 +77,143 @@ class Metadata(BaseModel):
 
     
     
+    
+    def _get_last_index(self, default: int = -1) -> int:
+        """
+        Return the maximum question index.
+        If no questions exist, return `default`.
+        """
+        if not self.qres:
+            return default
+
+        return max(q.index for q in self.qres.values())
+    
+    
+    
+    
+    @staticmethod
+    def _collect_data_fields(q: Question) -> set[str]:
+        fields = set(q.data_fields or [])
+
+        # other fields
+        other_fields = getattr(q, "other_fields", None)
+        if other_fields:
+            fields.update(other_fields.keys())
+
+        # matrix sub-questions
+        if getattr(q, "qtype", None) == "MATRIX":
+            for sub_q in q.sub_qres.values():
+                fields.update(sub_q.data_fields or [])
+                sub_other = getattr(sub_q, "other_fields", None)
+                if sub_other:
+                    fields.update(sub_other.keys())
+
+        return fields
+    
+    
+    
+    def _check_duplicates(self, new_qres: list[Question], *, check_name: bool = True, check_data_fields: bool = True) -> None:
+        """
+        Raise ValueError if duplicated questions are detected.
+        """
+        
+        # ---------- existing ----------
+        existing_names = {q.name for q in self.qres.values()}
+        existing_fields: dict[str, str] = {}
+        
+        for q in self.qres.values():
+            for f in self._collect_data_fields(q):
+                existing_fields[f] = q.name
+
+        # ---------- incoming ----------
+        for q in new_qres:
+            # 1) name duplication
+            if check_name: 
+                if q.name in existing_names:
+                    raise ValueError(f"Duplicate question name detected: '{q.name}'")
+
+                if q.name in list(existing_fields.keys()):
+                    raise ValueError(f"Duplicate question name detected in existing question's data fields: '{q.name}'")
+
+                ofields = getattr(q, "other_fields", None)
+                
+                if ofields:
+                    for ofield in ofields:
+                        if ofield in existing_names or ofield in list(existing_fields.keys()):
+                            raise ValueError(f"Duplicate other fields detected: '{q.name}[{ofield}]'")
+
+
+            
+            # 2) data field overlap
+            if check_data_fields:
+                for f in self._collect_data_fields(q):
+                    if f in existing_fields:
+                        raise ValueError(
+                            f"Duplicate data field '{f}' "
+                            f"(new_qres question='{q.name}', "
+                            f"existing question='{existing_fields[f]}')"
+                        )
+    
+    
+    
+    
+    
+    
+    
     def add_qres(self, qres: List[Question]) -> Metadata:
         
         if not isinstance(qres, list):
             raise TypeError("qres must be a list of Question")
         
-        
         QuestionAdapter = TypeAdapter(list[Question])
         QuestionAdapter.validate_python(qres)
         
+        # Check duplicated questions & data fields
+        self._check_duplicates(qres)
         
+        # Convert to Dict[str, Question]
+        last_index = self._get_last_index()
+        
+        for new_q in qres:
+            if new_q.index:
+                continue
+            
+            last_index += 1
+            new_q.index = last_index
+
+            if not getattr(new_q, "other_fields", None):
+                continue
+            
+            if not new_q.other_fields:
+                continue
+            
+            for new_other_field in new_q.other_fields.values():
+                if new_other_field.index:
+                    continue
+                    
+                last_index += 1
+                new_other_field.index = last_index
+        
+        
+        
+        self.qres.update({str(new_q.name): new_q for new_q in qres})
+        
+            
+            
+    
         # HERE: Code this first
         a = 1
         
-         
-        # 1. add new to qres
-        # 1.1. convert to dict[str, question]
-        
-        
-        # 1.2. check duplicated question 
-                
         
         # 2. then add new items to lst_qre_simple or lst_qre_matrix
         
         
         
         return self
-    
+
+        
+        
+        
     
     
 
@@ -455,8 +565,6 @@ class MetadataBuilder:
             qres[obj_qre.name] = obj_qre
             print(f'Metadata: Matrix question {qre_grp} was built.' + ' ' * 30, end='\r')
             
-        
-        # print(f"Metadata's build completed.", end='\n')
         
         
         return Metadata(qres=qres, lst_qre_simple=lst_qre_simple, lst_qre_matrix=lst_qre_matrix).sort_qres_by_index()

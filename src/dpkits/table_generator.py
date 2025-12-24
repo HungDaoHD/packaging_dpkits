@@ -230,7 +230,9 @@ class DataTableGenerator(Logging):
                 self.print(f'Cannot run table "{tbl_key}" with significant test and weighting at the same time. Processing terminated!!!', self.clr_err)
                 exit()
 
+        
 
+        # results = self.run_standard_table_sig(dict_tables['CLUSTERING'])
 
         # MULTIPLE PROCESSING-------------------------------------------------------------------------------------------
 
@@ -483,8 +485,12 @@ class DataTableGenerator(Logging):
             if '$' in qre['qre_name']:
 
                 if '_RANK' in str(qre['qre_name']).upper():
-                    # lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
+                    
                     lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
+                    
+                    if not lst_qre_col:
+                        lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}[0-9]+$"), 'var_name'].values.tolist()
+                    
                 else:
                     lst_qre_col = self.df_info.loc[self.df_info['var_name'].str.contains(f"^{qre['qre_name'][1:]}_[0-9]+$"), 'var_name'].values.tolist()
 
@@ -754,7 +760,14 @@ class DataTableGenerator(Logging):
                             num_val = np.average(df_temp_for_weight, weights=dict_header_col_name[item]['df_data'].loc[df_temp_for_weight.index, weight_var]) * val_pct
 
                 else:
-                    num_val = (df_filter[qre_name] == 1).sum() if is_count else df_filter[qre_name].mean() * val_pct
+                    try:
+                        num_val = (df_filter[qre_name] == 1).sum() if is_count else df_filter[qre_name].mean() * val_pct
+                    
+                    except Exception as e:
+                        print(qre_name)
+                        raise e
+
+
 
                 val_col_name, sig_col_name = dict_header_col_name[item]['val_col'], dict_header_col_name[item]['sig_col']
 

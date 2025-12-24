@@ -142,7 +142,8 @@
             "data_fields": [
                 "AGE1"
             ],
-            "index": 13
+            "index": 13,
+            "is_other_field": false
         },
         "AGE2": {
             "name": "AGE2",
@@ -573,7 +574,8 @@
             "data_fields": [
                 "OWNTV"
             ],
-            "index": 32
+            "index": 32,
+            "is_other_field": false
         },
         "OWN1": {
             "name": "OWN1",
@@ -31029,6 +31031,349 @@
                 }
             },
             "other_fields": null
+        },
+        "New_FT": {
+            "name": "New_FT",
+            "label": "Add new FT testing",
+            "qtype": "FT",
+            "data_fields": [
+                "New_FT"
+            ],
+            "index": 2637,
+            "is_other_field": false
+        },
+        "New_NUM": {
+            "name": "New_NUM",
+            "label": "Add New NUM testing",
+            "qtype": "NUM",
+            "data_fields": [
+                "New_NUM"
+            ],
+            "index": 2638,
+            "is_other_field": false
+        },
+        "New_SA_Scale": {
+            "name": "New_SA_Scale",
+            "label": "New_SA_Scale. Testing",
+            "qtype": "SA",
+            "data_fields": [
+                "New_SA_Scale"
+            ],
+            "index": 2639,
+            "codes": {
+                "1": {
+                    "value": 1,
+                    "label": "5pt",
+                    "factor": 5,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "2": {
+                    "value": 2,
+                    "label": "4pt",
+                    "factor": 4,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "3": {
+                    "value": 3,
+                    "label": "3pt",
+                    "factor": 3,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "4": {
+                    "value": 4,
+                    "label": "2pt",
+                    "factor": 2,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "5": {
+                    "value": 5,
+                    "label": "1pt",
+                    "factor": 1,
+                    "is_exclusive": false,
+                    "is_other": false
+                }
+            },
+            "other_fields": null
+        },
+        "New_SA_Others_Exclusive": {
+            "name": "New_SA_Others_Exclusive",
+            "label": "New_SA_Others_Exclusive. Testing",
+            "qtype": "SA",
+            "data_fields": [
+                "New_SA_Others_Exclusive"
+            ],
+            "index": 2640,
+            "codes": {
+                "9001": {
+                    "value": 9001,
+                    "label": "Grp A",
+                    "netted_type": "Net",
+                    "netted_fields": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "1": {
+                    "value": 1,
+                    "label": "1. AAA",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "2": {
+                    "value": 2,
+                    "label": "2. BBB",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "3": {
+                    "value": 3,
+                    "label": "3. CCC",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "9002": {
+                    "value": 9002,
+                    "label": "Grp B",
+                    "netted_type": "Combine",
+                    "netted_fields": [
+                        4,
+                        5,
+                        6
+                    ]
+                },
+                "4": {
+                    "value": 4,
+                    "label": "4. DDD",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "5": {
+                    "value": 5,
+                    "label": "5. EEE",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "6": {
+                    "value": 6,
+                    "label": "6. FFF",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "9003": {
+                    "value": 9003,
+                    "label": "Grp Others",
+                    "netted_type": "Combine",
+                    "netted_fields": [
+                        7,
+                        8
+                    ]
+                },
+                "7": {
+                    "value": 7,
+                    "label": "7. Other",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": true
+                },
+                "8": {
+                    "value": 8,
+                    "label": "8. Other",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": true
+                },
+                "9": {
+                    "value": 9,
+                    "label": "9. DK",
+                    "factor": null,
+                    "is_exclusive": true,
+                    "is_other": false
+                }
+            },
+            "other_fields": {
+                "New_SA_Others_Exclusive_o7": {
+                    "name": "New_SA_Others_Exclusive_o7",
+                    "label": "New_SA_Others_Exclusive_o7. Testing",
+                    "qtype": "FT",
+                    "data_fields": [
+                        "New_SA_Others_Exclusive_o7"
+                    ],
+                    "index": 2641,
+                    "is_other_field": true
+                },
+                "New_SA_Others_Exclusive_o8": {
+                    "name": "New_SA_Others_Exclusive_o8",
+                    "label": "New_SA_Others_Exclusive_o8. Testing",
+                    "qtype": "FT",
+                    "data_fields": [
+                        "New_SA_Others_Exclusive_o8"
+                    ],
+                    "index": 2642,
+                    "is_other_field": true
+                }
+            }
+        },
+        "New_MA": {
+            "name": "New_MA",
+            "label": "New_MA. Testing - has other & excl",
+            "qtype": "MA",
+            "data_fields": [
+                "New_MA_1",
+                "New_MA_2",
+                "New_MA_3",
+                "New_MA_4",
+                "New_MA_5",
+                "New_MA_6",
+                "New_MA_7",
+                "New_MA_8",
+                "New_MA_10",
+                "New_MA_9"
+            ],
+            "index": 2643,
+            "codes": {
+                "9001": {
+                    "value": 9001,
+                    "label": "Grp A",
+                    "netted_type": "Net",
+                    "netted_fields": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "1": {
+                    "value": 1,
+                    "label": "1. AAA",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "2": {
+                    "value": 2,
+                    "label": "2. BBB",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "3": {
+                    "value": 3,
+                    "label": "3. CCC",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "9002": {
+                    "value": 9002,
+                    "label": "Grp B",
+                    "netted_type": "Combine",
+                    "netted_fields": [
+                        4,
+                        5,
+                        6
+                    ]
+                },
+                "4": {
+                    "value": 4,
+                    "label": "4. DDD",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "5": {
+                    "value": 5,
+                    "label": "5. EEE",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "6": {
+                    "value": 6,
+                    "label": "6. FFF",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": false
+                },
+                "9003": {
+                    "value": 9003,
+                    "label": "Grp Others",
+                    "netted_type": "Combine",
+                    "netted_fields": [
+                        7,
+                        8
+                    ]
+                },
+                "7": {
+                    "value": 7,
+                    "label": "7. Other",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": true
+                },
+                "8": {
+                    "value": 8,
+                    "label": "8. Other",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": true
+                },
+                "10": {
+                    "value": 10,
+                    "label": "10. Other",
+                    "factor": null,
+                    "is_exclusive": false,
+                    "is_other": true
+                },
+                "9": {
+                    "value": 9,
+                    "label": "9. DK",
+                    "factor": null,
+                    "is_exclusive": true,
+                    "is_other": false
+                }
+            },
+            "other_fields": {
+                "New_MA_o7": {
+                    "name": "New_MA_o7",
+                    "label": "New_MA_o7. Testing",
+                    "qtype": "FT",
+                    "data_fields": [
+                        "New_MA_o7"
+                    ],
+                    "index": 2644,
+                    "is_other_field": true
+                },
+                "New_MA_o8": {
+                    "name": "New_MA_o8",
+                    "label": "New_MA_o8. Testing",
+                    "qtype": "FT",
+                    "data_fields": [
+                        "New_MA_o8"
+                    ],
+                    "index": 2645,
+                    "is_other_field": true
+                },
+                "New_MA_o10": {
+                    "name": "New_MA_o10",
+                    "label": "New_MA_o10. Testing",
+                    "qtype": "FT",
+                    "data_fields": [
+                        "New_MA_o10"
+                    ],
+                    "index": 2646,
+                    "is_other_field": true
+                }
+            }
         }
     },
     "lst_qre_simple": [

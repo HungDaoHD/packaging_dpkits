@@ -468,8 +468,17 @@ class DataProcessing(Logging):
         for key, val in dict_one_hot_regex.items():
             str_prefix = key
             lst_qre_col = self.df_data.filter(regex=val).columns.tolist()
-            str_qre_lbl = self.df_info.loc[self.df_info['var_name'].isin(lst_qre_col), 'var_lbl'].values[0]
-            dict_cate = self.df_info.loc[self.df_info['var_name'].isin(lst_qre_col), 'val_lbl'].values[0]
+            
+            try:
+            
+                str_qre_lbl = self.df_info.loc[self.df_info['var_name'].isin(lst_qre_col), 'var_lbl'].values[0]
+                dict_cate = self.df_info.loc[self.df_info['var_name'].isin(lst_qre_col), 'val_lbl'].values[0]
+
+            except Exception as e:
+                print(key, val, f"lst_qre_col = {lst_qre_col}")
+                raise e
+            
+            
 
             if isinstance(dict_cate, str):
                 dict_cate = eval(dict_cate)

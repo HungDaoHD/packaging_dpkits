@@ -3,7 +3,7 @@ from .data_processing import DataProcessing
 import pandas as pd
 import numpy as np
 import pingouin as pg
-import prince
+# import prince
 
 from sklearn.preprocessing import StandardScaler, Normalizer
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -777,8 +777,8 @@ class DataAnalysis(Logging):
 
 
 
-    def k_mean_segmentation(self, *, dict_k_mean: dict, output_name: str | None) -> (pd.DataFrame, pd.DataFrame):
-
+    def k_mean_segmentation(self, *, dict_k_mean: dict, output_name: str | None, n_test: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
+        
         dp = DataProcessing(df_data=self.df_data, df_info=self.df_info)
 
         for key, val in dict_k_mean.items():
@@ -791,7 +791,7 @@ class DataAnalysis(Logging):
 
             if val['n_clusters'] == 'auto':
 
-                K = range(2, 9)
+                K = range(2, n_test + 1)
                 wcss = list()
 
                 for k in K:
@@ -820,7 +820,7 @@ class DataAnalysis(Logging):
             kmeans.fit(df_data_norm)
 
             dict_add_new_qres = {
-                key: [f'{key}: k-mean', 'SA', {i: f'Cluster {i}' for i in range(1, n_clusters + 1)}, np.nan]
+                key: [f'{key}: k-mean', 'SA', {str(i): f'Cluster {i}' for i in range(1, n_clusters + 1)}, np.nan]
             }
 
             dp.add_qres(dict_add_new_qres)
